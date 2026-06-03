@@ -1218,6 +1218,8 @@ img {
   width: 34px;
   height: 34px;
   object-fit: contain;
+  filter: brightness(0) invert(1);
+  animation: floating-icon-shake 1.65s ease-in-out infinite;
 }
 
 .floating-action.facebook {
@@ -1226,11 +1228,9 @@ img {
 }
 
 .floating-action.facebook .floating-action-icon {
-  background: rgba(255, 255, 255, 0.16);
+  background: transparent;
   color: #ffffff;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.22),
-    0 8px 18px rgba(24,119,242,0.18);
+  box-shadow: none;
 }
 
 .floating-action.facebook > span:not(.floating-action-icon) {
