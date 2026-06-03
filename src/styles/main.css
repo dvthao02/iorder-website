@@ -139,6 +139,68 @@ img {
   max-width: 100%;
 }
 
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 0.62s ease,
+    transform 0.62s cubic-bezier(0.2, 0.82, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.listing-hero .reveal-on-scroll,
+.detail-hero .reveal-on-scroll,
+.contact-hero .reveal-on-scroll,
+.software-hero .reveal-on-scroll,
+.solution-hero .reveal-on-scroll {
+  transform: translate3d(0, 28px, 0);
+}
+
+.listing-card.reveal-on-scroll,
+.detail-card.reveal-on-scroll,
+.intro-card.reveal-on-scroll,
+.feature-card.reveal-on-scroll,
+.deployment-card.reveal-on-scroll,
+.solution-card.reveal-on-scroll,
+.news-card.reveal-on-scroll,
+.contact-card.reveal-on-scroll,
+.tools-download-card.reveal-on-scroll {
+  transform: translate3d(0, 30px, 0) scale(0.985);
+}
+
+.listing-card.reveal-on-scroll.is-visible,
+.detail-card.reveal-on-scroll.is-visible,
+.intro-card.reveal-on-scroll.is-visible,
+.feature-card.reveal-on-scroll.is-visible,
+.deployment-card.reveal-on-scroll.is-visible,
+.solution-card.reveal-on-scroll.is-visible,
+.news-card.reveal-on-scroll.is-visible,
+.contact-card.reveal-on-scroll.is-visible,
+.tools-download-card.reveal-on-scroll.is-visible {
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+@media (max-width: 640px) {
+  .reveal-on-scroll {
+    transform: translate3d(0, 14px, 0);
+    transition-duration: 0.48s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .page-shell {
   min-height: 100svh;
   display: flex;
