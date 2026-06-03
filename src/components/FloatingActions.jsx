@@ -12,7 +12,7 @@ export default function FloatingActions() {
         rel="noreferrer"
       >
         <span className="floating-action-icon" aria-hidden="true">
-          <img src={facebookIcon} alt="Facebook" />
+          <img src={facebookIcon} alt="Facebook" loading="lazy" decoding="async" />
         </span>
         <span>Facebook iOrder</span>
       </a>
@@ -36,7 +36,7 @@ export default function FloatingActions() {
         rel="noreferrer"
       >
         <span className="floating-action-icon" aria-hidden="true">
-          <img src={zaloIcon} alt="Zalo" />
+          <img src={zaloIcon} alt="Zalo" loading="lazy" decoding="async" />
         </span>
         <span>{"Zalo OA - ho\u1eb7c g\u1eedi email"}</span>
       </a>

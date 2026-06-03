@@ -145,7 +145,7 @@ export default function SolutionsPage() {
                   <Link to={solution.href} key={solution.slug} className="listing-card-link">
                     <article className="listing-card solution-listing-card">
                       <div className="solution-card-media">
-                        <img src={visual} alt="" loading="lazy" />
+                        <img src={visual} alt="" loading="lazy" decoding="async" />
                         <span>{String(index + 1).padStart(2, '0')}</span>
                       </div>
                       <div className="solution-card-body">

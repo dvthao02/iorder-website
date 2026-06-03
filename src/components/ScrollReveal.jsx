@@ -2,26 +2,40 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const REVEAL_SELECTOR = [
-  'main .section-eyebrow',
-  'main h1',
-  'main h2',
-  'main h3',
-  'main p',
-  'main li',
+  'main .section-title',
+  'main .listing-hero-title',
+  'main .listing-hero-lead',
+  'main .detail-title',
+  'main .detail-summary',
   'main .btn',
   'main .hero-badge',
   'main .hero-point',
   'main .hero-slide-copy',
-  'main .intro-card',
+  'main .about-copy',
+  'main .about-value-card',
+  'main .about-chip-row',
+  'main .partner-marquee',
+  'main .industry-group',
+  'main .industry-item',
   'main .partner-item',
   'main .industry-card',
   'main .feature-card',
-  'main .deployment-card',
+  'main .deployment-copy',
+  'main .deployment-visual',
+  'main .deployment-step',
+  'main .deployment-model-card',
   'main .solution-card',
+  'main .ecosystem-card',
   'main .news-card',
+  'main .news-feature-card',
+  'main .news-insight-card',
+  'main .home-news-card',
   'main .listing-card',
   'main .detail-card',
   'main .detail-cta',
+  'main .article-content',
+  'main .article-source-card',
+  'main .article-inline-cta-box',
   'main .contact-card',
   'main .contact-form',
   'main .tools-download-card',
@@ -38,7 +52,7 @@ export default function ScrollReveal() {
     elements.forEach((element, index) => {
       element.classList.remove('is-visible')
       element.classList.add('reveal-on-scroll')
-      element.style.setProperty('--reveal-delay', `${Math.min(index % 8, 7) * 45}ms`)
+      element.style.setProperty('--reveal-delay', `${Math.min(index % 6, 5) * 38}ms`)
     })
 
     if (reduceMotion || !('IntersectionObserver' in window)) {

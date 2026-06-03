@@ -174,7 +174,7 @@ export default function SoftwarePage() {
                   <Link to={`/phan-mem/${product.slug}`} key={product.id} className="listing-card-link">
                     <article className="listing-card software-listing-card">
                       <div className="software-card-media">
-                        <img src={visual} alt="" loading="lazy" />
+                        <img src={visual} alt="" loading="lazy" decoding="async" />
                         <span>{String(index + 1).padStart(2, '0')}</span>
                       </div>
                       <div className="software-card-body">

@@ -93,7 +93,7 @@ export default function Footer({ logoFooter }) {
         <div className="container footer-container">
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
-              <img src={logoFooter} alt="iOrder Logo" />
+              <img src={logoFooter} alt="iOrder Logo" loading="lazy" decoding="async" />
             </Link>
 
             <div className="footer-contact-list">

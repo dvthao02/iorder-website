@@ -91,7 +91,13 @@ export default function NewsDetail() {
 
             <aside className="article-source-card">
               <div className="article-source-image">
-                <img src={article.image} alt={article.imageAlt} />
+                <img
+                  src={article.image}
+                  alt={article.imageAlt}
+                  loading="eager"
+                  decoding="sync"
+                  fetchPriority="high"
+                />
               </div>
               <span>Trọng tâm iOrder</span>
               <h2>{article.focusName}</h2>
@@ -149,7 +155,7 @@ export default function NewsDetail() {
                 <Link to={`/tin-tuc/${item.slug}`} key={item.slug} className="listing-card-link">
                   <article className="listing-card news-listing-card">
                     <div className="news-card-image">
-                      <img src={item.image} alt={item.imageAlt} />
+                      <img src={item.image} alt={item.imageAlt} loading="lazy" decoding="async" />
                     </div>
                     <span className="news-card-badge">{item.category}</span>
                     <h3 className="listing-card-title">{item.title}</h3>

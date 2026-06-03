@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
@@ -124,19 +124,20 @@ export default function Home() {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeHeroSlide, setActiveHeroSlide] = useState(0)
+  const [loadedHeroSlides, setLoadedHeroSlides] = useState([0])
   const [activeNewsIndex, setActiveNewsIndex] = useState(0)
   const location = useLocation()
 
-  const softwareProducts = [
+  const softwareProducts = useMemo(() => [
     { slug: 'quan-ly-ban-hang-iorder', title: 'Phần mềm quản lý bán hàng - iOrder' },
     { slug: 'quan-ly-truong-mam-non-mimiedu', title: 'Phần mềm quản lý trường mầm non - MimiEdu' },
     { slug: 'dong-bo-du-lieu-iorder-rpa', title: 'Phần mềm đồng bộ dữ liệu iOrder RPA' },
     { slug: 'quan-ly-tram-sac-xe-dien', title: 'Phần mềm quản lý trạm sạc xe điện' },
     { slug: 'quan-ly-van-tai', title: 'Phần mềm quản lý vận tải' },
     { slug: 'hoa-don-dien-tu-chu-ky-so', title: 'Hóa đơn điện tử - Chữ ký số' },
-  ]
+  ], [])
 
-  const solutionPages = [
+  const solutionPages = useMemo(() => [
     {
       slug: 'mang-wifi-camera',
       title: 'Giải pháp hạ tầng mạng nội bộ, Wifi và camera',
@@ -162,9 +163,9 @@ export default function Home() {
       title: 'Giải pháp kiểm soát ra vào, chấm công vân tay, khuôn mặt',
       href: '/giai-phap/ha-tang/kiem-soat-ra-vao-cham-cong',
     },
-  ]
+  ], [])
 
-  const servicePages = [
+  const servicePages = useMemo(() => [
     {
       slug: 'thi-cong-mang-wifi-camera',
       title: 'Thiết kế, thi công hệ thống mạng nội bộ, Wifi, Camera, Kiểm soát ra vào',
@@ -200,9 +201,9 @@ export default function Home() {
       title: 'Tư vấn, đào tạo chuyển đổi số',
       href: '/dich-vu/dich-vu-cntt/tu-van-chuyen-doi-so',
     },
-  ]
+  ], [])
 
-  const ecosystemGroups = [
+  const ecosystemGroups = useMemo(() => [
     {
       icon: Smartphone,
       label: 'Sản phẩm',
@@ -236,7 +237,7 @@ export default function Home() {
         href: item.href,
       })),
     },
-  ]
+  ], [softwareProducts, solutionPages, servicePages])
 
   useEffect(() => {
     const pageTitles = {
@@ -268,6 +269,14 @@ export default function Home() {
     return () => window.clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    setLoadedHeroSlides((current) => {
+      const nextSlide = (activeHeroSlide + 1) % heroSlides.length
+      const next = new Set([...current, activeHeroSlide, nextSlide])
+      return next.size === current.length ? current : Array.from(next)
+    })
+  }, [activeHeroSlide])
+
   const goToHeroSlide = (direction) => {
     setActiveHeroSlide((current) => {
       if (direction === 'next') return (current + 1) % heroSlides.length
@@ -275,9 +284,9 @@ export default function Home() {
     })
   }
 
-  const homeNews = Array.from({ length: Math.min(3, newsArticles.length) }, (_, index) => {
+  const homeNews = useMemo(() => Array.from({ length: Math.min(3, newsArticles.length) }, (_, index) => {
     return newsArticles[(activeNewsIndex + index) % newsArticles.length]
-  })
+  }), [activeNewsIndex])
 
   const goToNews = (direction) => {
     setActiveNewsIndex((current) => {
@@ -353,7 +362,15 @@ export default function Home() {
                       className={`hero-slide ${index === activeHeroSlide ? 'active' : ''}`}
                       aria-hidden={index !== activeHeroSlide}
                     >
-                      <img src={slide.image} alt={slide.title} />
+                      {loadedHeroSlides.includes(index) ? (
+                        <img
+                          src={slide.image}
+                          alt={slide.title}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                          decoding={index === 0 ? 'sync' : 'async'}
+                          fetchPriority={index === 0 ? 'high' : 'low'}
+                        />
+                      ) : null}
                       <div className="hero-slide-copy">
                         <b>{slide.title}</b>
                         <span>{slide.caption}</span>
@@ -449,7 +466,7 @@ export default function Home() {
               <div className="home-partner-track partner-track">
                 {partnerItems.map((p, idx) => (
                   <div key={`a-${idx}`} className="model-card" title={p.name}>
-                    <img src={p.src} alt={p.name} />
+                    <img src={p.src} alt={p.name} loading="lazy" decoding="async" />
                     <div className="home-partner-info">
                       <span>{p.desc}</span>
                     </div>
@@ -457,7 +474,7 @@ export default function Home() {
                 ))}
                 {partnerItems.map((p, idx) => (
                   <div key={`b-${idx}`} className="model-card" title={p.name}>
-                    <img src={p.src} alt={p.name} />
+                    <img src={p.src} alt={p.name} loading="lazy" decoding="async" />
                     <div className="home-partner-info">
                       <span>{p.desc}</span>
                     </div>
@@ -539,7 +556,7 @@ export default function Home() {
             </div>
 
             <div className="deployment-visual deployment-model-feature">
-              <img src={posIotImage} alt="Mô hình máy POS kết nối thiết bị IoT iOrder" />
+              <img src={posIotImage} alt="Mô hình máy POS kết nối thiết bị IoT iOrder" loading="lazy" decoding="async" />
             </div>
 
             <div className="deployment-steps">
@@ -563,7 +580,7 @@ export default function Home() {
               {deploymentModels.map((model) => (
                 <article className="deployment-model-card" key={model.title}>
                   <div className="deployment-model-image">
-                    <img src={model.image} alt={`${model.title} iOrder`} />
+                    <img src={model.image} alt={`${model.title} iOrder`} loading="lazy" decoding="async" />
                   </div>
                   <div>
                     <h3>{model.title}</h3>
@@ -644,7 +661,7 @@ export default function Home() {
                 {homeNews.map((article) => (
                   <Link to={`/tin-tuc/${article.slug}`} className="home-news-card" key={article.slug}>
                     <div className="home-news-image">
-                      <img src={article.image} alt={article.imageAlt} />
+                      <img src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
                     </div>
                     <div className="home-news-copy">
                       <span>{article.category}</span>

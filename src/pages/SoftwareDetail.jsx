@@ -161,7 +161,12 @@ export default function SoftwareDetail() {
         <section className="detail-section software-rollout-section">
           <div className="container software-rollout-grid">
             <div className="software-rollout-image">
-              <img src={posHero} alt={`Minh họa triển khai ${product.title} iOrder`} />
+              <img
+                src={posHero}
+                alt={`Minh họa triển khai ${product.title} iOrder`}
+                loading="lazy"
+                decoding="async"
+              />
             </div>
             <div className="software-rollout-copy">
               <h2>Quy trình triển khai {product.title.toLowerCase()}</h2>

@@ -76,7 +76,12 @@ export default function IndustryDetail() {
             </div>
             <div className="article-source-card">
               <div className="article-source-image">
-                <img src={posHero} alt={`Minh họa giải pháp ${industry.title} iOrder`} />
+                <img
+                  src={posHero}
+                  alt={`Minh họa giải pháp ${industry.title} iOrder`}
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
               <span>iOrder theo ngành</span>
               <h2>{industry.title}</h2>

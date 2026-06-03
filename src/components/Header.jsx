@@ -172,7 +172,7 @@ export default function Header({
     <header className={`header ${scrolled ? "scrolled" : ""}`} onMouseLeave={() => setOpenDropdown(null)}>
       <div className="header-container">
         <Link to="/" className="logo" onClick={closeMenu}>
-          <img src={logoMain} alt="iOrder" />
+          <img src={logoMain} alt="iOrder" loading="eager" decoding="sync" fetchPriority="high" />
         </Link>
 
         <nav className="nav" aria-label="Menu chính">

@@ -74,7 +74,13 @@ export default function NewsPage() {
 
             <Link to={`/tin-tuc/${featuredArticle.slug}`} className="news-feature-card">
               <div className="news-feature-image">
-                <img src={featuredArticle.image} alt={featuredArticle.imageAlt} />
+                <img
+                  src={featuredArticle.image}
+                  alt={featuredArticle.imageAlt}
+                  loading="eager"
+                  decoding="sync"
+                  fetchPriority="high"
+                />
               </div>
               <span className="news-card-badge">{featuredArticle.category}</span>
               <h2>{featuredArticle.title}</h2>
@@ -93,7 +99,7 @@ export default function NewsPage() {
               {secondaryArticles.map((article) => (
                 <Link to={`/tin-tuc/${article.slug}`} key={article.id} className="news-insight-card">
                   <div className="news-insight-image">
-                    <img src={article.image} alt={article.imageAlt} />
+                    <img src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
                   </div>
                   <span>{article.focusName}</span>
                   <h3>{article.title}</h3>
@@ -129,7 +135,7 @@ export default function NewsPage() {
                 <Link to={`/tin-tuc/${article.slug}`} key={article.id} className="listing-card-link">
                   <article className="listing-card news-listing-card">
                     <div className="news-card-image">
-                      <img src={article.image} alt={article.imageAlt} />
+                      <img src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
                     </div>
                     <div>
                       <span className="news-card-badge">{article.category}</span>
