@@ -414,7 +414,7 @@ export default function Home() {
         </section>
 
         {/* Intro Section */}
-        <section className="section home-intro-section intro-section">
+        <section id="gioi-thieu" className="section home-intro-section intro-section">
           <div className="container about-panel">
             <div className="about-copy">
               <span className="section-eyebrow">GIỚI THIỆU</span>
