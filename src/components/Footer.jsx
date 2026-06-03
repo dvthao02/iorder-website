@@ -136,6 +136,17 @@ export default function Footer({ logoFooter, androidDownload, appleDownload }) {
                 </Link>
               ))}
             </div>
+
+            <div className="footer-socials" aria-label="Kênh mạng xã hội iOrder">
+              <a
+                href="https://www.facebook.com/iorder.phanmemquanlybanhang"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Facebook iOrder"
+              >
+                f
+              </a>
+            </div>
           </div>
 
           <div className="footer-column footer-company">
