@@ -1,4 +1,4 @@
-.listing-hero {
+﻿.listing-hero {
   padding: 92px 0 62px;
   background:
     linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(18, 185, 167, 0.08)),
@@ -31,7 +31,7 @@
   background: rgba(21, 136, 227, 0.11);
   color: #0f5fa3;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .listing-section {
@@ -171,7 +171,7 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.78);
   color: #294059;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .software-stats div {
@@ -291,7 +291,7 @@
 .news-insight-card > span {
   color: #1588e3;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .news-insight-card h3 {
@@ -316,7 +316,7 @@
   background: #f2f8fd;
   color: #294059;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .category-tabs {
@@ -333,7 +333,7 @@
   color: #294059;
   border: 1px solid #dfeaf4;
   cursor: pointer;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .category-tabs button.active {
@@ -434,7 +434,7 @@
   background: rgba(9, 111, 190, 0.88);
   color: #ffffff;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
   box-shadow: 0 12px 24px rgba(9, 111, 190, 0.22);
 }
 
@@ -490,7 +490,7 @@
   border-radius: 999px;
   background: rgba(21, 136, 227, 0.08);
   color: #0874c2;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .software-flow-item {
@@ -510,7 +510,7 @@
   border-radius: 999px;
   background: #1588e3;
   color: #ffffff;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .software-compare-section {
@@ -543,7 +543,7 @@
   background: #f6fbff;
   color: #13253b;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -553,7 +553,7 @@
 
 .software-compare-row a {
   color: #1588e3;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .software-compare-cta {
@@ -571,7 +571,7 @@
 .software-compare-cta p {
   margin: 0;
   color: #294059;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 @media (max-width: 1023px) {
@@ -652,3 +652,5 @@
     min-height: 0;
   }
 }
+
+

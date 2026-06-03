@@ -1,4 +1,4 @@
-.contact-hero {
+﻿.contact-hero {
   padding: 92px 0 62px;
   background:
     linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(18, 185, 167, 0.08)),
@@ -94,7 +94,7 @@
   display: block;
   margin-bottom: 8px;
   color: #13253b;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .contact-field label span {
@@ -130,7 +130,7 @@
   background-color: #1588e3;
   color: #ffffff;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.22s ease, transform 0.22s ease;
 }
@@ -237,3 +237,5 @@
     padding: 20px;
   }
 }
+
+

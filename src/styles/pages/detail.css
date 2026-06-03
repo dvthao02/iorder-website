@@ -1,4 +1,4 @@
-.detail-hero {
+﻿.detail-hero {
   padding: 64px 0 44px;
   background:
     linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(18, 185, 167, 0.08)),
@@ -25,7 +25,7 @@
   margin-bottom: 18px;
   color: #64748b;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .breadcrumb a {
@@ -152,7 +152,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.75);
   color: #294059;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 13px;
 }
 
@@ -183,7 +183,7 @@
 
 .article-source-card span {
   color: #1588e3;
-  font-weight: 900;
+  font-weight: 700;
   font-size: 13px;
 }
 
@@ -203,7 +203,7 @@
   align-items: center;
   gap: 8px;
   color: #1588e3;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .article-layout {
@@ -376,7 +376,7 @@
   border-radius: 999px;
   background: #1588e3;
   color: #ffffff;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .software-rollout-steps strong {
@@ -451,7 +451,7 @@
 .industry-related-grid span {
   color: #1588e3;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .industry-related-grid strong {
@@ -478,7 +478,7 @@
   background: #e7f4ff;
   color: #0878c9;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -574,7 +574,7 @@
 .tools-download-card > span {
   color: #1588e3;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tools-download-card h3 {
@@ -688,3 +688,5 @@
     margin: -20px -20px 18px;
   }
 }
+
+
