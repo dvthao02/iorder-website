@@ -214,7 +214,6 @@ img {
   line-height: 0.98;
   letter-spacing: 0.5px;
   font-weight: 900;
-  font-family: var(--font-heading);
 }
 
 .hero-content h1 span {
@@ -361,7 +360,6 @@ img {
 .section-title h2 {
   margin: 14px 0 0;
   color: var(--heading);
-  font-family: var(--font-heading);
   font-size: clamp(30px, 3vw, 42px);
   line-height: 1.25;
   font-weight: 900;
