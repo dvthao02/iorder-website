@@ -162,23 +162,24 @@
   z-index: 4;
   width: min(660px, calc(100vw - 128px));
   padding: 0;
-  color: #ffffff;
+  color: #0f2743;
   transform: translateY(-50%);
 }
 
 .page-shell .hero-content .eyebrow {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.72);
+  color: #0f5fa3;
+  border: 1px solid rgba(21, 136, 227, 0.14);
+  backdrop-filter: blur(8px);
 }
 
 .page-shell .hero-content h1 {
   margin: 22px 0 0;
-  color: #ffffff;
+  color: #15304d;
   font-size: clamp(42px, 4.05vw, 64px);
   line-height: 1.06;
   font-weight: 700;
-  text-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 10px 26px rgba(255, 255, 255, 0.62);
 }
 
 .page-shell .hero-content h1 span {
@@ -187,9 +188,9 @@
 
 .page-shell .hero-content > p {
   max-width: 570px;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(31, 55, 84, 0.9);
   font-size: 17px;
-  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 8px 22px rgba(255, 255, 255, 0.62);
 }
 
 .page-shell .hero-content .hero-points {
@@ -200,10 +201,10 @@
 
 .page-shell .hero-content .hero-point {
   padding: 10px 16px;
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  backdrop-filter: blur(12px);
+  border-color: rgba(21, 136, 227, 0.14);
+  background: rgba(255, 255, 255, 0.64);
+  color: #183650;
+  backdrop-filter: blur(8px);
 }
 
 .page-shell .hero-content .hero-point svg {
@@ -211,10 +212,10 @@
 }
 
 .page-shell .hero-content .btn.outline {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.36);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.58);
+  color: #15304d;
+  border-color: rgba(21, 136, 227, 0.18);
+  backdrop-filter: blur(8px);
 }
 
 .page-shell .hero-content .btn.large {
@@ -277,8 +278,8 @@
   z-index: 2;
   height: auto;
   background:
-    linear-gradient(90deg, rgba(3, 12, 26, 0.62) 0%, rgba(3, 12, 26, 0.38) 34%, rgba(3, 12, 26, 0.06) 64%, rgba(3, 12, 26, 0.02) 100%),
-    linear-gradient(180deg, rgba(3, 12, 26, 0) 0%, rgba(3, 12, 26, 0.03) 58%, rgba(3, 12, 26, 0.2) 100%);
+    linear-gradient(90deg, rgba(240, 248, 255, 0.84) 0%, rgba(240, 248, 255, 0.58) 34%, rgba(240, 248, 255, 0.12) 64%, rgba(240, 248, 255, 0) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(226, 241, 255, 0.05) 58%, rgba(186, 215, 241, 0.12) 100%);
 }
 
 .hero-slide-copy {
@@ -289,15 +290,15 @@
   z-index: 3;
   width: min(640px, calc(100vw - 190px));
   padding: 18px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 8px;
-  background: rgba(9, 20, 38, 0.22);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.42);
+  color: #14304d;
   text-align: right;
   box-shadow: 0 18px 42px rgba(15, 35, 68, 0.14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-shadow: 0 6px 18px rgba(255, 255, 255, 0.5);
 }
 
 .hero-slide-copy b,
@@ -314,7 +315,7 @@
   margin-top: 6px;
   font-size: 15px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(31, 55, 84, 0.88);
 }
 
 .hero-carousel-arrow {
