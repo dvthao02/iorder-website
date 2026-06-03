@@ -137,6 +137,13 @@
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 8px 18px rgba(24,119,242,0.18);
 }
 
+.floating-action.facebook .floating-action-icon img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  animation: none;
+}
+
 .floating-action.gmail {
   background: linear-gradient(135deg, #d14836, #c5372f);
   color: #fff;

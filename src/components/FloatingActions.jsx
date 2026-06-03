@@ -1,4 +1,5 @@
 import { Mail, Phone } from 'lucide-react'
+import facebookIcon from '../assets/misc/logo-facebook.png'
 import zaloIcon from '../assets/misc/zalo-96.png'
 
 export default function FloatingActions() {
@@ -11,7 +12,7 @@ export default function FloatingActions() {
         rel="noreferrer"
       >
         <span className="floating-action-icon" aria-hidden="true">
-          <b>f</b>
+          <img src={facebookIcon} alt="Facebook" />
         </span>
         <span>Facebook iOrder</span>
       </a>
