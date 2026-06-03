@@ -123,16 +123,6 @@ export default function Footer({ logoFooter }) {
               </div>
             </div>
 
-            <div className="footer-socials" aria-label="Kenh mang xa hoi iOrder">
-              <a
-                href="https://www.facebook.com/iorder.phanmemquanlybanhang"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Facebook iOrder"
-              >
-                f
-              </a>
-            </div>
           </div>
 
           <div className="footer-column">

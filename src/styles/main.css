@@ -1131,7 +1131,8 @@ img {
 
 /* Icon image / svg */
 .floating-action-icon img,
-.floating-action-icon svg {
+.floating-action-icon svg,
+.floating-action-icon b {
   position: relative;
   z-index: 3;
   width: 30px;
@@ -1139,6 +1140,17 @@ img {
   object-fit: contain;
   display: block;
   animation: floating-icon-shake 1.65s ease-in-out infinite;
+}
+
+.floating-action-icon b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  font-family: Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* Ensure Zalo raster icon is visually centered (some PNGs contain padding) */
@@ -1189,7 +1201,8 @@ img {
 }
 
 .floating-action:hover .floating-action-icon img,
-.floating-action:hover .floating-action-icon svg {
+.floating-action:hover .floating-action-icon svg,
+.floating-action:hover .floating-action-icon b {
   animation-play-state: paused;
 }
 
@@ -1199,6 +1212,19 @@ img {
 
 .floating-action.zalo {
   color: #0b67b2;
+}
+
+.floating-action.facebook {
+  background: linear-gradient(135deg, #1877f2, #0b5bd3);
+  color: #ffffff;
+}
+
+.floating-action.facebook .floating-action-icon {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.22),
+    0 8px 18px rgba(24,119,242,0.18);
 }
 
 /* Gmail style */
@@ -1280,6 +1306,12 @@ img {
   background: #ffffff;
   color: #0b67b2;
   box-shadow: 0 12px 30px rgba(11,103,178,0.08);
+}
+
+.floating-action.facebook > span:not(.floating-action-icon) {
+  background: linear-gradient(135deg, #1877f2, #0b5bd3);
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(24,119,242,0.16);
 }
 
 /* Hotline wave */
@@ -1389,7 +1421,8 @@ img {
   }
 
   .floating-action-icon img,
-  .floating-action-icon svg {
+  .floating-action-icon svg,
+  .floating-action-icon b {
     width: 27px;
     height: 27px;
   }
