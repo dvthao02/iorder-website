@@ -1,0 +1,4 @@
+iOrder POS Setup Checklist
+
+File tam thoi cho checklist trien khai iOrder tai cua hang.
+Noi dung chinh: thiet bi, mang, may in, danh muc san pham, nhan vien, phan quyen va quy trinh ban hang thu.

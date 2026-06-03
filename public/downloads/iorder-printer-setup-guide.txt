@@ -1,0 +1,4 @@
+iOrder Printer Setup Guide
+
+File tam thoi cho tai lieu cau hinh may in hoa don, may in bep/bar va kiem tra lenh in thu.
+Khi co tai lieu chinh thuc, thay noi dung file nay bang file moi.
