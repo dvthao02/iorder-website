@@ -266,9 +266,11 @@
 }
 
 @media (max-width: 640px) {
-  .floating-actions { right: 8px; bottom: 14px; gap: 11px; }
-  .floating-action { width: 50px; height: 50px; min-width: 50px; font-size: 13.5px; }
-  .floating-action-icon { width: 50px; height: 50px; min-width: 50px; flex-basis: 50px; }
-  .floating-action-icon img, .floating-action-icon svg { width: 27px; height: 27px; }
+  .floating-actions { right: 7px; bottom: 12px; gap: 9px; }
+  .floating-action { width: 44px; height: 44px; min-width: 44px; font-size: 13px; }
+  .floating-action-icon { width: 44px; height: 44px; min-width: 44px; flex-basis: 44px; }
+  .floating-action-icon img, .floating-action-icon svg { width: 24px; height: 24px; }
+  .floating-action.facebook .floating-action-icon img,
+  .floating-action.zalo .floating-action-icon img { width: 28px; height: 28px; }
 }
 
