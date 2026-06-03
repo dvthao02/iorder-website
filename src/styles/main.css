@@ -978,7 +978,7 @@ img {
 }
 
 .app-content li::before {
-  content: "âœ“";
+  content: "\2713";
   color: var(--primary);
   font-weight: 700;
   margin-right: 10px;
@@ -1224,7 +1224,7 @@ img {
     0 8px 18px rgba(0, 122, 255, 0.14);
 }
 
-/* SÃ³ng Zalo */
+/* Zalo wave */
 .floating-action.zalo .floating-action-icon::before,
 .floating-action.zalo .floating-action-icon::after {
   background: rgba(0, 122, 255, 0.18);
@@ -1282,7 +1282,7 @@ img {
   box-shadow: 0 12px 30px rgba(11,103,178,0.08);
 }
 
-/* SÃ³ng Hotline */
+/* Hotline wave */
 .floating-action.hotline .floating-action-icon::before,
 .floating-action.hotline .floating-action-icon::after {
   background: rgba(21, 136, 227, 0.25);
@@ -1638,7 +1638,7 @@ img {
 
 /* =========================
    Sticky Footer Fix
-   Footer bÃ¡m sÃ¡t Ä‘Ã¡y khi ná»™i dung page Ã­t hoáº·c khÃ´ng cÃ³ dá»¯ liá»‡u
+   Keep footer attached to the viewport bottom on short pages.
 ========================= */
 html,
 body,
