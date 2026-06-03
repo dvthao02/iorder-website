@@ -175,6 +175,7 @@
 .page-shell .hero-content h1 {
   margin: 22px 0 0;
   color: #ffffff;
+  font-family: var(--font-heading);
   font-size: clamp(42px, 4.05vw, 64px);
   line-height: 1.06;
   font-weight: 900;
