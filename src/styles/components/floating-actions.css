@@ -27,7 +27,7 @@
   box-shadow: 0 16px 38px rgba(15, 35, 68, 0.18), 0 5px 14px rgba(15, 35, 68, 0.08);
   text-decoration: none;
   font-size: 14.5px;
-  font-weight: 850;
+  font-weight: 700;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
@@ -145,6 +145,11 @@
   box-shadow: none;
 }
 
+.floating-action.facebook .floating-action-icon::before,
+.floating-action.facebook .floating-action-icon::after {
+  background: rgba(24, 119, 242, 0.22);
+}
+
 .floating-action.facebook > span:not(.floating-action-icon) {
   background: linear-gradient(135deg, #1877f2, #0b5bd3);
   color: #ffffff;
@@ -157,9 +162,40 @@
 }
 
 .floating-action.gmail .floating-action-icon {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
   color: #fff;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.06);
+}
+
+.floating-action.gmail:hover {
+  box-shadow: 0 22px 52px rgba(197,57,41,0.28);
+}
+
+.floating-action.gmail .floating-action-icon::before,
+.floating-action.gmail .floating-action-icon::after {
+  background: rgba(209,72,54,0.16);
+}
+
+.floating-action.gmail > span:not(.floating-action-icon) {
+  background: linear-gradient(135deg, #d14836, #c5372f);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(209,72,54,0.14);
+}
+
+.floating-action.zalo .floating-action-icon {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(0, 122, 255, 0.16), 0 8px 18px rgba(0, 122, 255, 0.14);
+}
+
+.floating-action.zalo .floating-action-icon::before,
+.floating-action.zalo .floating-action-icon::after {
+  background: rgba(0, 122, 255, 0.18);
+}
+
+.floating-action.zalo > span:not(.floating-action-icon) {
+  background: #ffffff;
+  color: #0b67b2;
+  box-shadow: 0 12px 30px rgba(11,103,178,0.08);
 }
 
 .floating-action.hotline {
@@ -167,10 +203,52 @@
   color: #ffffff;
 }
 
+.floating-action.hotline:hover {
+  box-shadow: 0 24px 58px rgba(21, 136, 227, 0.35), 0 8px 22px rgba(21, 136, 227, 0.18);
+}
+
 .floating-action.hotline .floating-action-icon {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 8px 18px rgba(255,255,255,0.08);
+}
+
+.floating-action.hotline .floating-action-icon::before,
+.floating-action.hotline .floating-action-icon::after {
+  background: rgba(21, 136, 227, 0.25);
+}
+
+.floating-action.hotline > span:not(.floating-action-icon) {
+  background: linear-gradient(135deg, var(--primary), #136dd9);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(19,103,200,0.14);
+}
+
+.floating-action-icon::before,
+.floating-action-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 999px;
+  pointer-events: none;
+  transform: scale(1);
+  opacity: 0;
+}
+
+.floating-action-icon::before {
+  animation: floating-wave 2s ease-out infinite;
+}
+
+.floating-action-icon::after {
+  animation: floating-wave 2s ease-out infinite;
+  animation-delay: 0.68s;
+}
+
+.floating-action:hover .floating-action-icon::before,
+.floating-action:hover .floating-action-icon::after {
+  animation-play-state: paused;
+  opacity: 0;
 }
 
 @keyframes floating-wave {
