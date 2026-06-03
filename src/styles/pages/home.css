@@ -30,22 +30,24 @@
 .home-intro-section {
   position: relative;
   scroll-margin-top: var(--header-height);
-  padding: 72px 0 64px;
+  padding: 72px 0 70px;
   background:
-    radial-gradient(circle at 82% 12%, rgba(18, 185, 167, 0.08), transparent 28%),
-    linear-gradient(180deg, #f7fbff 0%, #ffffff 76%);
+    radial-gradient(circle at 50% 0%, rgba(21, 136, 227, 0.1), transparent 34%),
+    radial-gradient(circle at 86% 22%, rgba(18, 185, 167, 0.08), transparent 30%),
+    linear-gradient(180deg, #f7fbff 0%, #ffffff 78%);
 }
 
 .about-panel {
   display: grid;
-  grid-template-columns: minmax(360px, 0.76fr) minmax(0, 1.24fr);
-  gap: 46px;
-  align-items: start;
+  grid-template-columns: 1fr;
+  gap: 34px;
+  align-items: stretch;
 }
 
 .about-copy {
-  max-width: 620px;
-  padding-top: 12px;
+  max-width: 980px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .about-copy .section-eyebrow {
@@ -56,14 +58,15 @@
 .about-copy h2 {
   margin: 16px 0 0;
   color: var(--heading);
-  font-size: clamp(30px, 2.45vw, 40px);
-  line-height: 1.14;
+  font-size: clamp(32px, 3vw, 48px);
+  line-height: 1.08;
   font-weight: 700;
   letter-spacing: 0;
 }
 
 .about-copy p {
-  margin: 16px 0 0;
+  max-width: 800px;
+  margin: 16px auto 0;
   color: var(--muted);
   font-size: 16px;
   line-height: 1.72;
@@ -72,8 +75,9 @@
 .about-chip-row {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 
 .about-chip-row span {
@@ -91,22 +95,24 @@
 
 .about-values {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .about-value-card {
   position: relative;
-  min-height: 128px;
+  grid-column: span 3;
+  min-height: 154px;
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr);
   align-content: start;
-  column-gap: 14px;
-  padding: 20px;
+  column-gap: 15px;
+  padding: 22px;
   border: 1px solid rgba(203, 213, 225, 0.78);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 16px 36px rgba(15, 35, 68, 0.055);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 255, 0.9));
+  box-shadow: 0 16px 38px rgba(15, 35, 68, 0.055);
   overflow: hidden;
 }
 
@@ -125,8 +131,8 @@
   position: relative;
   z-index: 1;
   color: var(--primary);
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   margin-top: 2px;
 }
 
@@ -145,18 +151,29 @@
   grid-column: 2;
   margin: 8px 0 0;
   color: var(--muted);
-  font-size: 14.6px;
+  font-size: 14.5px;
   line-height: 1.58;
 }
 
+.about-value-card:first-child,
+.about-value-card:nth-child(2) {
+  grid-column: span 6;
+  min-height: 138px;
+  padding: 24px 26px;
+}
+
 .about-value-card:first-child {
-  grid-column: 1 / -1;
-  min-height: 118px;
-  padding: 22px 24px;
   background:
     radial-gradient(circle at 96% 0%, rgba(21, 136, 227, 0.13), transparent 30%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 248, 255, 0.92));
   border-color: rgba(21, 136, 227, 0.2);
+}
+
+.about-value-card:nth-child(2) {
+  background:
+    radial-gradient(circle at 96% 0%, rgba(18, 185, 167, 0.11), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(242, 253, 251, 0.92));
+  border-color: rgba(18, 185, 167, 0.2);
 }
 
 .about-value-card:first-child::before {
@@ -164,20 +181,13 @@
   opacity: 1;
 }
 
-.about-value-card:first-child h3 {
+.about-value-card:first-child h3,
+.about-value-card:nth-child(2) h3 {
   font-size: 20px;
 }
 
-.about-value-card:first-child p {
-  max-width: 760px;
-}
-
-.about-value-card:last-child {
-  grid-column: 1 / -1;
-  min-height: 112px;
-}
-
-.about-value-card:last-child p {
+.about-value-card:first-child p,
+.about-value-card:nth-child(2) p {
   max-width: 760px;
 }
 
@@ -1036,6 +1046,16 @@
     grid-template-columns: 1fr;
   }
 
+  .about-values {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .about-value-card,
+  .about-value-card:first-child,
+  .about-value-card:nth-child(2) {
+    grid-column: auto;
+  }
+
   .feature-showcase-section .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1197,7 +1217,10 @@
     grid-template-columns: 1fr;
   }
 
-  .about-value-card {
+  .about-value-card,
+  .about-value-card:first-child,
+  .about-value-card:nth-child(2) {
+    grid-column: 1 / -1;
     min-height: 0;
   }
 
