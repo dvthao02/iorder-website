@@ -1,5 +1,6 @@
 node_modules/
 packages/*/dist/
+apps/api/dist/
 # dist/ của frontend và admin được commit để deploy lên Railway
 *.tsbuildinfo
 .codex-qa/
