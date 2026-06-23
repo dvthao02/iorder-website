@@ -2,7 +2,7 @@
 COREPACK_INTEGRITY_KEYS = "0"
 
 [phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = [
@@ -12,7 +12,11 @@ cmds = [
 ]
 
 [phases.build]
-cmds = ["pnpm build:cms"]
+cmds = [
+  "pnpm --filter @iorder/contracts build",
+  "pnpm --filter @iorder/database build",
+  "pnpm --filter @iorder/api build"
+]
 
 [start]
 cmd = "node apps/api/dist/server.js"
