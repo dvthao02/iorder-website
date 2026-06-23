@@ -41,6 +41,7 @@ export function AdminApp() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { section } = useParams()
+  const isLoginRoute = section === 'login'
   const activeModule = (section && keyBySlug[section]) || 'dashboard'
 
   const goTo = (key: string) => {
@@ -52,17 +53,27 @@ export function AdminApp() {
     getSession().then((session) => setUser(session.user)).catch(() => setUser(null)).finally(() => setIsLoading(false))
   }, [])
 
+  // Điều hướng theo trạng thái đăng nhập: chưa đăng nhập → /login; đã đăng nhập mà ở /login → /
+  useEffect(() => {
+    if (isLoading) return
+    if (!user && !isLoginRoute) navigate('/login', { replace: true })
+    if (user && isLoginRoute) navigate('/', { replace: true })
+  }, [isLoading, user, isLoginRoute, navigate])
+
   const handleLogin = async (username: string, password: string) => {
     setIsSubmitting(true); setError('')
-    try { const session = await login(username, password); setUser(session.user) }
+    try { const session = await login(username, password); setUser(session.user); navigate('/', { replace: true }) }
     catch (loginError) { const code = loginError instanceof Error ? loginError.message : 'UNKNOWN'; setError(errorMessages[code] ?? 'Không thể đăng nhập. Vui lòng thử lại.') }
     finally { setIsSubmitting(false) }
   }
 
-  const handleLogout = async () => { await logout().catch(() => undefined); setUser(null); navigate('/') }
+  const handleLogout = async () => { await logout().catch(() => undefined); setUser(null); navigate('/login', { replace: true }) }
 
   if (isLoading) return <main className="admin-shell"><p>Đang kiểm tra phiên đăng nhập...</p></main>
-  if (!user) return <main className="admin-shell"><section className="admin-card login-card"><p className="admin-kicker">iOrder CMS</p><h1>Đăng nhập quản trị</h1><p>Quản lý nội dung website iOrder. Hệ thống này độc lập với tài khoản POS.</p><LoginForm error={error} isSubmitting={isSubmitting} onSubmit={handleLogin} /></section></main>
+  if (!user) {
+    if (!isLoginRoute) return <main className="admin-shell"><p>Đang chuyển tới trang đăng nhập...</p></main>
+    return <main className="admin-shell"><section className="admin-card login-card"><p className="admin-kicker">iOrder CMS</p><h1>Đăng nhập quản trị</h1><p>Quản lý nội dung website iOrder. Hệ thống này độc lập với tài khoản POS.</p><LoginForm error={error} isSubmitting={isSubmitting} onSubmit={handleLogin} /></section></main>
+  }
 
   const back = () => goTo('dashboard')
   let content: React.ReactNode

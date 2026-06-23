@@ -90,6 +90,15 @@ export async function fetchNavOfferings() {
   return _navCache
 }
 
+// ── Partners ───────────────────────────────────────────────────────────────
+
+export async function fetchPartners() {
+  const payload = await apiFetch('/api/public/partners')
+  return (payload.items ?? [])
+    .filter((p) => p.logoUrl)
+    .map((p) => ({ src: p.logoUrl, name: p.name, websiteUrl: p.websiteUrl }))
+}
+
 // ── Site stats ─────────────────────────────────────────────────────────────
 
 let _statsCache = null

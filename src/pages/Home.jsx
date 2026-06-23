@@ -4,7 +4,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { setPageSeo } from '../utils/seo'
 import { externalLinks, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
-import { fetchNavOfferings, fetchSiteStats } from '../utils/contentApi'
+import { fetchNavOfferings, fetchPartners, fetchSiteStats } from '../utils/contentApi'
 import {
   BarChart3, Boxes, CheckCircle, Headphones, Printer,
   ReceiptText, ShieldCheck, Smartphone, Users, Utensils,
@@ -196,12 +196,14 @@ export default function Home() {
   const [cmsPosts, setCmsPosts] = useState([])
   const [cmsNav, setCmsNav] = useState(null)
   const [siteStats, setSiteStats] = useState(null)
+  const [tablePartners, setTablePartners] = useState([])
   const [openFaq, setOpenFaq] = useState(null)
   const location = useLocation()
 
   useEffect(() => {
     fetchNavOfferings().then(setCmsNav).catch(() => {})
     fetchSiteStats().then(setSiteStats).catch(() => {})
+    fetchPartners().then(setTablePartners).catch(() => {})
   }, [])
 
   // Count-up animation for numeric stat elements
@@ -273,9 +275,11 @@ export default function Home() {
   const resolvedHeroSlides = isCmsMode
     ? (cmsHero?.data?.slides ?? []).map((slide) => ({ image: cmsMedia.get(slide.imageMediaId)?.publicUrl, width: cmsMedia.get(slide.imageMediaId)?.width ?? 1600, height: cmsMedia.get(slide.imageMediaId)?.height ?? 900, title: slide.title, caption: slide.description })).filter((slide) => slide.image)
     : heroSlides
-  const resolvedPartners = isCmsMode
+  // Ưu tiên danh sách Đối tác quản lý ở CMS (bảng partners); nếu trống → logo nhúng trong block home_stats → fallback tĩnh
+  const blockPartners = isCmsMode
     ? (cmsStats?.data?.partners ?? []).map((item) => ({ src: cmsMedia.get(item.mediaId)?.publicUrl, name: item.name, websiteUrl: item.websiteUrl })).filter((item) => item.src)
     : partnerItems
+  const resolvedPartners = tablePartners.length > 0 ? tablePartners : blockPartners
   const resolvedFeatures = isCmsMode
     ? (cmsFeatures?.data?.items ?? []).map((item, idx) => {
         const t = (item.title ?? '').toLowerCase()
