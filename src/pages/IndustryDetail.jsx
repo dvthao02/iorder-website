@@ -6,6 +6,7 @@ import Footer from '../components/Footer'
 import StaticPage from './StaticPage'
 import { findIndustrySolution, industrySolutions } from '../data/industrySolutions'
 import { setPageSeo } from '../utils/seo'
+import { fetchOffering } from '../utils/contentApi'
 
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
@@ -22,8 +23,19 @@ export default function IndustryDetail() {
   const { slug } = useParams()
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [cmsIndustry, setCmsIndustry] = useState(null)
   const location = useLocation()
-  const industry = findIndustrySolution(slug)
+
+  useEffect(() => {
+    fetchOffering('industry', slug).then(setCmsIndustry).catch(() => {})
+  }, [slug])
+
+  const industry = cmsIndustry ? {
+    hero: cmsIndustry.title,
+    lead: cmsIndustry.description,
+    focusPoints: cmsIndustry.features ?? [],
+    links: cmsIndustry.items ?? [],
+  } : findIndustrySolution(slug)
   const relatedIndustries = industrySolutions.filter((item) => item.slug !== slug).slice(0, 6)
 
   useEffect(() => {

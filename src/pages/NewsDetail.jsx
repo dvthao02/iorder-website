@@ -5,6 +5,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { findNewsArticle, newsArticles } from '../data/newsArticles'
 import { setPageSeo } from '../utils/seo'
+import { fetchPublishedPost, fetchPublishedPosts } from '../utils/contentApi'
 
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
@@ -14,8 +15,19 @@ export default function NewsDetail() {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
-  const article = findNewsArticle(slug)
-  const relatedArticles = newsArticles.filter((item) => item.slug !== slug).slice(0, 3)
+  const [article, setArticle] = useState(() => findNewsArticle(slug))
+  const [relatedArticles, setRelatedArticles] = useState(() => newsArticles.filter((item) => item.slug !== slug).slice(0, 3))
+  const [isLoadingArticle, setIsLoadingArticle] = useState(true)
+
+  useEffect(() => {
+    Promise.all([fetchPublishedPost(slug), fetchPublishedPosts(4)])
+      .then(([current, all]) => {
+        setArticle(current)
+        setRelatedArticles(all.filter((item) => item.slug !== slug).slice(0, 3))
+      })
+      .catch(() => setArticle(findNewsArticle(slug)))
+      .finally(() => setIsLoadingArticle(false))
+  }, [slug])
 
   useEffect(() => {
     setPageSeo({
@@ -25,6 +37,8 @@ export default function NewsDetail() {
     setActiveDropdown(null)
     setMobileOpen(false)
   }, [article, location.pathname])
+
+  if (isLoadingArticle && !article) return <main className="detail-not-found"><div className="container"><p>Đang tải bài viết...</p></div></main>
 
   if (!article) {
     return (

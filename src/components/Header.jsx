@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu } from "lucide-react";
+import {
+  externalLinks,
+  servicePages as defaultServicePages,
+  softwareProducts as defaultSoftwareMenu,
+  solutionPages as defaultSolutionPages,
+} from "../data/siteContent";
+import { fetchNavOfferings } from "../utils/contentApi";
 
 export default function Header({
   activeDropdown,
@@ -15,6 +22,11 @@ export default function Header({
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [cmsNav, setCmsNav] = useState(null);
+
+  useEffect(() => {
+    fetchNavOfferings().then(setCmsNav).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const updateHeaderState = () => {
@@ -26,99 +38,6 @@ export default function Header({
 
     return () => window.removeEventListener("scroll", updateHeaderState);
   }, []);
-
-  const defaultSoftwareMenu = [
-    {
-      slug: "quan-ly-ban-hang-iorder",
-      title: "Phần mềm quản lý bán hàng - iOrder",
-    },
-    {
-      slug: "quan-ly-truong-mam-non-mimiedu",
-      title: "Phần mềm quản lý trường mầm non - MimiEdu",
-    },
-    {
-      slug: "dong-bo-du-lieu-iorder-rpa",
-      title: "Phần mềm đồng bộ dữ liệu iOrder RPA",
-    },
-    {
-      slug: "quan-ly-tram-sac-xe-dien",
-      title: "Phần mềm quản lý trạm sạc xe điện",
-    },
-    {
-      slug: "quan-ly-van-tai",
-      title: "Phần mềm quản lý vận tải",
-    },
-    {
-      slug: "hoa-don-dien-tu-chu-ky-so",
-      title: "Hóa đơn điện tử - Chữ ký số",
-    },
-  ];
-
-  const defaultSolutionPages = [
-    {
-      slug: "mang-wifi-camera",
-      title: "Giải pháp hạ tầng mạng nội bộ, Wifi và camera",
-      href: "/giai-phap/ha-tang/mang-wifi-camera",
-    },
-    {
-      slug: "can-bang-tai-ha-bao-mat",
-      title: "Cân bằng tải Internet, HA và bảo mật",
-      href: "/giai-phap/ha-tang/can-bang-tai-ha-bao-mat",
-    },
-    {
-      slug: "data-center",
-      title: "Hệ thống data center cho doanh nghiệp",
-      href: "/giai-phap/ha-tang/data-center",
-    },
-    {
-      slug: "may-chu-server",
-      title: "Giải pháp máy chủ lưu trữ; Proxy; Web server; Mail server; File server",
-      href: "/giai-phap/ha-tang/may-chu-server",
-    },
-    {
-      slug: "kiem-soat-ra-vao-cham-cong",
-      title: "Giải pháp kiểm soát ra vào, chấm công vân tay, khuôn mặt",
-      href: "/giai-phap/ha-tang/kiem-soat-ra-vao-cham-cong",
-    },
-  ];
-
-  const defaultServicePages = [
-    {
-      slug: "thi-cong-mang-wifi-camera",
-      title: "Thiết kế, thi công hệ thống mạng nội bộ, Wifi, Camera, Kiểm soát ra vào",
-      href: "/dich-vu/dich-vu-cntt/thi-cong-mang-wifi-camera",
-    },
-    {
-      slug: "bao-tri-it",
-      title: "Bảo trì và xử lý sự cố IT",
-      href: "/dich-vu/dich-vu-cntt/bao-tri-it",
-    },
-    {
-      slug: "hosting-website",
-      title: "Cung cấp tên miền, hosting, thiết kế website",
-      href: "/dich-vu/dich-vu-cntt/hosting-website",
-    },
-    {
-      slug: "chu-ky-so-hoa-don-dien-tu",
-      title: "Chữ ký số, hóa đơn điện tử, hợp đồng điện tử",
-      href: "/dich-vu/dich-vu-cntt/chu-ky-so-hoa-don-dien-tu",
-    },
-    {
-      slug: "name-card-dien-tu",
-      title: "Name card điện tử cá nhân, doanh nghiệp",
-      href: "/dich-vu/dich-vu-cntt/name-card-dien-tu",
-    },
-    {
-      slug: "phat-trien-phan-mem",
-      title: "Phát triển phần mềm theo yêu cầu",
-      href: "/dich-vu/dich-vu-cntt/phat-trien-phan-mem",
-    },
-    {
-      slug: "tu-van-chuyen-doi-so",
-      title: "Tư vấn, đào tạo chuyển đổi số",
-      href: "/dich-vu/dich-vu-cntt/tu-van-chuyen-doi-so",
-    },
-  ];
 
   const flattenMenu = (pages, parentPath) => {
     if (!Array.isArray(pages) || pages.length === 0) return [];
@@ -143,20 +62,13 @@ export default function Header({
     });
   };
 
-  const solutionsMenu =
-    Array.isArray(solutionPages) && solutionPages.length > 0
-      ? flattenMenu(solutionPages, "/giai-phap")
-      : defaultSolutionPages;
+  const effectiveSoftware = cmsNav?.software ?? (Array.isArray(softwareProducts) && softwareProducts.length > 0 ? softwareProducts : null)
+  const effectiveSolutions = cmsNav?.solutions ?? (Array.isArray(solutionPages) && solutionPages.length > 0 ? solutionPages : null)
+  const effectiveServices = cmsNav?.services ?? (Array.isArray(servicePages) && servicePages.length > 0 ? servicePages : null)
 
-  const servicesMenu =
-    Array.isArray(servicePages) && servicePages.length > 0
-      ? flattenMenu(servicePages, "/dich-vu")
-      : defaultServicePages;
-
-  const softwareMenu =
-    Array.isArray(softwareProducts) && softwareProducts.length > 0
-      ? flattenMenu(softwareProducts, "/phan-mem")
-      : defaultSoftwareMenu;
+  const softwareMenu = effectiveSoftware ? flattenMenu(effectiveSoftware, "/phan-mem") : defaultSoftwareMenu;
+  const solutionsMenu = effectiveSolutions ? flattenMenu(effectiveSolutions, "/giai-phap") : defaultSolutionPages;
+  const servicesMenu = effectiveServices ? flattenMenu(effectiveServices, "/dich-vu") : defaultServicePages;
 
   const closeMenu = () => {
     setOpenDropdown(null);
@@ -355,7 +267,7 @@ export default function Header({
         <div className="nav-actions">
           <a
             className="btn outline"
-            href="https://app.iorder.vn/login"
+            href={externalLinks.appLogin}
             target="_blank"
             rel="noreferrer"
           >
@@ -364,7 +276,7 @@ export default function Header({
 
           <a
             className="btn primary"
-            href="https://app.iorder.vn/register-trial"
+            href={externalLinks.trial}
             target="_blank"
             rel="noreferrer"
           >
@@ -475,7 +387,7 @@ export default function Header({
             <div className="mobile-nav-actions">
               <a
                 className="btn outline"
-                href="https://app.iorder.vn/login"
+                href={externalLinks.appLogin}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -484,7 +396,7 @@ export default function Header({
 
               <a
                 className="btn primary"
-                href="https://app.iorder.vn/register-trial"
+                href={externalLinks.trial}
                 target="_blank"
                 rel="noreferrer"
               >

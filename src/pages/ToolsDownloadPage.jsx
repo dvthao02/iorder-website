@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import { setPageSeo } from '../utils/seo'
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
 
@@ -57,7 +58,10 @@ export default function ToolsDownloadPage() {
   const location = useLocation()
 
   useEffect(() => {
-    document.title = 'Tải công cụ iOrder - Hỗ trợ'
+    setPageSeo({
+      title: 'Tải công cụ iOrder - Hỗ trợ',
+      description: 'Tải tài liệu hỗ trợ cài đặt, cấu hình thiết bị, nhập dữ liệu và triển khai vận hành iOrder cho cửa hàng.',
+    })
     setActiveDropdown('support')
   }, [])
 
@@ -87,7 +91,7 @@ export default function ToolsDownloadPage() {
             <div className="tools-hero-card">
               <Download size={34} />
               <strong>Kho file hỗ trợ</strong>
-              <p>Thay file trong thư mục downloads bằng bộ cài thật khi cần cập nhật phiên bản.</p>
+              <p>Tài liệu hỗ trợ cài đặt, thiết bị và dữ liệu ban đầu cho đội vận hành.</p>
             </div>
           </div>
         </section>

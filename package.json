@@ -1,8 +1,35 @@
 {
+  "name": "@iorder/web",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "dev:all": "concurrently --kill-others --names web,api,admin --prefix-colors cyan,magenta,yellow \"pnpm.cmd dev\" \"pnpm.cmd dev:api\" \"pnpm.cmd dev:admin\"",
+    "preview:local": "vite preview --host 127.0.0.1 --port 5173",
+    "serve:api": "pnpm --filter @iorder/api start",
+    "serve:admin": "pnpm --filter @iorder/admin serve",
+    "serve:all": "concurrently --kill-others --names web,api,admin --prefix-colors cyan,magenta,yellow \"pnpm.cmd preview:local\" \"pnpm.cmd serve:api\" \"pnpm.cmd serve:admin\"",
+    "build:all": "pnpm.cmd build && pnpm.cmd build:cms",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:api": "pnpm --filter @iorder/api dev",
+    "dev:admin": "pnpm --filter @iorder/admin dev",
+    "build:cms": "pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api build && pnpm --filter @iorder/admin build",
+    "cms:create-admin": "pnpm --filter @iorder/api create-admin",
+    "cms:import-homepage": "pnpm --filter @iorder/api import:homepage",
+    "cms:import-posts": "pnpm --filter @iorder/api import:posts",
+    "cms:import-offerings": "pnpm --filter @iorder/api import:offerings",
+    "test:auth": "pnpm --filter @iorder/api test:auth",
+    "test:media": "pnpm --filter @iorder/api test:media",
+    "test:posts": "pnpm --filter @iorder/api test:posts",
+    "test:homepage": "pnpm --filter @iorder/api test:homepage",
+    "typecheck:cms": "pnpm --filter @iorder/contracts typecheck && pnpm --filter @iorder/database typecheck && pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api typecheck && pnpm --filter @iorder/admin typecheck",
+    "db:create": "pnpm --filter @iorder/database db:create",
+    "db:generate": "pnpm --filter @iorder/database db:generate",
+    "db:migrate": "pnpm --filter @iorder/database db:migrate",
+    "db:normalize-ownership": "pnpm --filter @iorder/database db:normalize-ownership",
+    "db:seed": "pnpm --filter @iorder/database db:seed"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
@@ -11,5 +38,9 @@
     "react-dom": "latest",
     "react-router-dom": "^7.15.1",
     "vite": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "concurrently": "^10.0.3"
   }
 }

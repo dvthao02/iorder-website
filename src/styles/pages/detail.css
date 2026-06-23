@@ -690,3 +690,158 @@
 }
 
 
+
+/* ── Dark mode ───────────────────────────────────────────────── */
+[data-theme="dark"] .detail-benefit-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .detail-benefit-card p,
+[data-theme="dark"] .detail-benefit-card h3 {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .detail-card,
+[data-theme="dark"] .article-source-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .detail-card h2,
+[data-theme="dark"] .article-source-card h2,
+[data-theme="dark"] .article-source-card span {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .article-source-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .software-metric-grid {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .software-metric-card {
+  background: rgba(13, 31, 53, 0.8) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .software-metric-card strong {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .software-metric-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .software-rollout-image {
+  background: linear-gradient(135deg, #0a1c30 0%, #0d2340 100%) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .faq-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .faq-card h3 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .faq-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .tools-hero-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .tools-hero-card strong {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .tools-hero-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .tools-download-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .tools-download-card h3,
+[data-theme="dark"] .tools-download-card > span {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .tools-download-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .tools-download-icon {
+  background: rgba(11, 142, 220, 0.12) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .tools-note-section {
+  background: var(--soft) !important;
+}
+
+[data-theme="dark"] .tools-contact-panel {
+  background: linear-gradient(135deg, rgba(11, 142, 220, 0.08), rgba(18, 185, 167, 0.05)), var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .tools-contact-panel h2 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .tools-contact-panel p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .article-content {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .article-content p,
+[data-theme="dark"] .article-content li {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .article-inline-cta-box {
+  background: linear-gradient(135deg, rgba(11, 142, 220, 0.1), rgba(36, 198, 220, 0.06)) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .article-inline-cta h2,
+[data-theme="dark"] .article-inline-cta p {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .industry-hardware-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .industry-related-grid a {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .industry-related-grid strong {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .industry-related-grid span {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .detail-cta {
+  background: linear-gradient(135deg, #0a1c30, #061628) !important;
+  border-color: var(--border) !important;
+}

@@ -140,6 +140,17 @@
   transform: translateY(-1px);
 }
 
+.contact-form-status {
+  margin: -6px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #cfe4f6;
+  border-radius: 8px;
+  background: #f3f9ff;
+  color: #294059;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .contact-info-list {
   display: flex;
   flex-direction: column;
@@ -239,3 +250,67 @@
 }
 
 
+
+/* ── Dark mode ───────────────────────────────────────────────── */
+[data-theme="dark"] .contact-form,
+[data-theme="dark"] .contact-hero-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .contact-form label,
+[data-theme="dark"] .contact-form h2 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .contact-form input,
+[data-theme="dark"] .contact-form select,
+[data-theme="dark"] .contact-form textarea {
+  background: var(--soft) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .contact-checklist {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .contact-checklist h3,
+[data-theme="dark"] .contact-checklist li {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .contact-map-wrap {
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .contact-info-item {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .contact-info-item h3 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .contact-info-item p,
+[data-theme="dark"] .contact-info-item a {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .contact-info-icon {
+  background: rgba(11, 142, 220, 0.12) !important;
+}
+
+[data-theme="dark"] .contact-hero {
+  background: linear-gradient(135deg, rgba(11, 142, 220, 0.08), rgba(18, 185, 167, 0.05)), var(--bg) !important;
+}
+
+[data-theme="dark"] .contact-hero-title {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .contact-hero-lead {
+  color: var(--text) !important;
+}

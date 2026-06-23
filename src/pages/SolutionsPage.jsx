@@ -4,6 +4,8 @@ import { ArrowRight, CheckCircle, Database, Fingerprint, Network, Server, Shield
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { setPageSeo } from '../utils/seo'
+import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { fetchOfferings } from '../utils/contentApi'
 
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
@@ -13,67 +15,27 @@ import mhMtIot from '../assets/products/mh-mt-iot.png'
 import mhPhoneIot from '../assets/products/mh-phone-iot.png'
 import posImg from '../assets/products/pos.jpg'
 
-const solutions = [
-  {
-    slug: 'mang-wifi-camera',
-    href: '/giai-phap/ha-tang/mang-wifi-camera',
-    title: 'Hạ tầng mạng, Wifi và Camera',
-    description: 'Thiết kế mạng nội bộ, phủ sóng Wifi, camera giám sát và cấu hình thiết bị cho cửa hàng, văn phòng, chuỗi chi nhánh.',
-    icon: Wifi,
-    tags: ['LAN/Wifi', 'Camera', 'Thiết bị'],
-    bestFor: 'Cửa hàng, văn phòng và chuỗi nhiều điểm',
-    keyValue: 'Kết nối ổn định, dễ mở rộng'
-  },
-  {
-    slug: 'can-bang-tai-ha-bao-mat',
-    href: '/giai-phap/ha-tang/can-bang-tai-ha-bao-mat',
-    title: 'Cân bằng tải Internet, HA và bảo mật',
-    description: 'Dự phòng đường truyền, phân tải, firewall, VPN và chính sách truy cập để hệ thống vận hành ít gián đoạn hơn.',
-    icon: ShieldCheck,
-    tags: ['Failover', 'Firewall', 'VPN'],
-    bestFor: 'Doanh nghiệp cần mạng liên tục',
-    keyValue: 'Giảm rủi ro mất kết nối'
-  },
-  {
-    slug: 'data-center',
-    href: '/giai-phap/ha-tang/data-center',
-    title: 'Data center cho doanh nghiệp',
-    description: 'Tư vấn hạ tầng lưu trữ, máy chủ, backup, giám sát tài nguyên và phương án khôi phục dữ liệu.',
-    icon: Database,
-    tags: ['Storage', 'Backup', 'Monitoring'],
-    bestFor: 'Doanh nghiệp có dữ liệu quan trọng',
-    keyValue: 'Dữ liệu an toàn, dễ kiểm soát'
-  },
-  {
-    slug: 'may-chu-server',
-    href: '/giai-phap/ha-tang/may-chu-server',
-    title: 'Máy chủ, Proxy, Web/Mail/File server',
-    description: 'Triển khai server nội bộ hoặc public, cấu hình web, mail, file server, proxy, SSL, backup và giám sát log.',
-    icon: Server,
-    tags: ['Server', 'Proxy', 'SSL'],
-    bestFor: 'Đội vận hành cần hệ thống riêng',
-    keyValue: 'Chủ động hạ tầng ứng dụng'
-  },
-  {
-    slug: 'kiem-soat-ra-vao-cham-cong',
-    href: '/giai-phap/ha-tang/kiem-soat-ra-vao-cham-cong',
-    title: 'Kiểm soát ra vào và chấm công',
-    description: 'Tích hợp thiết bị vân tay, khuôn mặt, thẻ từ, khóa cửa điện tử và phần mềm chấm công cho văn phòng, cửa hàng.',
-    icon: Fingerprint,
-    tags: ['Chấm công', 'Ra vào', 'Thiết bị'],
-    bestFor: 'Văn phòng, nhà xưởng và cửa hàng',
-    keyValue: 'Quản lý nhân sự rõ ràng'
-  }
-]
+const solutionIconMap = {
+  database: Database,
+  fingerprint: Fingerprint,
+  server: Server,
+  shield: ShieldCheck,
+  wifi: Wifi,
+}
+
+const staticSolutions = solutionPages
 
 const solutionVisuals = [mhPosIot, heroImg, mhMtIot, mhPhoneIot, posImg]
-const softwareProducts = []
-const servicePages = []
 
 export default function SolutionsPage() {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [cmsSolutions, setCmsSolutions] = useState(null)
   const location = useLocation()
+
+  useEffect(() => {
+    fetchOfferings('solution').then(setCmsSolutions).catch(() => {})
+  }, [])
 
   useEffect(() => {
     setPageSeo({
@@ -94,7 +56,7 @@ export default function SolutionsPage() {
         location={location}
         logoMain={logoMain}
         softwareProducts={softwareProducts}
-        solutionPages={solutions}
+        solutionPages={cmsSolutions ?? staticSolutions}
         servicePages={servicePages}
       />
 
@@ -111,7 +73,7 @@ export default function SolutionsPage() {
                 iOrder không chỉ cung cấp phần mềm. Chúng tôi hỗ trợ thiết kế, triển khai và chuẩn hóa hạ tầng mạng, thiết bị, máy chủ và bảo mật để hệ thống bán hàng hoạt động ổn định.
               </p>
               <div className="software-stats">
-                <div><strong>{solutions.length}</strong><span>nhóm giải pháp</span></div>
+                <div><strong>{(cmsSolutions ?? staticSolutions).length}</strong><span>nhóm giải pháp</span></div>
                 <div><strong>LAN/Wifi</strong><span>thiết kế theo mặt bằng</span></div>
                 <div><strong>HA</strong><span>dự phòng và bảo mật</span></div>
               </div>
@@ -138,8 +100,8 @@ export default function SolutionsPage() {
             </div>
 
             <div className="listing-grid cols-4 solution-product-grid">
-              {solutions.map((solution, index) => {
-                const Icon = solution.icon
+              {(cmsSolutions ?? staticSolutions).map((solution, index) => {
+                const Icon = solutionIconMap[solution.iconKey] ?? Network
                 const visual = solutionVisuals[index % solutionVisuals.length]
                 return (
                   <Link to={solution.href} key={solution.slug} className="listing-card-link">
@@ -182,7 +144,7 @@ export default function SolutionsPage() {
                 <span>Giá trị chính</span>
                 <span>Chi tiết</span>
               </div>
-              {solutions.map((solution) => (
+              {(cmsSolutions ?? staticSolutions).map((solution) => (
                 <div className="software-compare-row" key={solution.slug}>
                   <strong>{solution.title}</strong>
                   <span>{solution.bestFor}</span>

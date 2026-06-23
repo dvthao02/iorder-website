@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import FloatingActions from "./FloatingActions";
+import { contactInfo } from "../data/siteContent";
 
 export default function Footer({ logoFooter }) {
   const dmcaUrl =
@@ -98,28 +99,28 @@ export default function Footer({ logoFooter }) {
 
             <div className="footer-contact-list">
               <a
-                href="https://maps.google.com/?q=756A%20Au%20Co%20Phuong%2014%20Tan%20Binh%20TPHCM"
+                href={contactInfo.addressMapUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="footer-contact-item"
               >
                 <MapPin size={17} />
-                <span>{"756A \u0110. \u00c2u C\u01a1, P.14, Q. T\u00e2n B\u00ecnh, TP.HCM"}</span>
+                <span>{contactInfo.address}</span>
               </a>
 
-              <a href="tel:02871073999" className="footer-contact-item">
+              <a href={contactInfo.phoneHref} className="footer-contact-item">
                 <Phone size={17} />
-                <span>028 710 73 999</span>
+                <span>{contactInfo.phoneDisplay}</span>
               </a>
 
-              <a href="mailto:support@iorder.vn" className="footer-contact-item">
+              <a href={`mailto:${contactInfo.supportEmail}`} className="footer-contact-item">
                 <Mail size={17} />
-                <span>support@iorder.vn</span>
+                <span>{contactInfo.supportEmail}</span>
               </a>
 
               <div className="footer-contact-item">
                 <Clock size={17} />
-                <span>{"Th\u1ee9 2 - Th\u1ee9 7: 08:00 - 18:00"}</span>
+                <span>{contactInfo.workingHours}</span>
               </div>
             </div>
 

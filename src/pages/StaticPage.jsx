@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, CheckCircle } from 'lucide-react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import { setPageSeo } from '../utils/seo'
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
 
@@ -384,7 +385,10 @@ export default function StaticPage() {
   const page = pages[normalizedPath] ?? buildFallback(location.pathname)
 
   useEffect(() => {
-    document.title = `${page.title} - iOrder`
+    setPageSeo({
+      title: `${page.title} - iOrder`,
+      description: page.lead,
+    })
 
     if (location.pathname.startsWith('/phan-mem')) setActiveDropdown('software')
     else if (location.pathname.startsWith('/giai-phap')) setActiveDropdown('solutions')

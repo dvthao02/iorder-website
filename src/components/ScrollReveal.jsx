@@ -39,6 +39,18 @@ const REVEAL_SELECTOR = [
   'main .contact-card',
   'main .contact-form',
   'main .tools-download-card',
+  /* Home page sections */
+  'main .about-company-intro',
+  'main .about-split-text',
+  'main .about-split-visual',
+  'main .about-stat',
+  'main .stat-item',
+  'main .industry-row-group',
+  'main .industry-item-row',
+  'main .home-cta-section',
+  'main .section-eyebrow',
+  'main .home-faq-item',
+  'main .testimonial-card',
 ].join(',')
 
 export default function ScrollReveal() {

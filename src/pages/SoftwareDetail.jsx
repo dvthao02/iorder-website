@@ -5,65 +5,12 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import StaticPage from './StaticPage'
 import { setPageSeo } from '../utils/seo'
+import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { fetchOffering } from '../utils/contentApi'
 
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
 import posHero from '../assets/products/pos.jpg'
-
-const softwareProducts = [
-  {
-    slug: 'pos-ban-hang',
-    title: 'POS bán hàng',
-    summary: 'Màn hình bán hàng nhanh cho quầy thu ngân, cafe, nhà hàng và cửa hàng bán lẻ cần xử lý đơn liên tục.',
-    metrics: ['Tạo đơn ít bước', 'Thanh toán linh hoạt', 'Chốt ca rõ ràng'],
-    features: ['Tìm sản phẩm bằng tên, nhóm hàng hoặc mã vạch', 'Giảm giá theo hóa đơn hoặc từng sản phẩm', 'Tách/gộp bàn, in bếp/bar cho mô hình F&B', 'Ghi nhận tiền mặt, chuyển khoản và ví điện tử', 'In hóa đơn, in tem và lưu lịch sử giao dịch'],
-    benefits: ['Giảm thời gian đào tạo nhân viên mới', 'Hạn chế sai sót khi tính tiền giờ cao điểm', 'Dễ kiểm tra doanh thu cuối ca', 'Tạo trải nghiệm thanh toán nhanh cho khách'],
-    faq: [
-      ['POS có dùng được cho nhà hàng và bán lẻ không?', 'Có. iOrder có thể cấu hình theo quầy bán lẻ, cafe, nhà hàng hoặc mô hình có bàn/phòng.'],
-      ['Có kết nối máy in không?', 'Có thể cấu hình máy in hóa đơn, máy in bếp/bar và các thiết bị bán hàng phổ biến.'],
-      ['Mất mạng có bán được không?', 'Tùy cấu hình triển khai thực tế. Đội ngũ iOrder sẽ tư vấn phương án phù hợp với thiết bị và mạng tại cửa hàng.'],
-    ]
-  },
-  {
-    slug: 'quan-ly-kho',
-    title: 'Quản lý kho',
-    summary: 'Kiểm soát nhập xuất, tồn kho, giá vốn và cảnh báo hàng sắp hết theo từng cửa hàng hoặc chi nhánh.',
-    metrics: ['Tồn kho realtime', 'Cảnh báo hết hàng', 'Theo dõi giá vốn'],
-    features: ['Nhập kho, xuất kho và điều chỉnh tồn', 'Theo dõi tồn theo chi nhánh hoặc kho hàng', 'Quản lý mã vạch, đơn vị tính và nhóm sản phẩm', 'Cảnh báo hàng bán chậm hoặc sắp hết', 'Xuất báo cáo nhập xuất tồn'],
-    benefits: ['Giảm thất thoát do lệch kho', 'Chủ động kế hoạch nhập hàng', 'Nhìn rõ sản phẩm bán chạy và tồn chậm', 'Dữ liệu kho đi cùng đơn bán thực tế'],
-    faq: [
-      ['Có nhập tồn kho ban đầu từ file không?', 'Có thể chuẩn bị file danh mục và tồn kho để đội triển khai hỗ trợ nhập dữ liệu ban đầu.'],
-      ['Có quản lý nhiều kho hoặc chi nhánh không?', 'Có. iOrder có thể tách dữ liệu tồn theo từng điểm bán hoặc kho hàng.'],
-      ['Có cảnh báo hàng sắp hết không?', 'Có thể thiết lập ngưỡng tồn thấp để quản lý chủ động nhập hàng.'],
-    ]
-  },
-  {
-    slug: 'quan-ly-nhan-vien',
-    title: 'Quản lý nhân viên',
-    summary: 'Phân quyền thao tác, theo dõi ca bán, hiệu suất và trách nhiệm của từng nhân viên trong cửa hàng.',
-    metrics: ['Vai trò rõ ràng', 'Theo dõi ca bán', 'Lịch sử thao tác'],
-    features: ['Tạo tài khoản theo vai trò', 'Giới hạn quyền xem báo cáo, sửa giá hoặc hủy đơn', 'Theo dõi doanh thu theo nhân viên và ca bán', 'Ghi nhận lịch sử thao tác quan trọng', 'Hỗ trợ quy trình bàn giao ca'],
-    benefits: ['Giảm rủi ro dùng chung tài khoản', 'Dễ phát hiện sai lệch trong ca bán', 'Quản lý đội ngũ khi mở thêm chi nhánh', 'Tăng trách nhiệm của từng vị trí'],
-    faq: [
-      ['Có phân quyền theo vai trò không?', 'Có. Chủ cửa hàng có thể phân quyền cho thu ngân, phục vụ, bếp/bar và quản lý.'],
-      ['Có xem doanh thu theo nhân viên không?', 'Có thể theo dõi theo ca bán, nhân viên và chi nhánh tùy cấu hình báo cáo.'],
-      ['Nhân viên mới có cần đào tạo lâu không?', 'iOrder ưu tiên thao tác đơn giản để nhân viên mới có thể làm quen nhanh.'],
-    ]
-  },
-  {
-    slug: 'bao-cao-doanh-thu',
-    title: 'Báo cáo doanh thu',
-    summary: 'Dashboard doanh thu, sản phẩm, lợi nhuận và hiệu suất chi nhánh giúp chủ cửa hàng ra quyết định nhanh hơn.',
-    metrics: ['Doanh thu realtime', 'Top sản phẩm', 'Theo dõi chi nhánh'],
-    features: ['Báo cáo doanh thu theo ngày, tháng, ca và nhân viên', 'Theo dõi sản phẩm bán chạy, bán chậm', 'Tổng hợp thanh toán theo tiền mặt và chuyển khoản', 'So sánh hiệu quả giữa các chi nhánh', 'Xuất dữ liệu phục vụ kế toán và quản lý'],
-    benefits: ['Nắm tình hình cửa hàng mọi lúc', 'Ra quyết định nhập hàng dựa trên dữ liệu', 'Phát hiện chi nhánh hoặc ca bán bất thường', 'Giảm phụ thuộc vào sổ sách thủ công'],
-    faq: [
-      ['Có xem báo cáo từ xa không?', 'Có. Chủ cửa hàng có thể theo dõi dữ liệu vận hành theo tài khoản được phân quyền.'],
-      ['Có tách doanh thu theo hình thức thanh toán không?', 'Có thể tách tiền mặt, chuyển khoản và các phương thức thanh toán khác.'],
-      ['Có xuất báo cáo cho kế toán không?', 'Có thể xuất dữ liệu phục vụ đối soát và kế toán theo nhu cầu triển khai.'],
-    ]
-  }
-]
 
 const detailIcons = [Gauge, Clock, CircleDollarSign]
 const rolloutSteps = ['Khảo sát mô hình', 'Nhập dữ liệu ban đầu', 'Cài thiết bị', 'Đào tạo ca bán đầu tiên']
@@ -72,17 +19,26 @@ export default function SoftwareDetail() {
   const { slug } = useParams()
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [cmsProduct, setCmsProduct] = useState(null)
   const location = useLocation()
-  const product = softwareProducts.find((item) => item.slug === slug)
+  const staticProduct = softwareProducts.find((item) => item.slug === slug)
+  const product = cmsProduct ?? staticProduct
+  const seoTitle = product
+    ? product.title.includes('iOrder') ? product.title : `${product.title} - iOrder`
+    : 'Phần mềm iOrder'
+
+  useEffect(() => {
+    fetchOffering('software', slug).then(setCmsProduct).catch(() => {})
+  }, [slug])
 
   useEffect(() => {
     setPageSeo({
-      title: product ? `${product.title} - iOrder` : 'Phần mềm iOrder',
+      title: seoTitle,
       description: product?.summary ?? 'Phần mềm iOrder hỗ trợ bán hàng, quản lý kho, nhân viên và báo cáo doanh thu cho cửa hàng.'
     })
     setActiveDropdown('software')
     setMobileOpen(false)
-  }, [location.pathname, product])
+  }, [location.pathname, product, seoTitle])
 
   if (!product) return <StaticPage />
 
@@ -96,8 +52,8 @@ export default function SoftwareDetail() {
         location={location}
         logoMain={logoMain}
         softwareProducts={softwareProducts}
-        solutionPages={[]}
-        servicePages={[]}
+        solutionPages={solutionPages}
+        servicePages={servicePages}
       />
 
       <main>

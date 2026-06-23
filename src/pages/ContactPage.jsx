@@ -4,13 +4,10 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { CheckCircle, Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { setPageSeo } from '../utils/seo'
+import { contactInfo, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
 
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
-
-const softwareProducts = []
-const solutionPages = []
-const servicePages = []
 
 const consultationChecklist = [
   'Danh sách sản phẩm, menu hoặc dịch vụ đang bán',
@@ -31,6 +28,7 @@ export default function ContactPage() {
     need: '',
     message: ''
   })
+  const [formStatus, setFormStatus] = useState('')
   const location = useLocation()
 
   useEffect(() => {
@@ -52,16 +50,22 @@ export default function ContactPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert('Cảm ơn bạn đã gửi thông tin. Đội ngũ iOrder sẽ liên hệ tư vấn sớm nhất.')
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      businessModel: '',
-      branches: '',
-      need: '',
-      message: ''
-    })
+    const subject = 'Yêu cầu tư vấn iOrder từ website'
+    const body = [
+      'Thông tin khách cần tư vấn:',
+      `Họ tên: ${formData.name}`,
+      `Số điện thoại: ${formData.phone}`,
+      `Email: ${formData.email || 'Chưa cung cấp'}`,
+      `Mô hình kinh doanh: ${formData.businessModel}`,
+      `Số chi nhánh/quầy: ${formData.branches || 'Chưa cung cấp'}`,
+      `Nhu cầu chính: ${formData.need || 'Chưa chọn'}`,
+      '',
+      'Mô tả thêm:',
+      formData.message || 'Chưa cung cấp',
+    ].join('\n')
+
+    window.location.href = `mailto:${contactInfo.salesEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    setFormStatus(`Đã mở ứng dụng email với nội dung tư vấn. Nếu trình email không mở, vui lòng gửi trực tiếp tới ${contactInfo.salesEmail} hoặc gọi hotline.`)
   }
 
   return (
@@ -205,6 +209,11 @@ export default function ContactPage() {
                   <button type="submit" className="contact-submit">
                     Gửi thông tin tư vấn
                   </button>
+                  {formStatus ? (
+                    <p className="contact-form-status" role="status">
+                      {formStatus}
+                    </p>
+                  ) : null}
                 </form>
               </div>
 
@@ -217,8 +226,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3>Hotline</h3>
-                      <p><a href="tel:0287103999">028 7103 999</a></p>
-                      <p className="contact-info-note">Hỗ trợ từ 8:00 - 18:00</p>
+                      <p><a href={contactInfo.phoneHref}>{contactInfo.phoneDisplay}</a></p>
+                      <p className="contact-info-note">{contactInfo.workingHours}</p>
                     </div>
                   </div>
 
@@ -228,7 +237,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3>Email</h3>
-                      <p><a href="mailto:contact@iorder.vn">contact@iorder.vn</a></p>
+                      <p><a href={`mailto:${contactInfo.salesEmail}`}>{contactInfo.salesEmail}</a></p>
                       <p className="contact-info-note">Tiếp nhận yêu cầu tư vấn và triển khai</p>
                     </div>
                   </div>
@@ -239,7 +248,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3>Địa chỉ</h3>
-                      <p>756A Đ. Âu Cơ, Phường 14, Quận Tân Bình, TP. Hồ Chí Minh</p>
+                      <p>{contactInfo.address}</p>
                     </div>
                   </div>
 
@@ -249,7 +258,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3>Giờ làm việc</h3>
-                      <p>Thứ 2 - Thứ 6: 8:00 - 18:00</p>
+                      <p>{contactInfo.workingHours}</p>
                     </div>
                   </div>
                 </div>

@@ -5,6 +5,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { newsArticles } from '../data/newsArticles'
 import { setPageSeo } from '../utils/seo'
+import { fetchPublishedPosts } from '../utils/contentApi'
 
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
@@ -17,19 +18,26 @@ export default function NewsPage() {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState('Tất cả')
+  const [cmsArticles, setCmsArticles] = useState([])
   const location = useLocation()
 
+  const articles = cmsArticles.length > 0 ? cmsArticles : newsArticles
+
   const categories = useMemo(
-    () => ['Tất cả', ...new Set(newsArticles.map((article) => article.category))],
-    []
+    () => ['Tất cả', ...new Set(articles.map((article) => article.category))],
+    [articles]
   )
 
   const filteredArticles = activeCategory === 'Tất cả'
-    ? newsArticles
-    : newsArticles.filter((article) => article.category === activeCategory)
+    ? articles
+    : articles.filter((article) => article.category === activeCategory)
 
-  const featuredArticle = newsArticles[0]
-  const secondaryArticles = newsArticles.slice(1, 3)
+  const featuredArticle = articles[0]
+  const secondaryArticles = articles.slice(1, 3)
+
+  useEffect(() => {
+    fetchPublishedPosts().then(setCmsArticles).catch(() => setCmsArticles([]))
+  }, [])
 
   useEffect(() => {
     setPageSeo({
@@ -143,7 +151,7 @@ export default function NewsPage() {
                     <h3 className="listing-card-title">{article.title}</h3>
                     <p className="listing-card-desc">{article.excerpt}</p>
                     <div className="news-chip-row">
-                      {article.highlights.slice(0, 3).map((item) => (
+                    {(article.highlights ?? []).slice(0, 3).map((item) => (
                         <span key={item}>{item}</span>
                       ))}
                     </div>

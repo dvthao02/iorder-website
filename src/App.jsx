@@ -1,4 +1,24 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:4000'
+
+function useAppearance() {
+  useEffect(() => {
+    fetch(`${API_URL}/api/public/settings`, { cache: 'no-store' })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        const a = data?.appearance
+        if (!a) return
+        const root = document.documentElement
+        if (a.primaryColor) root.style.setProperty('--primary', a.primaryColor)
+        if (a.accentColor)  root.style.setProperty('--accent-3', a.accentColor)
+        if (a.darkMode)     root.setAttribute('data-theme', 'dark')
+        else                root.removeAttribute('data-theme')
+      })
+      .catch(() => undefined)
+  }, [])
+}
 import Home from './pages/Home'
 import SoftwarePage from './pages/SoftwarePage'
 import SoftwareDetail from './pages/SoftwareDetail'
@@ -15,6 +35,7 @@ import StaticPage from './pages/StaticPage'
 
 
 export default function App() {
+  useAppearance()
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -26,11 +47,11 @@ export default function App() {
       <Route path="/giai-phap/dich-vu-cntt" element={<StaticPage />} />
       <Route path="/giai-phap/:slug" element={<SolutionDetail />} />
       <Route path="/nganh-hang/:slug" element={<IndustryDetail />} />
-      <Route path="/giai-phap/:section/:slug" element={<StaticPage />} />
+      <Route path="/giai-phap/:section/:slug" element={<SolutionDetail />} />
       <Route path="/dich-vu" element={<ServicesPage />} />
       <Route path="/dich-vu/dich-vu-cntt" element={<StaticPage />} />
       <Route path="/dich-vu/:slug" element={<ServiceDetail />} />
-      <Route path="/dich-vu/:section/:slug" element={<StaticPage />} />
+      <Route path="/dich-vu/:section/:slug" element={<ServiceDetail />} />
       <Route path="/ho-tro/cai-dat" element={<ToolsDownloadPage />} />
       <Route path="/ho-tro/:slug" element={<StaticPage />} />
       <Route path="/huong-dan" element={<StaticPage />} />

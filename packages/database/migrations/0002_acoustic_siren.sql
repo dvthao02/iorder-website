@@ -1,0 +1,1 @@
+ALTER TABLE "page_revisions" ADD COLUMN "is_published" boolean DEFAULT false NOT NULL;

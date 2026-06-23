@@ -654,3 +654,89 @@
 }
 
 
+
+/* ── Dark mode ───────────────────────────────────────────────── */
+[data-theme="dark"] .listing-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .listing-card-title {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .listing-card-desc {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .listing-card-icon {
+  background: rgba(11, 142, 220, 0.1) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .news-feature-card,
+[data-theme="dark"] .software-hero-panel {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .news-feature-card h2,
+[data-theme="dark"] .software-hero-panel h2 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .news-feature-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .news-highlight-section {
+  background: var(--soft) !important;
+}
+
+[data-theme="dark"] .news-insight-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .news-insight-card h3 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .news-insight-card p,
+[data-theme="dark"] .news-insight-card > span {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .category-tabs button {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .category-tabs button.active {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .software-stats {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .software-stats div {
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .software-stats strong {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .software-stats span {
+  color: var(--muted) !important;
+}
+
+[data-theme="dark"] .news-hero-tools span {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}

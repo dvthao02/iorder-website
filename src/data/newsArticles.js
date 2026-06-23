@@ -11,7 +11,6 @@ export const newsArticles = [
     category: 'Nhà hàng - Cafe',
     date: '2026-06-02',
     focusName: 'Order tại bàn',
-    sourceUrl: 'https://iorder.vn/detail-news-2',
     image: newsImage1,
     imageAlt: 'Nhân viên nhà hàng sử dụng iOrder để order tại bàn',
     readingTime: '6 phút đọc',

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+*.tsbuildinfo
 .codex-qa/
 .env
 .env.*
@@ -10,3 +11,6 @@ yarn-error.log*
 pnpm-debug.log*
 .DS_Store
 Thumbs.db
+storage/media/*
+!storage/media/.gitkeep
+test-results/

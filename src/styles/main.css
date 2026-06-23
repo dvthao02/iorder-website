@@ -22,13 +22,208 @@
   --muted: #64748b;
   --border: #e2e8f0;
   --soft: #f6fbff;
+  --bg: #ffffff;
+  --bg-card: #ffffff;
   --container: 1440px;
-  --container-padding: 50px;
+  --container-padding: 80px;
   --header-height: 76px;
   --shadow: 0 22px 60px rgba(15, 35, 68, 0.1);
   --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-heading: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
 
+[data-theme="dark"] {
+  --text: #cbd5e1;
+  --heading: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #1e3a52;
+  --soft: #0d1f30;
+  --bg: #0a1628;
+  --bg-card: #0f2236;
+  --shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme="dark"] .site-header {
+  background: rgba(10, 22, 40, 0.96);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .section-white,
+[data-theme="dark"] .section-gray {
+  background: var(--bg);
+}
+
+[data-theme="dark"] section {
+  background: var(--bg);
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .software-card,
+[data-theme="dark"] .solution-card,
+[data-theme="dark"] .service-card,
+[data-theme="dark"] .news-card,
+[data-theme="dark"] .benefit-card,
+[data-theme="dark"] .industry-item,
+[data-theme="dark"] .stat-item,
+[data-theme="dark"] .home-faq-item,
+[data-theme="dark"] .testimonial-card {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+/* Apply dark text only to non-hero sections */
+[data-theme="dark"] main > section:not(.hero) h1,
+[data-theme="dark"] main > section:not(.hero) h2,
+[data-theme="dark"] main > section:not(.hero) h3,
+[data-theme="dark"] main > section:not(.hero) h4 {
+  color: var(--heading);
+}
+
+/* Detail/page titles outside section wrappers */
+[data-theme="dark"] .detail-title,
+[data-theme="dark"] .listing-hero-title,
+[data-theme="dark"] .tools-hero-title,
+[data-theme="dark"] .contact-hero-title {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] main > section:not(.hero) p,
+[data-theme="dark"] main > section:not(.hero) li {
+  color: var(--text);
+}
+
+[data-theme="dark"] main > section:not(.hero) .section-eyebrow {
+  color: var(--primary);
+}
+
+
+[data-theme="dark"] .about-company-intro {
+  background: var(--bg-card);
+}
+
+/* Header */
+[data-theme="dark"] .header,
+[data-theme="dark"] .header.scrolled {
+  background: rgba(8, 18, 35, 0.97) !important;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] nav .nav-link,
+[data-theme="dark"] .footer-nav a {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .nav-link:hover {
+  color: var(--primary);
+}
+
+/* Feature split visual panels */
+[data-theme="dark"] .feature-split-visual,
+[data-theme="dark"] .feature-split-row:nth-child(odd) .feature-split-visual,
+[data-theme="dark"] .feature-split-row:nth-child(even) .feature-split-visual {
+  background: linear-gradient(135deg, #0d2340 0%, #0a1c33 100%);
+}
+
+[data-theme="dark"] .feature-split-visual::before {
+  opacity: 0.05;
+}
+
+/* News cards & controls */
+[data-theme="dark"] .home-news-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .home-news-all {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] .home-news-arrow {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .home-news-card .home-news-title,
+[data-theme="dark"] .home-news-card h3,
+[data-theme="dark"] .home-news-card h4 {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .home-news-card p,
+[data-theme="dark"] .home-news-card span:not([class*="badge"]):not([class*="tag"]):not([class*="category"]) {
+  color: var(--text) !important;
+}
+
+/* Stats block */
+[data-theme="dark"] .about-company-stats {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Feature section icon wrapper */
+[data-theme="dark"] .feature-split-icon-wrap {
+  background: rgba(15, 34, 54, 0.9) !important;
+  border-color: var(--border) !important;
+}
+
+/* Ecosystem links */
+[data-theme="dark"] .ecosystem-link {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* Darken background images in dark mode via overlay */
+[data-theme="dark"] .hero-slide::before,
+[data-theme="dark"] [style*="background-image"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 18, 35, 0.55);
+  z-index: 1;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .hero-slide {
+  position: relative;
+}
+
+[data-theme="dark"] .hero-slide > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Darken regular img in about/split sections */
+[data-theme="dark"] .about-split-visual img,
+[data-theme="dark"] .section-media img {
+  filter: brightness(0.75) saturate(0.85);
+}
+
+/* Dark overlay on sections that use background images */
+[data-theme="dark"] section[style*="background"] {
+  position: relative;
+}
+[data-theme="dark"] section[style*="background"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 18, 35, 0.6);
+  pointer-events: none;
+  z-index: 0;
+}
+[data-theme="dark"] section[style*="background"] > * {
+  position: relative;
+  z-index: 1;
 }
 
 html,
@@ -184,6 +379,57 @@ img {
 .contact-card.reveal-on-scroll.is-visible,
 .tools-download-card.reveal-on-scroll.is-visible {
   transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Directional reveal variants */
+.about-split-visual.reveal-on-scroll {
+  transform: translate3d(28px, 0, 0);
+}
+.about-split--reverse .about-split-visual.reveal-on-scroll {
+  transform: translate3d(-28px, 0, 0);
+}
+.about-split-text.reveal-on-scroll {
+  transform: translate3d(-24px, 0, 0);
+}
+.about-split--reverse .about-split-text.reveal-on-scroll {
+  transform: translate3d(24px, 0, 0);
+}
+.about-stat.reveal-on-scroll,
+.stat-item.reveal-on-scroll {
+  transform: translate3d(0, 20px, 0) scale(0.94);
+}
+.about-stat.reveal-on-scroll.is-visible,
+.stat-item.reveal-on-scroll.is-visible {
+  transform: translate3d(0, 0, 0) scale(1);
+}
+.industry-item-row.reveal-on-scroll {
+  transform: translate3d(-16px, 0, 0);
+}
+
+/* Section eyebrow shimmer */
+.section-eyebrow {
+  position: relative;
+  overflow: hidden;
+}
+.section-eyebrow.reveal-on-scroll.is-visible::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%);
+  animation: eyebrow-shine 0.9s ease forwards;
+}
+@keyframes eyebrow-shine {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@media (max-width: 1023px) {
+  .about-split-visual.reveal-on-scroll,
+  .about-split--reverse .about-split-visual.reveal-on-scroll,
+  .about-split-text.reveal-on-scroll,
+  .about-split--reverse .about-split-text.reveal-on-scroll {
+    transform: translate3d(0, 22px, 0);
+  }
 }
 
 @media (max-width: 640px) {
@@ -1171,9 +1417,13 @@ img {
 }
 
 @media (max-width: 1023px) {
+  :root {
+    --header-height: 74px;
+  }
+
   .header-container {
     width: min(100%, calc(100% - 40px));
-    height: 74px;
+    height: var(--header-height);
     grid-template-columns: 1fr auto;
     justify-content: space-between;
   }
@@ -1445,4 +1695,62 @@ body,
   .header .menu-btn svg {
     display: block !important;
   }
+}
+
+/* ── Dark mode: general cards (main.css classes) ────────────── */
+[data-theme="dark"] .model-card,
+[data-theme="dark"] .partner-card,
+[data-theme="dark"] .feature-card,
+[data-theme="dark"] .solution-card,
+[data-theme="dark"] .principle-card,
+[data-theme="dark"] .contact-card,
+[data-theme="dark"] .page-hero-card,
+[data-theme="dark"] .featured-card,
+[data-theme="dark"] .tabs-shell,
+[data-theme="dark"] .app-box,
+[data-theme="dark"] .step-card,
+[data-theme="dark"] .detail-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .model-card span,
+[data-theme="dark"] .partner-card span,
+[data-theme="dark"] .feature-card b,
+[data-theme="dark"] .solution-card b,
+[data-theme="dark"] .principle-card b,
+[data-theme="dark"] .contact-card b,
+[data-theme="dark"] .page-hero-card b,
+[data-theme="dark"] .featured-card b,
+[data-theme="dark"] .step-card b,
+[data-theme="dark"] .detail-card b {
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .feature-card p,
+[data-theme="dark"] .solution-card p,
+[data-theme="dark"] .contact-card p,
+[data-theme="dark"] .step-card p,
+[data-theme="dark"] .detail-card p {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .tab-btn {
+  background: var(--soft) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .tab-btn.active {
+  background: linear-gradient(135deg, var(--primary), #136dd9) !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .partner-desc {
+  background: rgba(13, 31, 53, 0.98) !important;
+  color: var(--heading) !important;
+}
+
+[data-theme="dark"] .model-card {
+  background: var(--bg-card) !important;
 }
