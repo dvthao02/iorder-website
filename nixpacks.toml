@@ -15,7 +15,8 @@ cmds = [
 cmds = [
   "pnpm --filter @iorder/contracts build",
   "pnpm --filter @iorder/database build",
-  "pnpm --filter @iorder/api build"
+  "pnpm --filter @iorder/api build",
+  "pnpm build"
 ]
 
 [start]

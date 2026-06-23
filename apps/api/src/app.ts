@@ -46,6 +46,20 @@ export async function buildApp(env: ApiEnv) {
     decorateReply: false,
   })
 
+  // Serve compiled React frontend
+  const frontendDist = resolve(process.cwd(), 'dist')
+  await app.register(staticFiles, {
+    root: frontendDist,
+    prefix: '/',
+    decorateReply: false,
+    wildcard: false,
+  })
+
+  // SPA fallback: serve index.html for all unmatched routes (React Router)
+  app.setNotFoundHandler(async (_request, reply) => {
+    return reply.sendFile('index.html', frontendDist)
+  })
+
   // Helmet mặc định set Cross-Origin-Resource-Policy: same-origin, block <img>/<video>
   // từ public site (port 5173) load media từ API (port 4000).
   // Override cho tất cả /media/* routes để cho phép cross-origin resource load.
