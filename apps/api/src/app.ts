@@ -46,15 +46,15 @@ export async function buildApp(env: ApiEnv) {
     decorateReply: false,
   })
 
-  // Serve compiled React frontend
+  // Serve compiled React frontend (SPA)
   const frontendDist = resolve(process.cwd(), 'dist')
   await app.register(staticFiles, {
     root: frontendDist,
     prefix: '/',
-    wildcard: false,
+    index: 'index.html',
   })
 
-  // SPA fallback: serve index.html for all unmatched routes (React Router)
+  // SPA fallback: serve index.html for React Router deep links
   app.setNotFoundHandler(async (_request, reply) => {
     return reply.sendFile('index.html')
   })
