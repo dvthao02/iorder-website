@@ -20,6 +20,7 @@ import { registerHomepageRoutes } from './pages/homepage-routes.js'
 import { registerPostRoutes } from './posts/post-routes.js'
 import { registerSettingsRoutes } from './settings/settings-routes.js'
 import { registerStatsRoutes } from './stats/stats-routes.js'
+import { registerTestimonialRoutes } from './testimonials/testimonial-routes.js'
 
 export async function buildApp(env: ApiEnv) {
   const database = createDatabase(env.DATABASE_URL)
@@ -125,6 +126,7 @@ export async function buildApp(env: ApiEnv) {
   registerHomepageRoutes(app, { db: database.db, slug: env.HOMEPAGE_SLUG })
   registerOfferingRoutes(app, { db: database.db })
   registerPartnerRoutes(app, { db: database.db })
+  registerTestimonialRoutes(app, { db: database.db })
   registerNavigationRoutes(app, { db: database.db })
   registerSettingsRoutes(app, { db: database.db })
   registerStatsRoutes(app, { appDbUrls: env.IORDER_APP_DB_URLS })

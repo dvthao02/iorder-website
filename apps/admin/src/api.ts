@@ -9,6 +9,8 @@ import type {
   PartnerResponse,
   PostInput,
   PostResponse,
+  TestimonialInput,
+  TestimonialResponse,
   HomepageInput,
   HomepageResponse,
   SiteProfileInput,
@@ -201,6 +203,29 @@ export function updatePartner(id: string, input: PartnerInput) {
 
 export function deletePartner(id: string) {
   return request<void>(`/api/admin/partners/${id}`, { method: 'DELETE' })
+}
+
+// ── Testimonials ───────────────────────────────────────────────────────────
+export function listTestimonials() {
+  return request<{ items: TestimonialResponse[]; total: number }>('/api/admin/testimonials')
+}
+
+export function createTestimonial(input: TestimonialInput) {
+  return request<{ item: TestimonialResponse }>('/api/admin/testimonials', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateTestimonial(id: string, input: TestimonialInput) {
+  return request<{ item: TestimonialResponse }>(`/api/admin/testimonials/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteTestimonial(id: string) {
+  return request<void>(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────

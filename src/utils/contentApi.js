@@ -99,6 +99,21 @@ export async function fetchPartners() {
     .map((p) => ({ src: p.logoUrl, name: p.name, websiteUrl: p.websiteUrl }))
 }
 
+// ── Testimonials ─────────────────────────────────────────────────────────────
+
+export async function fetchTestimonials() {
+  const payload = await apiFetch('/api/public/testimonials')
+  return (payload.items ?? []).map((t) => ({
+    quote: t.quote,
+    name: t.authorName,
+    role: t.authorRole,
+    company: t.company,
+    rating: t.rating,
+    avatarUrl: t.avatarUrl,
+    initials: t.authorName?.[0] ?? '?',
+  }))
+}
+
 // ── Site stats ─────────────────────────────────────────────────────────────
 
 let _statsCache = null

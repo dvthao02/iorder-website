@@ -50,6 +50,13 @@
       "when": 1782200000001,
       "tag": "0006_home_block_data_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782220812960,
+      "tag": "0007_lovely_iron_patriot",
+      "breakpoints": true
     }
   ]
 }

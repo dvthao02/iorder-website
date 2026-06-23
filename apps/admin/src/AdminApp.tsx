@@ -12,6 +12,7 @@ import { OfferingsManager } from './OfferingsManager'
 import { PartnersManager } from './PartnersManager'
 import { PostsManager } from './PostsManager'
 import { SiteProfileEditor } from './SiteProfileEditor'
+import { TestimonialsManager } from './TestimonialsManager'
 
 const navigation = [
   { key: 'dashboard', slug: '', label: 'Tổng quan' },
@@ -19,6 +20,7 @@ const navigation = [
   { key: 'offerings', slug: 'phan-mem', label: 'Phần mềm & Giải pháp' },
   { key: 'posts', slug: 'bai-viet', label: 'Bài viết' },
   { key: 'partners', slug: 'doi-tac', label: 'Đối tác & Khách hàng' },
+  { key: 'testimonials', slug: 'danh-gia', label: 'Đánh giá khách hàng' },
   { key: 'media', slug: 'thu-vien', label: 'Ảnh & tài liệu' },
   { key: 'navigation', slug: 'menu', label: 'Menu điều hướng' },
   { key: 'settings', slug: 'cai-dat', label: 'Cài đặt website' },
@@ -82,6 +84,7 @@ export function AdminApp() {
     case 'offerings': content = <OfferingsManager onBack={back} />; break
     case 'posts': content = <PostsManager onBack={back} />; break
     case 'partners': content = <PartnersManager onBack={back} />; break
+    case 'testimonials': content = <TestimonialsManager onBack={back} />; break
     case 'media': content = <MediaLibrary onBack={back} />; break
     case 'navigation': content = <NavigationEditor onBack={back} />; break
     case 'settings': content = <SiteProfileEditor onBack={back} />; break

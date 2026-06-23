@@ -6,4 +6,5 @@ export * from './offerings.js'
 export * from './pages.js'
 export * from './posts.js'
 export * from './system.js'
+export * from './testimonials.js'
 
