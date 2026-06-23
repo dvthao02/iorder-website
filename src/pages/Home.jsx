@@ -556,7 +556,7 @@ export default function Home() {
               <p>Với đội ngũ kỹ thuật tâm huyết và am hiểu thực tế vận hành tại thị trường Việt Nam, chúng tôi không chỉ cung cấp phần mềm mà còn là người bạn đồng hành lâu dài giúp doanh nghiệp phát triển bền vững.</p>
               <div className="about-company-stats">
                 <div className="about-stat">
-                  <strong data-count-to="150" data-count-suffix="+">150+</strong>
+                  <strong data-count-to="10000" data-count-suffix="+">10000+</strong>
                   <span>Cửa hàng tin dùng</span>
                 </div>
                 <div className="about-stat">
@@ -612,7 +612,7 @@ export default function Home() {
           <div className="container">
             {resolvedPartners.length > 0 ? <>
               <p className="partners-trust-line">
-                {(isCmsMode ? cmsStats?.data?.partnersHeading : null) ?? 'Tin dùng bởi 150+ doanh nghiệp & đơn vị đối tác'}
+                {(isCmsMode ? cmsStats?.data?.partnersHeading : null) ?? 'Tin dùng bởi 10000+ doanh nghiệp & đơn vị đối tác'}
               </p>
               <div className="home-partner-marquee partner-marquee" aria-hidden="false">
                 <div className="home-partner-track partner-track">
