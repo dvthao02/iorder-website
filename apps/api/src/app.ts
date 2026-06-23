@@ -51,13 +51,12 @@ export async function buildApp(env: ApiEnv) {
   await app.register(staticFiles, {
     root: frontendDist,
     prefix: '/',
-    decorateReply: false,
     wildcard: false,
   })
 
   // SPA fallback: serve index.html for all unmatched routes (React Router)
   app.setNotFoundHandler(async (_request, reply) => {
-    return reply.sendFile('index.html', frontendDist)
+    return reply.sendFile('index.html')
   })
 
   // Helmet mặc định set Cross-Origin-Resource-Policy: same-origin, block <img>/<video>
