@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iorderCMS
+      POSTGRES_USER: admin_iorder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_iorder -d iorderCMS"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "80:8080"
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: 8080
+      DATABASE_URL: postgresql://admin_iorder:${POSTGRES_PASSWORD}@postgres:5432/iorderCMS
+      SESSION_SECRET: ${SESSION_SECRET}
+      ADMIN_ORIGIN: ${SITE_URL}
+      PUBLIC_ORIGIN: ${SITE_URL}
+      MEDIA_STORAGE_PATH: /app/storage/media
+      MEDIA_PUBLIC_BASE_URL: ${SITE_URL}/media
+      HOMEPAGE_SLUG: home
+      CMS_ADMIN_USERNAME: ${CMS_ADMIN_USERNAME:-admin}
+      CMS_ADMIN_PASSWORD: ${CMS_ADMIN_PASSWORD}
+      CMS_ADMIN_NAME: ${CMS_ADMIN_NAME:-Administrator}
+    volumes:
+      - media_data:/app/storage/media
+
+volumes:
+  postgres_data:
+  media_data:
