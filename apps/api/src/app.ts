@@ -15,6 +15,7 @@ import { registerMediaRoutes } from './media/media-routes.js'
 import { LocalMediaStorage } from './media/media-storage.js'
 import { registerNavigationRoutes } from './navigation/navigation-routes.js'
 import { registerOfferingRoutes } from './offerings/offering-routes.js'
+import { registerPartnerRoutes } from './partners/partner-routes.js'
 import { registerHomepageRoutes } from './pages/homepage-routes.js'
 import { registerPostRoutes } from './posts/post-routes.js'
 import { registerSettingsRoutes } from './settings/settings-routes.js'
@@ -119,6 +120,7 @@ export async function buildApp(env: ApiEnv) {
   registerPostRoutes(app, { db: database.db })
   registerHomepageRoutes(app, { db: database.db, slug: env.HOMEPAGE_SLUG })
   registerOfferingRoutes(app, { db: database.db })
+  registerPartnerRoutes(app, { db: database.db })
   registerNavigationRoutes(app, { db: database.db })
   registerSettingsRoutes(app, { db: database.db })
   registerStatsRoutes(app, { appDbUrls: env.IORDER_APP_DB_URLS })

@@ -8,6 +8,7 @@ import { LoginForm } from './LoginForm'
 import { MediaLibrary } from './MediaLibrary'
 import { NavigationEditor } from './NavigationEditor'
 import { OfferingsManager } from './OfferingsManager'
+import { PartnersManager } from './PartnersManager'
 import { PostsManager } from './PostsManager'
 import { SiteProfileEditor } from './SiteProfileEditor'
 
@@ -16,6 +17,7 @@ const navigation = [
   { key: 'homepage', label: 'Trang chủ' },
   { key: 'offerings', label: 'Phần mềm & Giải pháp' },
   { key: 'posts', label: 'Bài viết' },
+  { key: 'partners', label: 'Đối tác & Khách hàng' },
   { key: 'media', label: 'Ảnh & tài liệu' },
   { key: 'navigation', label: 'Menu điều hướng' },
   { key: 'settings', label: 'Cài đặt website' },
@@ -56,6 +58,7 @@ export function AdminApp() {
     case 'homepage': content = <HomepageEditor onBack={() => setActiveModule('dashboard')} />; break
     case 'offerings': content = <OfferingsManager onBack={() => setActiveModule('dashboard')} />; break
     case 'posts': content = <PostsManager onBack={() => setActiveModule('dashboard')} />; break
+    case 'partners': content = <PartnersManager onBack={() => setActiveModule('dashboard')} />; break
     case 'media': content = <MediaLibrary onBack={() => setActiveModule('dashboard')} />; break
     case 'navigation': content = <NavigationEditor onBack={() => setActiveModule('dashboard')} />; break
     case 'settings': content = <SiteProfileEditor onBack={() => setActiveModule('dashboard')} />; break

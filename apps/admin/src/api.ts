@@ -5,6 +5,8 @@ import type {
   MediaMetadataInput,
   OfferingInput,
   OfferingResponse,
+  PartnerInput,
+  PartnerResponse,
   PostInput,
   PostResponse,
   HomepageInput,
@@ -176,6 +178,29 @@ export function archiveOffering(id: string) {
 
 export function deleteOffering(id: string) {
   return request<void>(`/api/admin/offerings/${id}`, { method: 'DELETE' })
+}
+
+// ── Partners ───────────────────────────────────────────────────────────────
+export function listPartners() {
+  return request<{ items: PartnerResponse[]; total: number }>('/api/admin/partners')
+}
+
+export function createPartner(input: PartnerInput) {
+  return request<{ item: PartnerResponse }>('/api/admin/partners', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updatePartner(id: string, input: PartnerInput) {
+  return request<{ item: PartnerResponse }>(`/api/admin/partners/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deletePartner(id: string) {
+  return request<void>(`/api/admin/partners/${id}`, { method: 'DELETE' })
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────
