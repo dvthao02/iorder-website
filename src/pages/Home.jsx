@@ -143,6 +143,12 @@ const partnerItems = [
   { src: logoVietsunco, name: 'Vietsunco', desc: 'Giải pháp thanh toán' },
 ]
 
+const staticTestimonials = [
+  { quote: 'iOrder giúp tôi theo dõi doanh thu từng ca, từng nhân viên mà không cần ngồi đối chiếu sổ sách. Mỗi tháng tiết kiệm được gần chục giờ đồng hồ.', name: 'Anh Minh', role: 'Chủ chuỗi 3 quán cafe tại TP.HCM', initials: 'M' },
+  { quote: 'Trước đây kho hay bị thất thoát mà không biết lý do. Từ khi dùng iOrder, mỗi lần xuất kho đều có ghi nhận, cuối tháng so khớp rất nhanh.', name: 'Chị Hà', role: 'Quản lý chuỗi trà sữa 5 chi nhánh', initials: 'H' },
+  { quote: 'Nhân viên mới chỉ cần học 30 phút là dùng được. Triển khai xong trong 1 ngày, hôm sau mở cửa bán hàng bình thường.', name: 'Anh Tuấn', role: 'Chủ cửa hàng bán lẻ tại Hà Nội', initials: 'T' },
+]
+
 const iconByKey = {
   store: Store,
   utensils: Utensils,
@@ -277,11 +283,21 @@ export default function Home() {
   const resolvedHeroSlides = isCmsMode
     ? (cmsHero?.data?.slides ?? []).map((slide) => ({ image: cmsMedia.get(slide.imageMediaId)?.publicUrl, width: cmsMedia.get(slide.imageMediaId)?.width ?? 1600, height: cmsMedia.get(slide.imageMediaId)?.height ?? 900, title: slide.title, caption: slide.description })).filter((slide) => slide.image)
     : heroSlides
-  // Ưu tiên danh sách Đối tác quản lý ở CMS (bảng partners); nếu trống → logo nhúng trong block home_stats → fallback tĩnh
-  const blockPartners = isCmsMode
+  // Ưu tiên danh sách Đối tác quản lý ở CMS (bảng partners) → logo nhúng trong block home_stats → fallback logo tĩnh
+  const cmsBlockPartners = isCmsMode
     ? (cmsStats?.data?.partners ?? []).map((item) => ({ src: cmsMedia.get(item.mediaId)?.publicUrl, name: item.name, websiteUrl: item.websiteUrl })).filter((item) => item.src)
+    : []
+  const resolvedPartners = tablePartners.length > 0
+    ? tablePartners
+    : cmsBlockPartners.length > 0
+    ? cmsBlockPartners
     : partnerItems
-  const resolvedPartners = tablePartners.length > 0 ? tablePartners : blockPartners
+  // Ưu tiên đánh giá quản lý ở CMS (bảng) → block home_testimonials → fallback tĩnh
+  const resolvedTestimonials = tableTestimonials.length > 0
+    ? tableTestimonials
+    : (isCmsMode && cmsTestimonials?.data?.items?.length
+        ? cmsTestimonials.data.items.map((item) => ({ ...item, initials: item.name?.[0] ?? '?' }))
+        : staticTestimonials)
   const resolvedFeatures = isCmsMode
     ? (cmsFeatures?.data?.items ?? []).map((item, idx) => {
         const t = (item.title ?? '').toLowerCase()
@@ -592,7 +608,7 @@ export default function Home() {
         </section>
 
         {/* Stats + Partners Section */}
-        {shouldShow('home_stats') ? <section className="section home-stats-section" style={{ order: blockOrder('home_stats') }}>
+        {(shouldShow('home_stats') || resolvedPartners.length > 0) ? <section className="section home-stats-section" style={{ order: isCmsMode ? (blockOrder('home_stats') >= 0 ? blockOrder('home_stats') : blockOrder('home_hero')) : undefined }}>
           <div className="container">
             <div className="stats-bar-grid">
               {(isCmsMode && cmsStats?.data?.stats?.length
@@ -707,24 +723,14 @@ export default function Home() {
         </section> : null}
 
         {/* Testimonials Section */}
-        {(shouldShow('home_testimonials') || tableTestimonials.length > 0) ? <section className="section home-testimonials-section" style={{ order: blockOrder('home_testimonials') }}>
+        {(shouldShow('home_testimonials') || resolvedTestimonials.length > 0) ? <section className="section home-testimonials-section" style={{ order: isCmsMode ? (blockOrder('home_testimonials') >= 0 ? blockOrder('home_testimonials') : blockOrder('home_cta')) : undefined }}>
           <div className="container">
             <div className="section-title">
               <span className="section-eyebrow">{cmsTestimonials?.data?.eyebrow ?? 'KHÁCH HÀNG NÓI GÌ'}</span>
               <h2>{cmsTestimonials?.data?.heading ?? 'Trải nghiệm thực tế từ chủ cửa hàng'}</h2>
             </div>
             <div className="testimonial-grid">
-              {/* Ưu tiên đánh giá quản lý ở CMS (bảng testimonials); rồi tới block home_testimonials; cuối cùng fallback tĩnh */}
-              {(tableTestimonials.length > 0
-                ? tableTestimonials
-                : isCmsMode && cmsTestimonials?.data?.items?.length
-                ? cmsTestimonials.data.items.map((item) => ({ ...item, initials: item.name?.[0] ?? '?' }))
-                : [
-                    { quote: 'iOrder giúp tôi theo dõi doanh thu từng ca, từng nhân viên mà không cần ngồi đối chiếu sổ sách. Mỗi tháng tiết kiệm được gần chục giờ đồng hồ.', name: 'Anh Minh', role: 'Chủ chuỗi 3 quán cafe tại TP.HCM', initials: 'M' },
-                    { quote: 'Trước đây kho hay bị thất thoát mà không biết lý do. Từ khi dùng iOrder, mỗi lần xuất kho đều có ghi nhận, cuối tháng so khớp rất nhanh.', name: 'Chị Hà', role: 'Quản lý chuỗi trà sữa 5 chi nhánh', initials: 'H' },
-                    { quote: 'Nhân viên mới chỉ cần học 30 phút là dùng được. Triển khai xong trong 1 ngày, hôm sau mở cửa bán hàng bình thường.', name: 'Anh Tuấn', role: 'Chủ cửa hàng bán lẻ tại Hà Nội', initials: 'T' },
-                  ]
-              ).map((item, idx) => (
+              {resolvedTestimonials.map((item, idx) => (
                 <div className="testimonial-card" key={`${item.name}-${idx}`}>
                   <Quote size={30} className="testimonial-quote-icon" />
                   <p>{item.quote}</p>
@@ -853,7 +859,7 @@ export default function Home() {
         </section> : null}
 
         {/* FAQ Section */}
-        {shouldShow('home_faq') ? <section className="section home-faq-section" style={{ order: blockOrder('home_faq') }}>
+        {(shouldShow('home_faq') || faqItems.length > 0) ? <section className="section home-faq-section" style={{ order: isCmsMode ? (blockOrder('home_faq') >= 0 ? blockOrder('home_faq') : blockOrder('home_cta')) : undefined }}>
           <div className="container home-faq-container">
             <div className="section-title">
               <span className="section-eyebrow">{cmsFaq?.data?.eyebrow ?? 'CÂU HỎI THƯỜNG GẶP'}</span>
