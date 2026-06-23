@@ -65,8 +65,12 @@ export async function buildApp(env: ApiEnv) {
     index: 'index.html',
   })
 
-  // SPA fallback: serve index.html for React Router deep links
-  app.setNotFoundHandler(async (_request, reply) => {
+  // SPA fallback: serve index.html for React Router deep links.
+  // Deep links trong CMS (vd /admin/bai-viet) → admin index.html; còn lại → site index.html
+  app.setNotFoundHandler(async (request, reply) => {
+    if (request.url.startsWith('/admin')) {
+      return reply.sendFile('index.html', adminDist)
+    }
     return reply.sendFile('index.html')
   })
 

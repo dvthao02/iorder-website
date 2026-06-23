@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { AdminApp } from './AdminApp'
 import './styles.css'
@@ -12,7 +13,12 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <AdminApp />
+    <BrowserRouter basename="/admin">
+      <Routes>
+        <Route path="/" element={<AdminApp />} />
+        <Route path="/:section" element={<AdminApp />} />
+      </Routes>
+    </BrowserRouter>
   </StrictMode>,
 )
 
