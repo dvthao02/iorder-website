@@ -20,8 +20,10 @@ const envSchema = z.object({
 export type ApiEnv = z.infer<typeof envSchema>
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
-  // Railway injects PORT; map it to API_PORT if not explicitly set
   const merged = { ...source }
-  if (!merged.API_PORT && merged.PORT) merged.API_PORT = merged.PORT
+  // Railway injects PORT; use it when API_PORT is missing or an unresolved template
+  if (merged.PORT && (!merged.API_PORT || merged.API_PORT.includes('{'))) {
+    merged.API_PORT = merged.PORT
+  }
   return envSchema.parse(merged)
 }
