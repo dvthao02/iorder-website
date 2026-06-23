@@ -239,7 +239,7 @@ export default function Home() {
     }, { threshold: 0.6 })
     targets.forEach((el) => obs.observe(el))
     return () => obs.disconnect()
-  }, [])
+  }, [cmsHomepage])
 
   useEffect(() => {
     let active = true
@@ -292,6 +292,15 @@ export default function Home() {
     : cmsBlockPartners.length > 0
     ? cmsBlockPartners
     : partnerItems
+  // Số liệu: lấy từ block home_stats (sửa trong CMS là hiện ra) → fallback tĩnh
+  const resolvedStats = isCmsMode && cmsStats?.data?.stats?.length
+    ? cmsStats.data.stats
+    : [
+        { value: '10000+', label: 'Cửa hàng tin dùng' },
+        { value: '5+', label: 'Năm kinh nghiệm' },
+        { value: '24/7', label: 'Hỗ trợ kỹ thuật' },
+        { value: '1–3 ngày', label: 'Triển khai nhanh' },
+      ]
   // Ưu tiên đánh giá quản lý ở CMS (bảng) → block home_testimonials → fallback tĩnh
   const resolvedTestimonials = tableTestimonials.length > 0
     ? tableTestimonials
@@ -555,22 +564,17 @@ export default function Home() {
               <p>Được thành lập với mục tiêu mang lại giải pháp công nghệ thiết thực cho doanh nghiệp vừa và nhỏ, iOrder cung cấp hệ thống quản lý bán hàng tích hợp đầy đủ từ POS, quản lý kho, nhân viên đến báo cáo kinh doanh thời gian thực.</p>
               <p>Với đội ngũ kỹ thuật tâm huyết và am hiểu thực tế vận hành tại thị trường Việt Nam, chúng tôi không chỉ cung cấp phần mềm mà còn là người bạn đồng hành lâu dài giúp doanh nghiệp phát triển bền vững.</p>
               <div className="about-company-stats">
-                <div className="about-stat">
-                  <strong data-count-to="10000" data-count-suffix="+">10000+</strong>
-                  <span>Cửa hàng tin dùng</span>
-                </div>
-                <div className="about-stat">
-                  <strong data-count-to="5" data-count-suffix="+">5+</strong>
-                  <span>Năm kinh nghiệm</span>
-                </div>
-                <div className="about-stat">
-                  <strong>24/7</strong>
-                  <span>Hỗ trợ kỹ thuật</span>
-                </div>
-                <div className="about-stat">
-                  <strong>1–3 ngày</strong>
-                  <span>Triển khai nhanh</span>
-                </div>
+                {resolvedStats.map((stat, idx) => {
+                  const numeric = String(stat.value).match(/^(\d+)(\D*)$/)
+                  return (
+                    <div className="about-stat" key={`${stat.label}-${idx}`}>
+                      {numeric
+                        ? <strong data-count-to={numeric[1]} data-count-suffix={numeric[2]}>{stat.value}</strong>
+                        : <strong>{stat.value}</strong>}
+                      <span>{stat.label}</span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

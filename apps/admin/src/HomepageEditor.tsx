@@ -213,15 +213,8 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
             <button type="button" onClick={() => updateBlock(index, { stats: block.data.stats.filter((_, i) => i !== itemIndex) })}>Xóa</button>
           </div>)}
         </div>
-        <label>Nhãn phần đối tác<input value={block.data.partnersHeading ?? ''} onChange={(e) => updateBlock(index, { partnersHeading: e.target.value || null })} /></label>
-        <div className="nested-editor"><div className="nested-heading"><strong>Logo đối tác</strong><button disabled={images.length === 0} type="button" onClick={() => updateBlock(index, { partners: [...block.data.partners, { name: images[0]?.originalName ?? 'Đối tác mới', mediaId: images[0]?.id ?? '', websiteUrl: null }] })}>+ Thêm đối tác</button></div>
-          {block.data.partners.map((partner, itemIndex) => <div className="nested-row" key={`${partner.mediaId}-${itemIndex}`}>
-            <input value={partner.name} onChange={(e) => updateBlock(index, { partners: block.data.partners.map((item, i) => i === itemIndex ? { ...item, name: e.target.value } : item) })} />
-            <select value={partner.mediaId} onChange={(e) => updateBlock(index, { partners: block.data.partners.map((item, i) => i === itemIndex ? { ...item, mediaId: e.target.value } : item) })}>{images.map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}</select>
-            <input placeholder="Website" value={partner.websiteUrl ?? ''} onChange={(e) => updateBlock(index, { partners: block.data.partners.map((item, i) => i === itemIndex ? { ...item, websiteUrl: e.target.value || null } : item) })} />
-            <button type="button" onClick={() => updateBlock(index, { partners: block.data.partners.filter((_, i) => i !== itemIndex) })}>Xóa</button>
-          </div>)}
-        </div>
+        <label>Nhãn phần đối tác<input value={block.data.partnersHeading ?? ''} onChange={(e) => updateBlock(index, { partnersHeading: e.target.value || null })} /><small>Dòng chữ phía trên dải logo đối tác.</small></label>
+        <p className="editor-hint">🏷️ Logo đối tác giờ được quản lý tại mục <strong>“Đối tác &amp; Khách hàng”</strong> trong menu bên trái — thêm/sửa/xóa logo ở đó. Block này chỉ điều khiển số liệu và nhãn phía trên.</p>
       </> : null}
 
       {/* home_features */}
