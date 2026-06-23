@@ -46,6 +46,15 @@ export async function buildApp(env: ApiEnv) {
     decorateReply: false,
   })
 
+  // Serve admin CMS (SPA) at /admin
+  const adminDist = resolve(process.cwd(), 'apps/admin/dist')
+  await app.register(staticFiles, {
+    root: adminDist,
+    prefix: '/admin',
+    decorateReply: false,
+    index: 'index.html',
+  })
+
   // Serve compiled React frontend (SPA)
   const frontendDist = resolve(process.cwd(), 'dist')
   await app.register(staticFiles, {
