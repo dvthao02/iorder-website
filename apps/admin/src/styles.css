@@ -30,22 +30,34 @@ button, input, textarea, select { font: inherit; }
 .admin-sidebar nav button { padding: 12px 14px; border: 0; border-radius: 10px; color: #d9e8f4; text-align: left; background: transparent; cursor: pointer; transition: background .15s, color .15s; }
 .admin-sidebar nav button:hover { color: #fff; background: rgba(255,255,255,.07); }
 .admin-sidebar nav button.is-active { color: #fff; background: var(--sidebar-active); }
-.sidebar-account { display: grid; gap: 4px; margin-top: auto; }
+.sidebar-account { display: grid; gap: 4px; margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.08); }
+.sidebar-account span { font-weight: 700; }
 .sidebar-account small { color: #aac3d6; overflow-wrap: anywhere; }
-.sidebar-account button { margin-top: 10px; padding: 9px 12px; border: 1px solid #55758c; border-radius: 9px; color: #fff; background: transparent; cursor: pointer; }
-.admin-main { min-width: 0; padding: 32px; }
+.sidebar-account button { margin-top: 10px; padding: 9px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: 9px; color: #fff; background: transparent; cursor: pointer; transition: background .15s, border-color .15s; }
+.sidebar-account button:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.4); }
+
+/* Logo thương hiệu trong sidebar */
+.sidebar-brand { display: grid; gap: 10px; justify-items: start; }
+.sidebar-logo-badge { display: inline-flex; padding: 12px 16px; background: #fff; border-radius: 14px; box-shadow: 0 8px 22px rgba(0,0,0,.22); }
+.sidebar-logo-badge img { display: block; height: 30px; width: auto; }
+.sidebar-brand-sub { color: #aac6dd; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+
+.admin-main { min-width: 0; padding: 32px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 220px); }
 .admin-main > .admin-card { width: 100%; max-width: 1200px; margin: 0 auto; }
 
 .dashboard-page { width: min(1100px, 100%); margin: 0 auto; }
 .page-heading { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
 .page-heading h1 { margin: 8px 0; font-size: clamp(30px, 4vw, 46px); }
 .site-preview-link { display: inline-flex; align-items: center; text-decoration: none; }
-.stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 30px 0; }
-.stats-grid button { display: grid; gap: 8px; min-height: 180px; padding: 22px; border: 1px solid #dce8f1; border-radius: 18px; text-align: left; background: #fff; box-shadow: 0 12px 35px rgba(15,35,68,.07); cursor: pointer; }
-.stats-grid span { color: var(--brand-dark); font-weight: 800; }
-.stats-grid strong { font-size: 28px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 30px 0; }
+.stats-grid button { position: relative; overflow: hidden; display: grid; gap: 8px; min-height: 180px; padding: 24px; border: 1px solid #e2edf5; border-radius: 18px; text-align: left; background: #fff; box-shadow: 0 12px 35px rgba(15,35,68,.07); cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s; }
+.stats-grid button::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--brand-gradient); opacity: 0; transition: opacity .18s; }
+.stats-grid button:hover { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(15,35,68,.14); border-color: transparent; }
+.stats-grid button:hover::before { opacity: 1; }
+.stats-grid span { color: var(--brand-dark); font-weight: 800; letter-spacing: .03em; }
+.stats-grid strong { font-size: 34px; background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .stats-grid small { color: #607084; line-height: 1.5; }
-.workflow-panel { padding: 24px; border: 1px solid #dce8f1; border-radius: 18px; background: #fff; }
+.workflow-panel { padding: 26px; border: 1px solid #e2edf5; border-radius: 18px; background: #fff; box-shadow: 0 12px 35px rgba(15,35,68,.05); }
 .workflow-panel h2 { margin-top: 0; }
 .workflow-panel li { margin: 10px 0; color: #536174; }
 
@@ -54,7 +66,12 @@ button, input, textarea, select { font: inherit; }
   display: grid;
   place-items: center;
   padding: 32px;
+  background: radial-gradient(1200px 600px at 50% -10%, #e3f1fb 0%, #f4f8fb 60%);
 }
+
+.login-card { width: min(460px, 100%); text-align: center; }
+.login-logo { display: block; height: 46px; width: auto; margin: 0 auto 18px; }
+.login-card .login-form { text-align: left; }
 
 .admin-card {
   width: min(720px, 100%);
