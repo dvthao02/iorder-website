@@ -13,17 +13,24 @@ async function apiFetch(path, options = {}) {
 
 // ── Posts ──────────────────────────────────────────────────────────────────
 
+// Bài viết từ TipTap được lưu dưới dạng HTML (chứa thẻ < >).
+// Bài cũ là văn bản thuần — vẫn tách theo đoạn để tương thích ngược.
+const isHtml = (value) => typeof value === 'string' && /<\/?[a-z][\s\S]*>/i.test(value)
+
 export function normalizeCmsPost(post) {
+  const rawBody = post.body ?? ''
+  const wordCount = rawBody.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
   return {
     ...post,
     category: post.category ?? (post.type === 'promotion' ? 'Khuyến mãi' : 'Tin tức'),
     date: post.publishedAt ?? post.updatedAt,
     image: post.coverUrl,
     imageAlt: post.title,
-    readingTime: `${Math.max(1, Math.ceil((post.body?.split(/\s+/).length ?? 0) / 220))} phút đọc`,
+    readingTime: `${Math.max(1, Math.ceil(wordCount / 220))} phút đọc`,
     focusName: post.category ?? 'Nội dung iOrder',
     highlights: post.checklist?.slice(0, 3) ?? [],
-    body: post.body ? post.body.split(/\n\s*\n/).filter(Boolean) : [],
+    bodyHtml: isHtml(rawBody) ? rawBody : null,
+    body: isHtml(rawBody) ? [] : rawBody.split(/\n\s*\n/).filter(Boolean),
     checklist: post.checklist ?? [],
   }
 }

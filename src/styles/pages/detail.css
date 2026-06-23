@@ -231,6 +231,23 @@
   margin-bottom: 0;
 }
 
+/* Nội dung HTML từ trình soạn thảo CMS (TipTap) */
+.article-rich { color: #294059; font-size: 18px; line-height: 1.8; }
+.article-rich > *:first-child { margin-top: 0; }
+.article-rich > *:last-child { margin-bottom: 0; }
+.article-rich p { margin: 0 0 18px; }
+.article-rich h2 { font-size: 26px; font-weight: 800; margin: 32px 0 14px; color: #1f3147; }
+.article-rich h3 { font-size: 21px; font-weight: 800; margin: 26px 0 12px; color: #1f3147; }
+.article-rich ul, .article-rich ol { margin: 0 0 18px; padding-left: 26px; }
+.article-rich li { margin-bottom: 8px; }
+.article-rich blockquote { margin: 0 0 18px; padding: 8px 18px; border-left: 4px solid #0b8edc; background: #f4f9fd; color: #3a526b; font-style: italic; border-radius: 0 8px 8px 0; }
+.article-rich a { color: #0b8edc; text-decoration: underline; }
+.article-rich strong { font-weight: 700; }
+.article-rich hr { border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0; }
+[data-theme="dark"] .article-rich { color: var(--text) !important; }
+[data-theme="dark"] .article-rich h2, [data-theme="dark"] .article-rich h3 { color: var(--text) !important; }
+[data-theme="dark"] .article-rich blockquote { background: rgba(11,142,220,0.08) !important; color: var(--text) !important; }
+
 .article-checklist {
   position: sticky;
   top: 96px;

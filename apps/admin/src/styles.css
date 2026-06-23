@@ -525,4 +525,27 @@ button, input, textarea, select { font: inherit; }
 .nav-item-form input, .nav-item-form select { padding: 8px 10px; border: 1.5px solid #c8dce9; border-radius: 8px; min-width: 0; }
 .nav-item-actions { display: flex; gap: 8px; }
 .link-group-section { margin-bottom: 24px; padding: 18px; border: 1px solid #dce8f1; border-radius: 14px; background: #fff; }
+
+/* ── Rich text editor (TipTap) ──────────────────────────────────────────────── */
+.rte-field { display: grid; gap: 6px; }
+.rte-label { font-weight: 700; }
+.rte { border: 1px solid #cddbe7; border-radius: 12px; overflow: hidden; background: #fff; }
+.rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 8px; border-bottom: 1px solid #e3edf5; background: #f7fafd; }
+.rte-tool { min-height: 32px; min-width: 34px; padding: 4px 9px; border: 1px solid transparent; border-radius: 8px; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: #33475b; cursor: pointer; }
+.rte-tool:hover:not(:disabled) { background: #e7f1fa; }
+.rte-tool.is-active { background: #0b8edc; color: #fff; }
+.rte-tool:disabled { opacity: .4; cursor: not-allowed; }
+.rte-sep { width: 1px; align-self: stretch; margin: 2px 4px; background: #dbe6ef; }
+.rte-content { padding: 14px 16px; min-height: 280px; max-height: 560px; overflow-y: auto; }
+.rte-content .ProseMirror { min-height: 250px; outline: none; line-height: 1.65; color: #1f2d3d; }
+.rte-content .ProseMirror:focus { outline: none; }
+.rte-content .ProseMirror > * + * { margin-top: 0.75em; }
+.rte-content .ProseMirror h2 { font-size: 1.4em; font-weight: 800; margin-top: 1.2em; }
+.rte-content .ProseMirror h3 { font-size: 1.18em; font-weight: 800; margin-top: 1em; }
+.rte-content .ProseMirror ul { padding-left: 1.4em; list-style: disc; }
+.rte-content .ProseMirror ol { padding-left: 1.4em; list-style: decimal; }
+.rte-content .ProseMirror blockquote { border-left: 3px solid #0b8edc; padding-left: 14px; color: #4a5b6d; font-style: italic; }
+.rte-content .ProseMirror a { color: #0b8edc; text-decoration: underline; }
+.rte-content .ProseMirror hr { border: 0; border-top: 1px solid #d6e2ec; margin: 1.2em 0; }
+.rte-content .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; color: #9bb0c3; pointer-events: none; }
 .link-group-section h4 { margin-top: 0; }

@@ -127,11 +127,15 @@ export default function NewsDetail() {
 
         <section className="detail-section">
           <div className="container article-layout">
-            <article className="article-content">
-              {article.body.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </article>
+            {article.bodyHtml ? (
+              <article className="article-content article-rich" dangerouslySetInnerHTML={{ __html: article.bodyHtml }} />
+            ) : (
+              <article className="article-content">
+                {article.body.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </article>
+            )}
 
             <aside className="detail-card article-checklist">
               <h2>Checklist nhanh</h2>

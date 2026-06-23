@@ -2,6 +2,7 @@ import type { MediaAsset, PostInput, PostResponse } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
 
 import { archivePost, createPost, listMedia, listPosts, publishPost, updatePost } from './api'
+import { RichTextEditor } from './RichTextEditor'
 
 interface PostsManagerProps {
   onBack: () => void
@@ -200,10 +201,10 @@ export function PostsManager({ onBack }: PostsManagerProps) {
             Chủ đề
             <input maxLength={120} placeholder="Ví dụ: Nhà hàng - Cafe" value={form.category ?? ''} onChange={(event) => patchForm('category', event.target.value || null)} />
           </label>
-          <label>
-            Nội dung
-            <textarea required maxLength={200000} rows={14} value={form.body} onChange={(event) => patchForm('body', event.target.value)} />
-          </label>
+          <div className="rte-field">
+            <span className="rte-label">Nội dung</span>
+            <RichTextEditor value={form.body} placeholder="Soạn nội dung bài viết..." onChange={(html) => patchForm('body', html)} />
+          </div>
           <label>
             Checklist / điểm nổi bật (mỗi dòng một mục)
             <textarea rows={5} value={form.checklist.join('\n')} onChange={(event) => patchForm('checklist', event.target.value.split('\n').map((item) => item.trim()).filter(Boolean))} />
