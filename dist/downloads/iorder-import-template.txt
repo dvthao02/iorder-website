@@ -1,0 +1,4 @@
+iOrder Import Template
+
+File tam thoi cho mau nhap du lieu ban dau: san pham, nhom hang, don vi tinh, gia ban va ton kho.
+Khi co file Excel chinh thuc, cap nhat duong dan trong trang tai cong cu hoac thay file nay bang file moi.

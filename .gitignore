@@ -1,5 +1,7 @@
 node_modules/
-dist/
+apps/*/dist/
+packages/*/dist/
+# dist/ của frontend được commit để deploy lên Railway
 *.tsbuildinfo
 .codex-qa/
 .env
