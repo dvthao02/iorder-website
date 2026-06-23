@@ -607,26 +607,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats + Partners Section */}
-        {(shouldShow('home_stats') || resolvedPartners.length > 0) ? <section className="section home-stats-section" style={{ order: isCmsMode ? (blockOrder('home_stats') >= 0 ? blockOrder('home_stats') : blockOrder('home_hero')) : undefined }}>
+        {/* Partners Section (số liệu đã hiển thị ở mục Giới thiệu công ty phía trên) */}
+        {resolvedPartners.length > 0 ? <section className="section home-stats-section" style={{ order: isCmsMode ? (blockOrder('home_stats') >= 0 ? blockOrder('home_stats') : blockOrder('home_hero')) : undefined }}>
           <div className="container">
-            <div className="stats-bar-grid">
-              {(isCmsMode && cmsStats?.data?.stats?.length
-                ? cmsStats.data.stats
-                : [
-                    { value: siteStats?.storeCount != null ? `${siteStats.storeCount}` : '150+', label: 'Cửa hàng đang dùng iOrder' },
-                    { value: '5', label: 'Loại mô hình kinh doanh' },
-                    { value: '24/7', label: 'Hỗ trợ kỹ thuật' },
-                    { value: '1–3 ngày', label: 'Trung bình thời gian triển khai' },
-                  ]
-              ).map((stat) => (
-                <div className="stat-item" key={stat.label}>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                </div>
-              ))}
-            </div>
-
             {resolvedPartners.length > 0 ? <>
               <p className="partners-trust-line">
                 {(isCmsMode ? cmsStats?.data?.partnersHeading : null) ?? 'Tin dùng bởi 150+ doanh nghiệp & đơn vị đối tác'}
