@@ -48,8 +48,10 @@ button, input, textarea, select { font: inherit; }
 .sidebar-logo-badge img { display: block; height: 32px; width: auto; filter: brightness(0) invert(1); }
 .sidebar-brand-sub { color: #aac6dd; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 
-.admin-main { min-width: 0; padding: 32px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 220px); }
+.admin-main { min-width: 0; padding: 28px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 220px); }
 .admin-main > .admin-card { width: 100%; max-width: 1200px; margin: 0 auto; }
+/* Trang quản lý nhiều cột (editor, danh sách) dùng rộng hơn + bớt padding kép ở 4 góc */
+.admin-main > .admin-card.content-manager { max-width: min(1680px, 100%); padding: 24px 26px; }
 
 .dashboard-page { width: 100%; max-width: 1280px; margin: 0 auto; }
 
