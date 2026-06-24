@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
 import { externalLinks, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
 import { fetchNavOfferings, fetchPartners, fetchTestimonials } from '../utils/contentApi'
@@ -16,8 +15,6 @@ import {
   Zap, Target, Heart, Award
 } from 'lucide-react'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 import heroImg from '../assets/products/hero-img.png'
 import heroImg2 from '../assets/products/hero-img2.png'
 import heroImg3 from '../assets/products/hero-img3.jpg'
@@ -159,8 +156,6 @@ const faqItems = [
 ]
 
 export default function Home() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [activeHeroSlide, setActiveHeroSlide] = useState(0)
   const [loadedHeroSlides, setLoadedHeroSlides] = useState([0])
   const [activeNewsIndex, setActiveNewsIndex] = useState(0)
@@ -346,17 +341,6 @@ export default function Home() {
       title: cmsHomepage?.item?.seoTitle ?? (location.pathname === '/' ? 'iOrder - Trang chủ' : 'iOrder - Phần mềm quản lý bán hàng'),
       description: cmsHomepage?.item?.seoDescription ?? 'iOrder hỗ trợ POS bán hàng, order tại bàn, quản lý kho, nhân viên và báo cáo doanh thu cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.'
     })
-    setMobileOpen(false)
-
-    if (location.pathname.startsWith('/phan-mem')) {
-      setActiveDropdown('software')
-    } else if (location.pathname.startsWith('/giai-phap')) {
-      setActiveDropdown('solutions')
-    } else if (location.pathname.startsWith('/dich-vu')) {
-      setActiveDropdown('services')
-    } else {
-      setActiveDropdown(null)
-    }
   }, [location.pathname, cmsHomepage?.item?.seoTitle, cmsHomepage?.item?.seoDescription])
 
   useEffect(() => {
@@ -405,20 +389,11 @@ export default function Home() {
   }
 
   return (
-    <div className="page-shell home-shell">
-      <Header 
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={navSoftware}
-        solutionPages={navSolutions}
-        servicePages={navServices}
-      />
-
-      <main className={isCmsMode ? 'cms-home-layout' : undefined} data-content-source={cmsHomepage ? 'cms' : 'static-fallback'}>
+    <PageLayout
+      shellClassName="page-shell home-shell"
+      mainClassName={isCmsMode ? 'cms-home-layout' : undefined}
+      mainProps={{ 'data-content-source': cmsHomepage ? 'cms' : 'static-fallback' }}
+    >
         {/* Hero Section */}
         {shouldShow('home_hero') ? <section className="hero" style={{ order: blockOrder('home_hero') }}>
           <div className="container hero-grid">
@@ -854,9 +829,6 @@ export default function Home() {
             </a>
           </div>
         </section> : null}
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }
