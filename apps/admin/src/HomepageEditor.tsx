@@ -117,6 +117,7 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
   const [previewUrl, setPreviewUrl] = useState('')
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light')
+  const [showPreview, setShowPreview] = useState(true)
   const autosaveInFlight = useRef(false)
 
   useEffect(() => {
@@ -297,6 +298,15 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
     finally { setBusy(false) }
   }
 
+  // Bật/tắt panel xem trước; lần đầu bật thì tự tạo bản preview
+  const togglePreview = () => {
+    setShowPreview((current) => {
+      const next = !current
+      if (next && !previewUrl) void openPreview()
+      return next
+    })
+  }
+
   const restoreRevision = async (version: number) => {
     if (!window.confirm(`Khôi phục phiên bản ${version} thành bản nháp hiện tại? Website công khai sẽ không thay đổi.`)) return
     setBusy(true); setMessage('')
@@ -318,13 +328,13 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
   return <section className="admin-card content-manager">
     <button className="text-button" type="button" onClick={onBack}>← Tổng quan</button>
     <p className="admin-kicker">Nội dung website</p>
-    <div className="manager-heading"><div><h1>Trang chủ</h1><p>Trạng thái: {status} · Phiên bản nháp: {draftVersion} · <span className={`autosave-state is-${autosaveState}`}>{autosaveState === 'saving' ? 'Đang tự lưu…' : autosaveState === 'pending' ? 'Chờ tự lưu' : autosaveState === 'saved' ? 'Đã tự lưu' : autosaveState === 'offline' ? 'Chưa đồng bộ' : autosaveState === 'conflict' ? 'Xung đột dữ liệu' : 'Đã tải'}</span> · <span className={`api-state is-${apiStatus}`}>API {apiStatus === 'online' ? 'online' : apiStatus === 'offline' ? 'offline' : 'đang kiểm tra'}</span></p></div><div className="post-actions"><button className="secondary-button" disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void save()}><Save size={16} /> Lưu phiên bản</button><button className="publish-button" disabled={busy || form.blocks.length === 0 || autosaveState === 'conflict'} type="button" onClick={() => void publish()}><UploadCloud size={16} /> {busy ? 'Đang xử lý...' : 'Xuất bản'}</button><button className="secondary-button" disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void openPreview()}><Eye size={16} /> Xem trước</button><button className="secondary-button" type="button" onClick={() => setShowRevisions((current) => !current)}><History size={16} /> Lịch sử ({revisions.length})</button></div></div>
+    <div className="manager-heading"><div><h1>Trang chủ</h1><p>Trạng thái: {status} · Phiên bản nháp: {draftVersion} · <span className={`autosave-state is-${autosaveState}`}>{autosaveState === 'saving' ? 'Đang tự lưu…' : autosaveState === 'pending' ? 'Chờ tự lưu' : autosaveState === 'saved' ? 'Đã tự lưu' : autosaveState === 'offline' ? 'Chưa đồng bộ' : autosaveState === 'conflict' ? 'Xung đột dữ liệu' : 'Đã tải'}</span> · <span className={`api-state is-${apiStatus}`}>API {apiStatus === 'online' ? 'online' : apiStatus === 'offline' ? 'offline' : 'đang kiểm tra'}</span></p></div><div className="post-actions"><button className="secondary-button" disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void save()}><Save size={16} /> Lưu phiên bản</button><button className="publish-button" disabled={busy || form.blocks.length === 0 || autosaveState === 'conflict'} type="button" onClick={() => void publish()}><UploadCloud size={16} /> {busy ? 'Đang xử lý...' : 'Xuất bản'}</button><button className={`secondary-button ${showPreview ? 'is-active' : ''}`} disabled={busy || autosaveState === 'conflict'} type="button" onClick={togglePreview}><Eye size={16} /> {showPreview ? 'Ẩn xem trước' : 'Xem trước'}</button><button className="secondary-button" type="button" onClick={() => setShowRevisions((current) => !current)}><History size={16} /> Lịch sử ({revisions.length})</button></div></div>
     {message ? <p className={`publish-notice ${apiStatus === 'offline' ? 'is-error' : ''}`} role="status">{message}</p> : null}
     <div className="post-form homepage-meta">
       <label>Tiêu đề SEO<input maxLength={70} value={form.seoTitle ?? ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value || null })} /><small>Hiển thị trên tab trình duyệt và công cụ tìm kiếm.</small></label>
       <label>Mô tả SEO<textarea maxLength={180} value={form.seoDescription ?? ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value || null })} /><small>Phần mô tả dành cho Google và chia sẻ mạng xã hội.</small></label>
     </div>
-    <div className="fixed-editor-layout">
+    <div className={`fixed-editor-layout ${showPreview ? '' : 'no-preview'}`}>
       <aside className="fixed-section-nav" aria-label="Các khu vực trang chủ">
         <div className="fixed-section-nav-head"><strong>Cấu trúc cố định</strong><small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small></div>
         {form.blocks.map((block, index) => <button className={block.type === selectedType ? 'is-active' : ''} key={block.type} type="button" onClick={() => setSelectedType(block.type)}><span>{index + 1}</span><b>{labels[block.type]}</b><small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small></button>)}
@@ -421,14 +431,15 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
         </div>
       ) : null}
       </article>)}</div>
-      <aside className="homepage-preview-panel">
+      {showPreview ? <aside className="homepage-preview-panel">
         <div className="preview-toolbar">
           <strong>Live preview</strong>
           <div className="preview-toolbar-group"><button className={previewMode === 'desktop' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('desktop')}>Desktop</button><button className={previewMode === 'tablet' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('tablet')}>Tablet</button><button className={previewMode === 'mobile' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('mobile')}>Mobile</button></div>
           <div className="preview-toolbar-group"><button className={previewTheme === 'light' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('light')}>Sáng</button><button className={previewTheme === 'dark' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('dark')}>Tối</button></div>
+          <button className="preview-close" type="button" aria-label="Đóng xem trước" onClick={() => setShowPreview(false)}>✕</button>
         </div>
         {previewUrl ? <div className={`preview-frame-wrap is-${previewMode}`}><iframe key={`${previewUrl}-${previewTheme}`} src={`${previewUrl.split('&cmsTheme=')[0]}&cmsTheme=${previewTheme}`} title="Xem trước bản nháp trang chủ" /></div> : <div className="preview-placeholder"><p>Bản xem trước chỉ đọc nội dung đã autosave và không ảnh hưởng website công khai.</p><button className="primary-cta" type="button" onClick={() => void openPreview()}>Tạo bản xem trước</button></div>}
-      </aside>
+      </aside> : null}
     </div>
     {showRevisions ? <aside className="revision-drawer" aria-label="Lịch sử phiên bản"><div className="revision-drawer-head"><div><strong>Lịch sử phiên bản</strong><small>Khôi phục luôn tạo bản nháp mới.</small></div><button type="button" onClick={() => setShowRevisions(false)}>Đóng</button></div>{revisions.length === 0 ? <p>Chưa có phiên bản nào.</p> : <ol>{revisions.map((revision) => <li key={revision.id}><div><strong>Phiên bản {revision.versionNumber}</strong><span>{revision.isPublished ? 'Đã xuất bản' : 'Bản lưu'} · {new Date(revision.createdAt).toLocaleString('vi-VN')}</span><small>{revision.changeNote ?? 'Không có ghi chú'}{revision.editorName ? ` · ${revision.editorName}` : ''}</small></div><button disabled={busy} type="button" onClick={() => void restoreRevision(revision.versionNumber)}>Khôi phục</button></li>)}</ol>}</aside> : null}
   </section>

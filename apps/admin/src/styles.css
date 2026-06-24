@@ -651,6 +651,8 @@ button, input, textarea, select { font: inherit; }
 .autosave-state.is-saved { background: #e3f7ec; color: #15803d; }
 .autosave-state.is-offline, .autosave-state.is-conflict { background: #fdecec; color: #b91c1c; }
 .fixed-editor-layout { display: grid; grid-template-columns: 230px minmax(480px, .9fr) minmax(420px, 1.1fr); gap: 18px; align-items: start; }
+/* Tắt xem trước → editor fill full, không chừa khoảng trống */
+.fixed-editor-layout.no-preview { grid-template-columns: 230px minmax(0, 1fr); }
 .fixed-section-nav { position: sticky; top: 18px; display: grid; gap: 7px; padding: 12px; border: 1px solid #dce8f1; border-radius: 16px; background: #f7fbfe; }
 .fixed-section-nav-head { display: grid; gap: 4px; padding: 8px 8px 12px; border-bottom: 1px solid #dce8f1; }
 .fixed-section-nav-head small { color: #607084; line-height: 1.45; }
@@ -670,6 +672,8 @@ button, input, textarea, select { font: inherit; }
 .contrast-warning { color: #a16207; font-weight: 700; }
 .homepage-preview-panel { position: sticky; top: 18px; overflow: hidden; border: 1px solid #d6e4ef; border-radius: 16px; background: #edf3f7; box-shadow: 0 12px 34px rgba(30, 64, 92, .1); }
 .preview-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #d6e4ef; background: #fff; }
+.preview-close { margin-left: auto; width: 28px; height: 28px; padding: 0; border: 1px solid #d6e4ef; border-radius: 8px; background: #fff; color: #62748a; font-size: 13px; cursor: pointer; transition: background .12s, color .12s; }
+.preview-close:hover { background: #fdecec; color: #c0392b; border-color: #f3c9c9; }
 .preview-toolbar > strong { margin-right: auto; }
 .preview-toolbar-group { display: inline-flex; gap: 3px; padding: 3px; border-radius: 9px; background: #edf3f7; }
 .preview-toolbar button { padding: 5px 8px; border: 0; border-radius: 7px; background: transparent; color: #546577; cursor: pointer; font-size: 11px; font-weight: 700; }
