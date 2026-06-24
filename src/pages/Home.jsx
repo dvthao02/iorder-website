@@ -21,8 +21,6 @@ import logoFooter from '../assets/header/logo.png'
 import heroImg from '../assets/products/hero-img.png'
 import heroImg2 from '../assets/products/hero-img2.png'
 import heroImg3 from '../assets/products/hero-img3.jpg'
-import phoneIotImage from '../assets/products/mh-phone-iot.png'
-import computerIotImage from '../assets/products/mh-mt-iot.png'
 import posIotImage from '../assets/products/mh-pos-iot.png'
 import logoCrm from '../assets/partners/crm_online.png'
 import logoHuit from '../assets/partners/huit.png'
@@ -95,30 +93,6 @@ const heroSlides = [
   { image: heroImg,  width: 1672, height: 941 },
   { image: heroImg2, width: 1802, height: 873 },
   { image: heroImg3, width: 1804, height: 872 },
-]
-
-const deploymentModels = [
-  {
-    image: phoneIotImage,
-    width: 1717,
-    height: 916,
-    title: 'Mô hình 1 thiết bị',
-    description: 'Phù hợp cửa hàng nhỏ, quầy bán lưu động hoặc quán cafe cần bán hàng nhanh bằng điện thoại.',
-  },
-  {
-    image: computerIotImage,
-    width: 1619,
-    height: 972,
-    title: 'Mô hình máy tính + IoT',
-    description: 'Quản lý bán hàng trên máy tính, kết nối máy in bill, tem món, máy quét mã vạch và order từ xa.',
-  },
-  {
-    image: posIotImage,
-    width: 1536,
-    height: 1024,
-    title: 'Mô hình máy POS + IoT',
-    description: 'Bộ vận hành chuyên nghiệp cho quầy bán hàng có POS, máy in, máy quét và dữ liệu đồng bộ iOrder.',
-  },
 ]
 
 const partnerItems = [
@@ -318,9 +292,6 @@ export default function Home() {
   const resolvedIndustryGroups = isCmsMode
     ? (cmsIndustry?.data?.groups ?? []).map((group) => ({ ...group, icon: iconByKey[group.iconKey] ?? Store }))
     : industryGroups.map((group, index) => ({ ...group, icon: [Store, Utensils, ShieldCheck][index] ?? Store, items: group.items.map((item) => ({ ...item, href: `/nganh-hang/${item.slug}` })) }))
-  const resolvedProcessModels = isCmsMode
-    ? (cmsProcess?.data?.models ?? []).map((model) => ({ ...model, image: cmsMedia.get(model.mediaId)?.publicUrl, width: cmsMedia.get(model.mediaId)?.width ?? 1600, height: cmsMedia.get(model.mediaId)?.height ?? 900 })).filter((model) => model.image)
-    : deploymentModels
   const processFeatureImage = isCmsMode ? cmsMedia.get(cmsProcess?.data?.featureMediaId)?.publicUrl : posIotImage
 
   useEffect(() => {
