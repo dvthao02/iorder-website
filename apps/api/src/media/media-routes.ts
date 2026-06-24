@@ -5,8 +5,8 @@ import {
   mediaMetadataInputSchema,
 } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
-import { auditLogs, mediaAssets } from '@iorder/database'
-import { and, count, desc, eq, ilike, not } from 'drizzle-orm'
+import { auditLogs, mediaAssets, offerings, pageBlocks, partners, posts, siteProfile, testimonials } from '@iorder/database'
+import { and, count, desc, eq, ilike, isNull, not } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 
 import { createAuthGuard, requireCmsUser } from '../auth/auth-guard.js'
@@ -216,5 +216,32 @@ export function registerMediaRoutes(app: FastifyInstance, options: MediaRouteOpt
     })
 
     return { item: serializeMediaAsset(updated) }
+  })
+
+  app.get('/api/admin/media/:id/usage', { preHandler: adminGuard }, async (request, reply) => {
+    const id = contentIdSchema.safeParse((request.params as { id?: unknown }).id)
+    if (!id.success) return reply.code(400).send({ error: 'INVALID_MEDIA_ID' })
+    const [asset] = await options.db.select({ id: mediaAssets.id }).from(mediaAssets).where(eq(mediaAssets.id, id.data)).limit(1)
+    if (!asset) return reply.code(404).send({ error: 'MEDIA_NOT_FOUND' })
+
+    const [blocks, postRows, offeringRows, partnerRows, testimonialRows, profiles] = await Promise.all([
+      options.db.select({ id: pageBlocks.id, type: pageBlocks.type, data: pageBlocks.data, appearance: pageBlocks.appearance }).from(pageBlocks),
+      options.db.select({ id: posts.id, title: posts.title, coverMediaId: posts.coverMediaId }).from(posts).where(isNull(posts.deletedAt)),
+      options.db.select({ id: offerings.id, title: offerings.title, coverMediaId: offerings.coverMediaId }).from(offerings).where(isNull(offerings.deletedAt)),
+      options.db.select({ id: partners.id, name: partners.name, logoMediaId: partners.logoMediaId }).from(partners),
+      options.db.select({ id: testimonials.id, authorName: testimonials.authorName, avatarMediaId: testimonials.avatarMediaId }).from(testimonials),
+      options.db.select({ id: siteProfile.id, companyName: siteProfile.companyName, logoMediaId: siteProfile.logoMediaId }).from(siteProfile),
+    ])
+
+    const items: Array<{ entityType: 'homepage_section' | 'post' | 'offering' | 'partner' | 'testimonial' | 'site_profile'; entityId: string; label: string; location: string }> = []
+    for (const block of blocks) {
+      if (JSON.stringify({ data: block.data, appearance: block.appearance }).includes(id.data)) items.push({ entityType: 'homepage_section', entityId: block.id, label: block.type, location: 'Trang chủ' })
+    }
+    for (const row of postRows) if (row.coverMediaId === id.data) items.push({ entityType: 'post', entityId: row.id, label: row.title, location: 'Ảnh bìa bài viết' })
+    for (const row of offeringRows) if (row.coverMediaId === id.data) items.push({ entityType: 'offering', entityId: row.id, label: row.title, location: 'Ảnh bìa phần mềm/giải pháp' })
+    for (const row of partnerRows) if (row.logoMediaId === id.data) items.push({ entityType: 'partner', entityId: row.id, label: row.name, location: 'Logo đối tác' })
+    for (const row of testimonialRows) if (row.avatarMediaId === id.data) items.push({ entityType: 'testimonial', entityId: row.id, label: row.authorName, location: 'Ảnh khách hàng' })
+    for (const row of profiles) if (row.logoMediaId === id.data) items.push({ entityType: 'site_profile', entityId: row.id, label: row.companyName, location: 'Logo website' })
+    return { items, total: items.length, canDelete: items.length === 0 }
   })
 }

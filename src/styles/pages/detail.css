@@ -232,21 +232,98 @@
 }
 
 /* ── Trang 404 ─────────────────────────────────────────────────────────────── */
-.notfound-section { padding: 80px 0 100px; }
-.notfound-box { max-width: 720px; margin: 0 auto; text-align: center; }
-.notfound-code { font-size: clamp(80px, 16vw, 150px); font-weight: 900; line-height: 1; margin: 0; background: linear-gradient(135deg, var(--primary) 0%, var(--accent-3) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.notfound-box h1 { font-size: clamp(26px, 4vw, 38px); margin: 8px 0 14px; color: var(--heading); }
-.notfound-lead { color: var(--muted); font-size: 17px; line-height: 1.7; margin: 0 auto 28px; max-width: 560px; }
-.notfound-lead code { background: var(--soft); padding: 2px 8px; border-radius: 6px; color: var(--primary); font-size: 15px; }
-.notfound-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
-.btn.ghost { background: transparent; border: 1.5px solid var(--border); color: var(--heading); }
-.btn.ghost:hover { border-color: var(--primary); color: var(--primary); }
-.notfound-suggest { padding-top: 28px; border-top: 1px solid var(--border); }
-.notfound-suggest > p { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-weight: 600; margin: 0 0 14px; }
-.notfound-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.notfound-links a { padding: 8px 18px; border: 1px solid var(--border); border-radius: 999px; color: var(--heading); text-decoration: none; font-weight: 600; transition: all .15s; }
-.notfound-links a:hover { border-color: var(--primary); color: var(--primary); background: var(--soft); }
+.notfound-section {
+  min-height: calc(100svh - var(--header-height));
+  height: calc(100svh - var(--header-height));
+  padding: 28px 0 38px;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(180deg, rgba(240, 247, 255, 0.02), rgba(239, 247, 255, 0.08)),
+    url('../../assets/misc/not-found-background.png') center / cover no-repeat;
+}
+.notfound-box {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.notfound-code {
+  margin: 0;
+  color: #2d7eea;
+  font-size: clamp(130px, 14vw, 188px);
+  font-weight: 900;
+  letter-spacing: -12px;
+  line-height: .82;
+  -webkit-text-stroke: 3px rgba(255, 255, 255, 0.8);
+  text-shadow:
+    0 3px 0 #73b9ff,
+    0 7px 0 #1769d2,
+    0 12px 18px rgba(14, 79, 174, 0.25);
+}
+.notfound-box h1 {
+  margin: 24px 0 12px;
+  color: #123b81;
+  font-size: clamp(30px, 3.1vw, 42px);
+  line-height: 1.15;
+}
+.notfound-lead {
+  max-width: 560px;
+  margin: 0 auto 24px;
+  color: #435a7e;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.notfound-actions { display: flex; justify-content: center; }
+.notfound-home {
+  min-width: 276px;
+  min-height: 54px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2285f4, #075de6);
+  box-shadow: 0 12px 28px rgba(12, 94, 221, 0.28);
+  font-size: 17px;
+}
+.notfound-home:hover {
+  box-shadow: 0 15px 32px rgba(12, 94, 221, 0.36);
+  transform: translateY(-2px);
+}
+[data-theme="dark"] .notfound-section {
+  background:
+    linear-gradient(180deg, rgba(8, 18, 35, 0.28), rgba(8, 18, 35, 0.38)),
+    url('../../assets/misc/not-found-background.png') center / cover no-repeat;
+}
+[data-theme="dark"] .notfound-box {
+  background: transparent;
+}
 [data-theme="dark"] .notfound-box h1 { color: var(--text) !important; }
+
+@media (max-width: 640px) {
+  .notfound-section {
+    min-height: calc(100svh - var(--header-height));
+    height: calc(100svh - var(--header-height));
+    padding: 56px 0 72px;
+    background-position: center;
+  }
+
+  .notfound-box {
+    width: 100%;
+    padding: 0 22px;
+  }
+
+  .notfound-code {
+    font-size: clamp(104px, 34vw, 134px);
+    letter-spacing: -8px;
+  }
+
+  .notfound-box h1 {
+    margin-top: 22px;
+  }
+
+  .notfound-lead br {
+    display: none;
+  }
+}
 
 /* Nội dung HTML từ trình soạn thảo CMS (TipTap) */
 .article-rich { color: #294059; font-size: 18px; line-height: 1.8; }

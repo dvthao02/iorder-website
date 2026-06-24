@@ -1,12 +1,40 @@
-import { homepageInputSchema, type HomepageBlock, type HomepageInput, type MediaAsset } from '@iorder/contracts'
-import { useEffect, useState } from 'react'
+import {
+  DEFAULT_SECTION_APPEARANCE,
+  HOMEPAGE_SECTION_ORDER,
+  SECTION_BACKGROUND_COLORS,
+  homepageInputSchema,
+  type HomepageBlock,
+  type HomepageInput,
+  type HomepageRevisionSummary,
+  type MediaAsset,
+  type SectionAppearance,
+} from '@iorder/contracts'
+import { useEffect, useRef, useState } from 'react'
 
-import { checkApiHealth, getHomepage, listMedia, publishHomepage, saveHomepage } from './api'
-
-const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? 'http://127.0.0.1:5173/'
+import {
+  autosaveHomepage,
+  checkApiHealth,
+  checkpointHomepage,
+  createHomepagePreview,
+  getHomepage,
+  listHomepageRevisions,
+  listMedia,
+  publishHomepage,
+  restoreHomepageRevision,
+} from './api'
 
 const defaultInput: HomepageInput = {
   title: 'Trang chủ', seoTitle: null, seoDescription: null, canonicalUrl: null, blocks: [],
+}
+
+const RECOVERY_KEY = 'iorder-cms-homepage-recovery-v2'
+
+const backgroundColorLabels: Record<(typeof SECTION_BACKGROUND_COLORS)[number], string> = {
+  '#ffffff': 'Trắng',
+  '#f6fbff': 'Xanh rất nhạt',
+  '#eaf6ff': 'Xanh nhạt',
+  '#0a1628': 'Navy tối',
+  '#0f2236': 'Navy thẻ',
 }
 
 const labels: Record<HomepageBlock['type'], string> = {
@@ -53,16 +81,22 @@ function validateHomepage(input: HomepageInput) {
 }
 
 function newBlock(type: HomepageBlock['type'], mediaId = ''): HomepageBlock {
-  if (type === 'home_hero') return { type, isEnabled: true, data: { eyebrow: null, title: 'Giải pháp cho doanh nghiệp', description: 'Nhập mô tả banner', imageMediaId: null, primaryLabel: 'Liên hệ', primaryUrl: '/lien-he', secondaryLabel: null, secondaryUrl: null, points: [], slides: [] } }
-  if (type === 'home_stats') return { type, isEnabled: true, data: { stats: [{ value: '500+', label: 'Khách hàng tin dùng', note: null }], partnersHeading: 'Khách hàng & đối tác', partners: [] } }
-  if (type === 'home_features') return { type, isEnabled: true, data: { eyebrow: 'NỀN TẢNG', heading: 'Một nền tảng cho toàn bộ vận hành cửa hàng', intro: null, items: [{ title: 'Tính năng mới', description: 'Mô tả tính năng', href: null }] } }
-  if (type === 'home_industries') return { type, isEnabled: true, data: { eyebrow: 'THEO NGÀNH HÀNG', heading: 'Phù hợp nhiều mô hình kinh doanh', intro: null, groups: [{ title: 'Nhóm ngành', iconKey: 'store', items: [{ title: 'Ngành mới', description: 'Mô tả ngành', href: '/nganh-hang' }] }] } }
-  if (type === 'home_ecosystem_services') return { type, isEnabled: true, data: { eyebrow: 'TRIỂN KHAI TRỌN GÓI', heading: 'Không chỉ phần mềm — triển khai trọn gói', intro: null, groups: [{ iconKey: 'check', label: 'Nhóm', title: 'Nội dung mới', description: 'Mô tả nội dung', href: '/', items: [] }] } }
-  if (type === 'home_process') return { type, isEnabled: true, data: { eyebrow: 'QUY TRÌNH', heading: 'Quy trình triển khai rõ ràng', intro: 'Mô tả quy trình triển khai', buttonLabel: 'Liên hệ', buttonUrl: '/lien-he', featureMediaId: mediaId, steps: [{ title: 'Bước triển khai', description: 'Mô tả bước triển khai' }], models: [] } }
-  if (type === 'home_testimonials') return { type, isEnabled: true, data: { eyebrow: 'KHÁCH HÀNG NÓI GÌ', heading: 'Khách hàng tin tưởng iOrder', items: [] } }
-  if (type === 'home_featured_posts') return { type, isEnabled: true, data: { eyebrow: 'TIN TỨC IORDER', heading: 'Bài viết nổi bật', intro: null, postType: 'all', limit: 3, allLabel: 'Xem tất cả bài viết', allUrl: '/tin-tuc' } }
-  if (type === 'home_faq') return { type, isEnabled: true, data: { eyebrow: 'CÂU HỎI THƯỜNG GẶP', heading: 'Giải đáp thắc mắc', items: [{ question: 'Câu hỏi 1?', answer: 'Câu trả lời 1.' }] } }
-  return { type: 'home_cta', isEnabled: true, data: { title: 'Bạn cần tư vấn?', description: 'Liên hệ với iOrder để được hỗ trợ.', buttonLabel: 'Liên hệ', buttonUrl: '/lien-he' } }
+  const appearance = { ...DEFAULT_SECTION_APPEARANCE }
+  if (type === 'home_hero') return { type, isEnabled: false, appearance, data: { eyebrow: null, title: 'Giải pháp cho doanh nghiệp', description: 'Nhập mô tả banner', imageMediaId: null, primaryLabel: 'Liên hệ', primaryUrl: '/lien-he', secondaryLabel: null, secondaryUrl: null, points: [], slides: [] } }
+  if (type === 'home_stats') return { type, isEnabled: false, appearance, data: { stats: [{ value: '500+', label: 'Khách hàng tin dùng', note: null }], partnersHeading: 'Khách hàng & đối tác', partners: [] } }
+  if (type === 'home_features') return { type, isEnabled: false, appearance, data: { eyebrow: 'NỀN TẢNG', heading: 'Một nền tảng cho toàn bộ vận hành cửa hàng', intro: null, items: [{ title: 'Tính năng mới', description: 'Mô tả tính năng', href: null }] } }
+  if (type === 'home_industries') return { type, isEnabled: false, appearance, data: { eyebrow: 'THEO NGÀNH HÀNG', heading: 'Phù hợp nhiều mô hình kinh doanh', intro: null, groups: [{ title: 'Nhóm ngành', iconKey: 'store', items: [{ title: 'Ngành mới', description: 'Mô tả ngành', href: '/nganh-hang' }] }] } }
+  if (type === 'home_ecosystem_services') return { type, isEnabled: false, appearance, data: { eyebrow: 'TRIỂN KHAI TRỌN GÓI', heading: 'Không chỉ phần mềm — triển khai trọn gói', intro: null, groups: [{ iconKey: 'check', label: 'Nhóm', title: 'Nội dung mới', description: 'Mô tả nội dung', href: '/', items: [] }] } }
+  if (type === 'home_process') return { type, isEnabled: false, appearance, data: { eyebrow: 'QUY TRÌNH', heading: 'Quy trình triển khai rõ ràng', intro: 'Mô tả quy trình triển khai', buttonLabel: 'Liên hệ', buttonUrl: '/lien-he', featureMediaId: mediaId, steps: [{ title: 'Bước triển khai', description: 'Mô tả bước triển khai' }], models: [] } }
+  if (type === 'home_testimonials') return { type, isEnabled: false, appearance, data: { eyebrow: 'KHÁCH HÀNG NÓI GÌ', heading: 'Khách hàng tin tưởng iOrder', items: [] } }
+  if (type === 'home_featured_posts') return { type, isEnabled: false, appearance, data: { eyebrow: 'TIN TỨC IORDER', heading: 'Bài viết nổi bật', intro: null, postType: 'all', limit: 3, allLabel: 'Xem tất cả bài viết', allUrl: '/tin-tuc' } }
+  if (type === 'home_faq') return { type, isEnabled: false, appearance, data: { eyebrow: 'CÂU HỎI THƯỜNG GẶP', heading: 'Giải đáp thắc mắc', items: [{ question: 'Câu hỏi 1?', answer: 'Câu trả lời 1.' }] } }
+  return { type: 'home_cta', isEnabled: false, appearance, data: { title: 'Bạn cần tư vấn?', description: 'Liên hệ với iOrder để được hỗ trợ.', buttonLabel: 'Liên hệ', buttonUrl: '/lien-he' } }
+}
+
+function fixedBlocks(blocks: HomepageBlock[], mediaId = '') {
+  const byType = new Map(blocks.map((block) => [block.type, block]))
+  return HOMEPAGE_SECTION_ORDER.map((type) => byType.get(type) ?? newBlock(type, mediaId))
 }
 
 export function HomepageEditor({ onBack }: { onBack: () => void }) {
@@ -71,21 +105,44 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking')
+  const [autosaveState, setAutosaveState] = useState<'idle' | 'pending' | 'saving' | 'saved' | 'offline' | 'conflict'>('idle')
   const [loaded, setLoaded] = useState(false)
   const [savedSignature, setSavedSignature] = useState('')
+  const [draftVersion, setDraftVersion] = useState(0)
   const [images, setImages] = useState<MediaAsset[]>([])
+  const [selectedType, setSelectedType] = useState<HomepageBlock['type']>('home_hero')
+  const [revisions, setRevisions] = useState<HomepageRevisionSummary[]>([])
+  const [showRevisions, setShowRevisions] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
+  const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light')
+  const autosaveInFlight = useRef(false)
 
   useEffect(() => {
-    Promise.all([getHomepage(), listMedia('image')]).then(([{ item }, imageResult]) => {
+    Promise.all([getHomepage(), listMedia('image'), listHomepageRevisions()]).then(([{ item }, imageResult, revisionResult]) => {
+      const mediaId = imageResult.items[0]?.id ?? ''
       if (item) {
-        const loadedForm = { title: item.title, seoTitle: item.seoTitle, seoDescription: item.seoDescription, canonicalUrl: item.canonicalUrl, blocks: item.blocks }
+        const serverForm: HomepageInput = { title: item.title, seoTitle: item.seoTitle, seoDescription: item.seoDescription, canonicalUrl: item.canonicalUrl, blocks: fixedBlocks(item.blocks, mediaId) }
+        let loadedForm = serverForm
+        try {
+          const recovery = JSON.parse(window.localStorage.getItem(RECOVERY_KEY) ?? 'null') as { form?: unknown; baseVersion?: number } | null
+          const parsedRecovery = homepageInputSchema.safeParse(recovery?.form)
+          if (parsedRecovery.success && recovery?.baseVersion === item.draftVersion && JSON.stringify(parsedRecovery.data) !== JSON.stringify(serverForm)) {
+            loadedForm = parsedRecovery.data
+            setMessage('Đã khôi phục nội dung chưa kịp đồng bộ từ trình duyệt này.')
+          }
+        } catch { /* Ignore malformed local recovery. */ }
         setForm(loadedForm)
-        setSavedSignature(JSON.stringify(loadedForm))
+        setSavedSignature(JSON.stringify(serverForm))
         setStatus(item.status)
+        setDraftVersion(item.draftVersion)
       } else {
+        const emptyForm = { ...defaultInput, blocks: fixedBlocks([], mediaId) }
+        setForm(emptyForm)
         setSavedSignature(JSON.stringify(defaultInput))
       }
       setImages(imageResult.items)
+      setRevisions(revisionResult.items)
       setLoaded(true)
     }).catch(() => { setMessage('Không thể tải nội dung trang chủ.'); setLoaded(true) })
   }, [])
@@ -115,38 +172,102 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
 
   const formSignature = JSON.stringify(form)
   const hasUnsavedChanges = loaded && formSignature !== savedSignature
-
   const updateBlock = (index: number, data: Record<string, unknown>) => setForm((current) => ({
     ...current, blocks: current.blocks.map((block, position) => position === index ? ({ ...block, data: { ...block.data, ...data } } as HomepageBlock) : block),
   }))
-  const move = (index: number, offset: number) => setForm((current) => {
-    const blocks = [...current.blocks]; const target = index + offset
-    if (target < 0 || target >= blocks.length) return current
-    ;[blocks[index], blocks[target]] = [blocks[target]!, blocks[index]!]
-    return { ...current, blocks }
-  })
+  const updateAppearance = (index: number, appearance: Partial<SectionAppearance>) => setForm((current) => ({
+    ...current,
+    blocks: current.blocks.map((block, position) => position === index
+      ? ({ ...block, appearance: { ...block.appearance, ...appearance } } as HomepageBlock)
+      : block),
+  }))
   const updateItems = (index: number, items: unknown[]) => updateBlock(index, { items })
 
-  const save = async () => {
+  useEffect(() => {
+    if (!loaded || !hasUnsavedChanges || autosaveInFlight.current) return undefined
     const validationError = validateHomepage(form)
-    if (validationError) { setMessage(validationError); return }
-    setApiStatus('checking')
-    setBusy(true); setMessage('')
-    try { const result = await saveHomepage(form); setApiStatus('online'); setStatus(result.item.status); setSavedSignature(formSignature); setMessage('Đã lưu bản nháp. Website công khai chưa thay đổi cho đến khi xuất bản.') }
-    catch (error) { const offline = error instanceof Error && error.message === 'API_UNAVAILABLE'; setApiStatus(offline ? 'offline' : 'online'); setMessage(offline ? 'Không kết nối được CMS API tại cổng 4000. Nội dung chưa được lưu.' : 'Dữ liệu block chưa hợp lệ hoặc không thể lưu.') }
-    finally { setBusy(false) }
+    try { window.localStorage.setItem(RECOVERY_KEY, JSON.stringify({ form, baseVersion: draftVersion, savedAt: new Date().toISOString() })) } catch { /* Storage can be unavailable. */ }
+    if (validationError) { setAutosaveState('pending'); return undefined }
+    setAutosaveState('pending')
+    const timer = window.setTimeout(async () => {
+      autosaveInFlight.current = true
+      setAutosaveState('saving')
+      try {
+        const signature = JSON.stringify(form)
+        const result = await autosaveHomepage(form, draftVersion)
+        setDraftVersion(result.item.draftVersion)
+        setStatus(result.item.status)
+        setSavedSignature(signature)
+        setApiStatus('online')
+        setAutosaveState('saved')
+        try { window.localStorage.removeItem(RECOVERY_KEY) } catch { /* Ignore. */ }
+        setPreviewUrl((current) => current ? `${current.split('&refresh=')[0]}&refresh=${Date.now()}` : current)
+      } catch (error) {
+        const code = error instanceof Error ? error.message : ''
+        if (code === 'CONTENT_CONFLICT') {
+          setAutosaveState('conflict')
+          setMessage('Nội dung đã được thay đổi ở tab khác. Hãy tải lại trang trước khi tiếp tục để tránh ghi đè.')
+        } else {
+          setAutosaveState('offline')
+          setApiStatus(code === 'API_UNAVAILABLE' ? 'offline' : 'online')
+          setMessage(code === 'MEDIA_REFERENCE_NOT_FOUND'
+            ? 'Một ảnh đang dùng không còn tồn tại trong thư viện.'
+            : 'Chưa thể đồng bộ bản nháp. Bản phục hồi vẫn được giữ trong trình duyệt.')
+        }
+      } finally {
+        autosaveInFlight.current = false
+      }
+    }, 2000)
+    return () => window.clearTimeout(timer)
+  }, [draftVersion, form, hasUnsavedChanges, loaded])
+
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return
+      event.preventDefault()
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [hasUnsavedChanges])
+
+  const ensureAutosaved = async () => {
+    const validationError = validateHomepage(form)
+    if (validationError) { setMessage(validationError); return null }
+    if (!hasUnsavedChanges) return draftVersion
+    const signature = JSON.stringify(form)
+    const result = await autosaveHomepage(form, draftVersion)
+    setDraftVersion(result.item.draftVersion)
+    setSavedSignature(signature)
+    setAutosaveState('saved')
+    try { window.localStorage.removeItem(RECOVERY_KEY) } catch { /* Ignore. */ }
+    return result.item.draftVersion
   }
+
+  const save = async () => {
+    setBusy(true); setMessage('')
+    try {
+      const version = await ensureAutosaved()
+      if (version === null) return
+      await checkpointHomepage(version, 'Mốc lưu thủ công')
+      setRevisions((await listHomepageRevisions()).items)
+      setMessage('Đã lưu một phiên bản để có thể khôi phục về sau.')
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setMessage(code === 'CONTENT_CONFLICT' ? 'Có thay đổi từ tab khác. Hãy tải lại trang.' : 'Không thể lưu phiên bản lúc này.')
+    } finally { setBusy(false) }
+  }
+
   const publish = async () => {
-    const validationError = validateHomepage(form)
-    if (validationError) { setMessage(validationError); return }
     setApiStatus('checking')
     setBusy(true); setMessage('')
     try {
-      await saveHomepage(form)
-      const result = await publishHomepage()
+      const version = await ensureAutosaved()
+      if (version === null) return
+      const result = await publishHomepage(version, 'Xuất bản từ trình biên tập trang chủ')
       setApiStatus('online')
       setStatus(result.item.status)
-      setSavedSignature(formSignature)
+      setDraftVersion(result.item.draftVersion)
+      setRevisions((await listHomepageRevisions()).items)
       setMessage('Đã lưu và xuất bản trang chủ. Mở lại website để kiểm tra nội dung mới.')
     }
     catch (error) {
@@ -161,19 +282,71 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
     finally { setBusy(false) }
   }
 
+  const openPreview = async () => {
+    setBusy(true); setMessage('')
+    try {
+      const version = await ensureAutosaved()
+      if (version === null) return
+      const preview = await createHomepagePreview()
+      const url = new URL(preview.previewUrl)
+      url.searchParams.set('cmsTheme', previewTheme)
+      setPreviewUrl(url.toString())
+    } catch { setMessage('Không thể tạo bản xem trước. Hãy kiểm tra kết nối CMS API.') }
+    finally { setBusy(false) }
+  }
+
+  const restoreRevision = async (version: number) => {
+    if (!window.confirm(`Khôi phục phiên bản ${version} thành bản nháp hiện tại? Website công khai sẽ không thay đổi.`)) return
+    setBusy(true); setMessage('')
+    try {
+      const result = await restoreHomepageRevision(version, draftVersion)
+      const restored: HomepageInput = { title: result.item.title, seoTitle: result.item.seoTitle, seoDescription: result.item.seoDescription, canonicalUrl: result.item.canonicalUrl, blocks: fixedBlocks(result.item.blocks, images[0]?.id) }
+      setForm(restored)
+      setSavedSignature(JSON.stringify(restored))
+      setDraftVersion(result.item.draftVersion)
+      setStatus(result.item.status)
+      setRevisions((await listHomepageRevisions()).items)
+      setMessage(`Đã khôi phục phiên bản ${version} thành bản nháp mới.`)
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setMessage(code === 'MEDIA_REFERENCE_NOT_FOUND' ? 'Phiên bản này tham chiếu ảnh không còn tồn tại.' : 'Không thể khôi phục phiên bản.')
+    } finally { setBusy(false) }
+  }
+
   return <section className="admin-card content-manager">
     <button className="text-button" type="button" onClick={onBack}>← Tổng quan</button>
     <p className="admin-kicker">Nội dung website</p>
-    <div className="manager-heading"><div><h1>Trang chủ</h1><p>Trạng thái: {status} · {hasUnsavedChanges ? 'Có thay đổi chưa lưu' : 'Không có thay đổi mới'} · <span className={`api-state is-${apiStatus}`}>API {apiStatus === 'online' ? 'online' : apiStatus === 'offline' ? 'offline' : 'đang kiểm tra'}</span></p></div><div className="post-actions"><button disabled={busy || !hasUnsavedChanges} type="button" onClick={() => void save()}>Lưu nháp</button><button className="publish-button" disabled={busy || form.blocks.length === 0} type="button" onClick={() => void publish()}>{busy ? 'Đang xuất bản...' : 'Lưu & xuất bản'}</button><a className="secondary-button preview-link" href={PUBLIC_SITE_URL} target="_blank" rel="noreferrer">Xem website ↗</a></div></div>
+    <div className="manager-heading"><div><h1>Trang chủ</h1><p>Trạng thái: {status} · Phiên bản nháp: {draftVersion} · <span className={`autosave-state is-${autosaveState}`}>{autosaveState === 'saving' ? 'Đang tự lưu…' : autosaveState === 'pending' ? 'Chờ tự lưu' : autosaveState === 'saved' ? 'Đã tự lưu' : autosaveState === 'offline' ? 'Chưa đồng bộ' : autosaveState === 'conflict' ? 'Xung đột dữ liệu' : 'Đã tải'}</span> · <span className={`api-state is-${apiStatus}`}>API {apiStatus === 'online' ? 'online' : apiStatus === 'offline' ? 'offline' : 'đang kiểm tra'}</span></p></div><div className="post-actions"><button disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void save()}>Lưu phiên bản</button><button className="publish-button" disabled={busy || form.blocks.length === 0 || autosaveState === 'conflict'} type="button" onClick={() => void publish()}>{busy ? 'Đang xử lý...' : 'Xuất bản'}</button><button className="secondary-button" disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void openPreview()}>Xem trước</button><button className="secondary-button" type="button" onClick={() => setShowRevisions((current) => !current)}>Lịch sử ({revisions.length})</button></div></div>
     {message ? <p className={`publish-notice ${apiStatus === 'offline' ? 'is-error' : ''}`} role="status">{message}</p> : null}
     <div className="post-form homepage-meta">
       <label>Tiêu đề SEO<input maxLength={70} value={form.seoTitle ?? ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value || null })} /><small>Hiển thị trên tab trình duyệt và công cụ tìm kiếm.</small></label>
       <label>Mô tả SEO<textarea maxLength={180} value={form.seoDescription ?? ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value || null })} /><small>Phần mô tả dành cho Google và chia sẻ mạng xã hội.</small></label>
     </div>
-    <div className="block-add-row">{(Object.keys(labels) as HomepageBlock['type'][]).map((type) => <button className="secondary-button" disabled={form.blocks.some((block) => block.type === type)} key={type} type="button" onClick={() => setForm({ ...form, blocks: [...form.blocks, newBlock(type, images[0]?.id)] })}>+ {labels[type]}</button>)}</div>
-    <div className="block-list">{form.blocks.map((block, index) => <article className="block-card" key={`${block.type}-${index}`}>
-      <div className="block-card-heading"><strong>{index + 1}. {labels[block.type]}</strong><div><button type="button" onClick={() => move(index, -1)}>↑</button><button type="button" onClick={() => move(index, 1)}>↓</button><button type="button" onClick={() => setForm({ ...form, blocks: form.blocks.filter((_, i) => i !== index) })}>Xóa</button></div></div>
+    <div className="fixed-editor-layout">
+      <aside className="fixed-section-nav" aria-label="Các khu vực trang chủ">
+        <div className="fixed-section-nav-head"><strong>Cấu trúc cố định</strong><small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small></div>
+        {form.blocks.map((block, index) => <button className={block.type === selectedType ? 'is-active' : ''} key={block.type} type="button" onClick={() => setSelectedType(block.type)}><span>{index + 1}</span><b>{labels[block.type]}</b><small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small></button>)}
+      </aside>
+      <div className="block-list">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
+      <div className="block-card-heading"><strong>{index + 1}. {labels[block.type]}</strong><span className="fixed-structure-badge">Section cố định</span></div>
       <label className="inline-check"><input checked={block.isEnabled} type="checkbox" onChange={(e) => setForm({ ...form, blocks: form.blocks.map((item, i) => i === index ? { ...item, isEnabled: e.target.checked } : item) })} /> Hiển thị block</label>
+      <fieldset className="appearance-editor">
+        <legend>Background của section</legend>
+        <div className="form-row">
+          <label>Ảnh nền desktop<select value={block.appearance.backgroundMediaId ?? ''} onChange={(e) => updateAppearance(index, { backgroundMediaId: e.target.value || null })}><option value="">Dùng giao diện mặc định</option>{images.map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}</select></label>
+          <label>Ảnh nền mobile<select value={block.appearance.mobileBackgroundMediaId ?? ''} onChange={(e) => updateAppearance(index, { mobileBackgroundMediaId: e.target.value || null })}><option value="">Dùng ảnh desktop</option>{images.map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}</select></label>
+        </div>
+        <div className="form-row appearance-options">
+          <label>Màu nền<select value={block.appearance.backgroundColor ?? ''} onChange={(e) => updateAppearance(index, { backgroundColor: (e.target.value || null) as SectionAppearance['backgroundColor'] })}><option value="">Mặc định</option>{SECTION_BACKGROUND_COLORS.map((color) => <option key={color} value={color}>{backgroundColorLabels[color]}</option>)}</select></label>
+          <label>Hiển thị ảnh<select value={block.appearance.backgroundFit} onChange={(e) => updateAppearance(index, { backgroundFit: e.target.value as SectionAppearance['backgroundFit'] })}><option value="cover">Phủ kín</option><option value="contain">Hiện toàn bộ</option></select></label>
+          <label>Lớp phủ<select value={block.appearance.overlay} onChange={(e) => updateAppearance(index, { overlay: e.target.value as SectionAppearance['overlay'] })}><option value="none">Không có</option><option value="light">Sáng</option><option value="dark-soft">Tối nhẹ</option><option value="dark-medium">Tối vừa</option></select></label>
+        </div>
+        <div className="form-row focal-controls">
+          <label>Điểm lấy nét ngang: {block.appearance.focalPointX}%<input min={0} max={100} type="range" value={block.appearance.focalPointX} onChange={(e) => updateAppearance(index, { focalPointX: Number(e.target.value) })} /></label>
+          <label>Điểm lấy nét dọc: {block.appearance.focalPointY}%<input min={0} max={100} type="range" value={block.appearance.focalPointY} onChange={(e) => updateAppearance(index, { focalPointY: Number(e.target.value) })} /></label>
+        </div>
+        <div className="appearance-actions"><button className="secondary-button" type="button" onClick={() => updateAppearance(index, { ...DEFAULT_SECTION_APPEARANCE })}>Khôi phục background mặc định</button>{block.appearance.backgroundMediaId && block.appearance.overlay === 'none' ? <small className="contrast-warning">Nên chọn lớp phủ nếu chữ khó đọc trên ảnh nền.</small> : null}</div>
+      </fieldset>
       {'eyebrow' in block.data ? <label>Nhãn nhỏ / eyebrow<input value={block.data.eyebrow ?? ''} onChange={(e) => updateBlock(index, { eyebrow: e.target.value || null })} /></label> : null}
       {'heading' in block.data ? <label>Tiêu đề<input value={String(block.data.heading)} onChange={(e) => updateBlock(index, { heading: e.target.value })} /></label> : null}
       {'title' in block.data ? <label>Tiêu đề<input value={String(block.data.title)} onChange={(e) => updateBlock(index, { title: e.target.value })} /></label> : null}
@@ -245,6 +418,16 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
           <label>Liên kết<input value={block.data.buttonUrl} onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })} /></label>
         </div>
       ) : null}
-    </article>)}</div>
+      </article>)}</div>
+      <aside className="homepage-preview-panel">
+        <div className="preview-toolbar">
+          <strong>Live preview</strong>
+          <div className="preview-toolbar-group"><button className={previewMode === 'desktop' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('desktop')}>Desktop</button><button className={previewMode === 'tablet' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('tablet')}>Tablet</button><button className={previewMode === 'mobile' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('mobile')}>Mobile</button></div>
+          <div className="preview-toolbar-group"><button className={previewTheme === 'light' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('light')}>Sáng</button><button className={previewTheme === 'dark' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('dark')}>Tối</button></div>
+        </div>
+        {previewUrl ? <div className={`preview-frame-wrap is-${previewMode}`}><iframe key={`${previewUrl}-${previewTheme}`} src={`${previewUrl.split('&cmsTheme=')[0]}&cmsTheme=${previewTheme}`} title="Xem trước bản nháp trang chủ" /></div> : <div className="preview-placeholder"><p>Bản xem trước chỉ đọc nội dung đã autosave và không ảnh hưởng website công khai.</p><button className="primary-cta" type="button" onClick={() => void openPreview()}>Tạo bản xem trước</button></div>}
+      </aside>
+    </div>
+    {showRevisions ? <aside className="revision-drawer" aria-label="Lịch sử phiên bản"><div className="revision-drawer-head"><div><strong>Lịch sử phiên bản</strong><small>Khôi phục luôn tạo bản nháp mới.</small></div><button type="button" onClick={() => setShowRevisions(false)}>Đóng</button></div>{revisions.length === 0 ? <p>Chưa có phiên bản nào.</p> : <ol>{revisions.map((revision) => <li key={revision.id}><div><strong>Phiên bản {revision.versionNumber}</strong><span>{revision.isPublished ? 'Đã xuất bản' : 'Bản lưu'} · {new Date(revision.createdAt).toLocaleString('vi-VN')}</span><small>{revision.changeNote ?? 'Không có ghi chú'}{revision.editorName ? ` · ${revision.editorName}` : ''}</small></div><button disabled={busy} type="button" onClick={() => void restoreRevision(revision.versionNumber)}>Khôi phục</button></li>)}</ol>}</aside> : null}
   </section>
 }

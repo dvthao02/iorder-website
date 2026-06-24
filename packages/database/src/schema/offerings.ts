@@ -27,6 +27,7 @@ export const offerings = pgTable('offerings', {
   contentJson: jsonb('content_json').$type<Record<string, unknown>>().notNull(),
   icon: varchar('icon', { length: 120 }),
   status: contentStatusEnum('status').default('draft').notNull(),
+  draftVersion: integer('draft_version').default(0).notNull(),
   sortOrder: integer('sort_order').default(0).notNull(),
   isFeatured: boolean('is_featured').default(false).notNull(),
   seoTitle: varchar('seo_title', { length: 70 }),
@@ -66,4 +67,3 @@ export const partners = pgTable('partners', {
   uniqueIndex('partners_name_unique').on(table.name),
   index('partners_enabled_sort_index').on(table.isEnabled, table.sortOrder),
 ])
-

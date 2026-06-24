@@ -123,7 +123,12 @@ export async function buildApp(env: ApiEnv) {
     maxFileSizeBytes: env.MEDIA_MAX_FILE_SIZE_MB * 1024 * 1024,
   })
   registerPostRoutes(app, { db: database.db })
-  registerHomepageRoutes(app, { db: database.db, slug: env.HOMEPAGE_SLUG })
+  registerHomepageRoutes(app, {
+    db: database.db,
+    slug: env.HOMEPAGE_SLUG,
+    previewSecret: env.CMS_PREVIEW_SECRET ?? env.SESSION_SECRET,
+    publicOrigin: env.PUBLIC_ORIGIN,
+  })
   registerOfferingRoutes(app, { db: database.db })
   registerPartnerRoutes(app, { db: database.db })
   registerTestimonialRoutes(app, { db: database.db })

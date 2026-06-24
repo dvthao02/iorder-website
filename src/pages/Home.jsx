@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { HOMEPAGE_SECTION_ORDER } from '@iorder/contracts'
 import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
 import { externalLinks, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
@@ -40,6 +41,42 @@ import { industryGroups } from '../data/industrySolutions'
 
 const localApiHost = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
 const API_URL = import.meta.env.VITE_API_URL ?? `http://${localApiHost}:4000`
+
+const overlayGradients = {
+  none: 'linear-gradient(transparent, transparent)',
+  light: 'linear-gradient(rgba(255,255,255,.62), rgba(255,255,255,.62))',
+  'dark-soft': 'linear-gradient(rgba(8,18,35,.36), rgba(8,18,35,.36))',
+  'dark-medium': 'linear-gradient(rgba(8,18,35,.58), rgba(8,18,35,.58))',
+}
+
+function cmsSectionProps(block, media) {
+  const appearance = block?.appearance
+  if (!appearance) return { 'data-cms-section': block?.type }
+  const desktop = appearance.backgroundMediaId ? media.get(appearance.backgroundMediaId)?.publicUrl : null
+  const mobile = appearance.mobileBackgroundMediaId ? media.get(appearance.mobileBackgroundMediaId)?.publicUrl : desktop
+  const imageValue = (url) => url ? `url(${JSON.stringify(url)})` : 'none'
+  return {
+    'data-cms-section': block.type,
+    className: 'cms-section-appearance',
+    style: {
+      '--cms-bg-desktop': imageValue(desktop),
+      '--cms-bg-mobile': imageValue(mobile),
+      '--cms-bg-color': appearance.backgroundColor ?? 'transparent',
+      '--cms-bg-fit': appearance.backgroundFit,
+      '--cms-bg-position': `${appearance.focalPointX}% ${appearance.focalPointY}%`,
+      '--cms-bg-overlay': overlayGradients[appearance.overlay] ?? overlayGradients.none,
+    },
+  }
+}
+
+function mergeSectionProps(baseClassName, baseStyle, block, media) {
+  const appearance = cmsSectionProps(block, media)
+  return {
+    ...appearance,
+    className: `${baseClassName}${appearance.className ? ` ${appearance.className}` : ''}`,
+    style: { ...baseStyle, ...appearance.style },
+  }
+}
 
 function getItemIcon(title = '') {
   const t = title.toLowerCase()
@@ -159,7 +196,10 @@ export default function Home() {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0)
   const [loadedHeroSlides, setLoadedHeroSlides] = useState([0])
   const [activeNewsIndex, setActiveNewsIndex] = useState(0)
+  const previewToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('cmsPreview') : null
+  const previewTheme = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('cmsTheme') : null
   const [cmsHomepage, setCmsHomepage] = useState(() => {
+    if (previewToken) return null
     try {
       const raw = sessionStorage.getItem('cms_hp')
       return raw ? JSON.parse(raw) : null
@@ -177,6 +217,18 @@ export default function Home() {
     fetchPartners().then(setTablePartners).catch(() => {})
     fetchTestimonials().then(setTableTestimonials).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!previewToken || !['light', 'dark'].includes(previewTheme)) return undefined
+    const root = document.documentElement
+    const previous = root.getAttribute('data-theme')
+    if (previewTheme === 'dark') root.setAttribute('data-theme', 'dark')
+    else root.removeAttribute('data-theme')
+    return () => {
+      if (previous) root.setAttribute('data-theme', previous)
+      else root.removeAttribute('data-theme')
+    }
+  }, [previewTheme, previewToken])
 
   // Count-up animation for numeric stat elements
   useEffect(() => {
@@ -207,12 +259,15 @@ export default function Home() {
 
   useEffect(() => {
     let active = true
-    const loadHomepage = () => fetch(`${API_URL}/api/public/homepage`, { cache: 'no-store' })
+    const endpoint = previewToken
+      ? `${API_URL}/api/public/homepage/preview?token=${encodeURIComponent(previewToken)}`
+      : `${API_URL}/api/public/homepage`
+    const loadHomepage = () => fetch(endpoint, { cache: 'no-store' })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('CMS unavailable')))
       .then((payload) => {
         if (!active) return
         setCmsHomepage(payload)
-        try { sessionStorage.setItem('cms_hp', JSON.stringify(payload)) } catch {}
+        if (!previewToken) try { sessionStorage.setItem('cms_hp', JSON.stringify(payload)) } catch {}
       })
       .catch(() => { if (active) setCmsHomepage(null) })
     const refreshWhenVisible = () => {
@@ -227,7 +282,7 @@ export default function Home() {
       window.removeEventListener('focus', loadHomepage)
       document.removeEventListener('visibilitychange', refreshWhenVisible)
     }
-  }, [])
+  }, [previewToken])
 
   const cmsMedia = useMemo(() => new Map((cmsHomepage?.media ?? []).map((asset) => [asset.id, asset])), [cmsHomepage])
   const cmsBlock = (type) => cmsHomepage?.item?.blocks?.find((block) => block.type === type && block.isEnabled)
@@ -243,7 +298,7 @@ export default function Home() {
   const cmsCta           = cmsBlock('home_cta')
   const isCmsMode = Boolean(cmsHomepage)
   const shouldShow = (type) => !isCmsMode || Boolean(cmsBlock(type))
-  const blockOrder = (type) => isCmsMode ? cmsHomepage.item.blocks.findIndex((block) => block.type === type) : undefined
+  const blockOrder = (type) => HOMEPAGE_SECTION_ORDER.indexOf(type)
   const resolvedHeroSlides = isCmsMode
     ? (cmsHero?.data?.slides ?? []).map((slide) => ({ image: cmsMedia.get(slide.imageMediaId)?.publicUrl, width: cmsMedia.get(slide.imageMediaId)?.width ?? 1600, height: cmsMedia.get(slide.imageMediaId)?.height ?? 900, title: slide.title, caption: slide.description })).filter((slide) => slide.image)
     : heroSlides
@@ -339,9 +394,10 @@ export default function Home() {
   useEffect(() => {
     setPageSeo({
       title: cmsHomepage?.item?.seoTitle ?? (location.pathname === '/' ? 'iOrder - Trang chủ' : 'iOrder - Phần mềm quản lý bán hàng'),
-      description: cmsHomepage?.item?.seoDescription ?? 'iOrder hỗ trợ POS bán hàng, order tại bàn, quản lý kho, nhân viên và báo cáo doanh thu cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.'
+      description: cmsHomepage?.item?.seoDescription ?? 'iOrder hỗ trợ POS bán hàng, order tại bàn, quản lý kho, nhân viên và báo cáo doanh thu cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.',
+      noindex: Boolean(previewToken),
     })
-  }, [location.pathname, cmsHomepage?.item?.seoTitle, cmsHomepage?.item?.seoDescription])
+  }, [location.pathname, cmsHomepage?.item?.seoTitle, cmsHomepage?.item?.seoDescription, previewToken])
 
   useEffect(() => {
     if (resolvedHeroSlides.length === 0) return undefined
@@ -394,8 +450,9 @@ export default function Home() {
       mainClassName={isCmsMode ? 'cms-home-layout' : undefined}
       mainProps={{ 'data-content-source': cmsHomepage ? 'cms' : 'static-fallback' }}
     >
+        {previewToken ? <div className="cms-preview-banner" role="status">Đang xem bản nháp CMS · Nội dung này chưa được xuất bản</div> : null}
         {/* Hero Section */}
-        {shouldShow('home_hero') ? <section className="hero" style={{ order: blockOrder('home_hero') }}>
+        {shouldShow('home_hero') ? <section {...mergeSectionProps('hero', { order: blockOrder('home_hero') }, cmsHero, cmsMedia)}>
           <div className="container hero-grid">
             <div className="hero-content">
               <span className="eyebrow">
@@ -553,7 +610,7 @@ export default function Home() {
         </section>
 
         {/* Partners Section (số liệu đã hiển thị ở mục Giới thiệu công ty phía trên) */}
-        {resolvedPartners.length > 0 ? <section className="section home-stats-section" style={{ order: isCmsMode ? (blockOrder('home_stats') >= 0 ? blockOrder('home_stats') : blockOrder('home_hero')) : undefined }}>
+        {shouldShow('home_stats') && resolvedPartners.length > 0 ? <section {...mergeSectionProps('section home-stats-section', { order: blockOrder('home_stats') }, cmsStats, cmsMedia)}>
           <div className="container">
             {resolvedPartners.length > 0 ? <>
               <p className="partners-trust-line">
@@ -578,7 +635,7 @@ export default function Home() {
         </section> : null}
 
         {/* Industry Solutions Section */}
-        {shouldShow('home_industries') ? <section className="section industry-section" style={{ order: blockOrder('home_industries') }}>
+        {shouldShow('home_industries') ? <section {...mergeSectionProps('section industry-section', { order: blockOrder('home_industries') }, cmsIndustry, cmsMedia)}>
           <div className="container">
             <div className="industry-compact-header">
               <div>
@@ -614,7 +671,7 @@ export default function Home() {
         </section> : null}
 
         {/* Features Section */}
-        {shouldShow('home_features') ? <section className="section feature-showcase-section" style={{ order: blockOrder('home_features') }}>
+        {shouldShow('home_features') ? <section {...mergeSectionProps('section feature-showcase-section', { order: blockOrder('home_features') }, cmsFeatures, cmsMedia)}>
           <div className="container">
             <div className="section-title">
               <span className="section-eyebrow">{cmsFeatures?.data?.eyebrow ?? 'TÍNH NĂNG'}</span>
@@ -651,7 +708,7 @@ export default function Home() {
         </section> : null}
 
         {/* Testimonials Section */}
-        {(shouldShow('home_testimonials') || resolvedTestimonials.length > 0) ? <section className="section home-testimonials-section" style={{ order: isCmsMode ? (blockOrder('home_testimonials') >= 0 ? blockOrder('home_testimonials') : blockOrder('home_cta')) : undefined }}>
+        {shouldShow('home_testimonials') && resolvedTestimonials.length > 0 ? <section {...mergeSectionProps('section home-testimonials-section', { order: blockOrder('home_testimonials') }, cmsTestimonials, cmsMedia)}>
           <div className="container">
             <div className="section-title">
               <span className="section-eyebrow">{cmsTestimonials?.data?.eyebrow ?? 'KHÁCH HÀNG NÓI GÌ'}</span>
@@ -678,7 +735,7 @@ export default function Home() {
         </section> : null}
 
         {/* Ecosystem Services Section */}
-        {shouldShow('home_ecosystem_services') ? <section id="giai-phap" className="section" style={{ order: blockOrder('home_ecosystem_services') }}>
+        {shouldShow('home_ecosystem_services') ? <section id="giai-phap" {...mergeSectionProps('section', { order: blockOrder('home_ecosystem_services') }, cmsEcosystem, cmsMedia)}>
           <div className="container">
             <div className="section-title">
               <span className="section-eyebrow">{cmsEcosystem?.data?.eyebrow ?? 'TRIỂN KHAI TRỌN GÓI'}</span>
@@ -719,7 +776,7 @@ export default function Home() {
         </section> : null}
 
         {/* Process Section */}
-        {shouldShow('home_process') ? <section className="section deployment-section" style={{ order: blockOrder('home_process') }}>
+        {shouldShow('home_process') ? <section {...mergeSectionProps('section deployment-section', { order: blockOrder('home_process') }, cmsProcess, cmsMedia)}>
           <div className="container deployment-grid">
             <div className="deployment-copy">
               <span className="section-eyebrow">{cmsProcess?.data?.eyebrow ?? 'QUY TRÌNH TRIỂN KHAI'}</span>
@@ -752,7 +809,7 @@ export default function Home() {
         </section> : null}
 
         {/* Featured Posts Section */}
-        {shouldShow('home_featured_posts') ? <section className="section home-news-section" style={{ order: blockOrder('home_featured_posts') }}>
+        {shouldShow('home_featured_posts') ? <section {...mergeSectionProps('section home-news-section', { order: blockOrder('home_featured_posts') }, cmsFeaturedPosts, cmsMedia)}>
           <div className="container">
             <div className="home-news-heading">
               <div className="section-title">
@@ -787,7 +844,7 @@ export default function Home() {
         </section> : null}
 
         {/* FAQ Section */}
-        {(shouldShow('home_faq') || faqItems.length > 0) ? <section className="section home-faq-section" style={{ order: isCmsMode ? (blockOrder('home_faq') >= 0 ? blockOrder('home_faq') : blockOrder('home_cta')) : undefined }}>
+        {shouldShow('home_faq') ? <section {...mergeSectionProps('section home-faq-section', { order: blockOrder('home_faq') }, cmsFaq, cmsMedia)}>
           <div className="container home-faq-container">
             <div className="section-title">
               <span className="section-eyebrow">{cmsFaq?.data?.eyebrow ?? 'CÂU HỎI THƯỜNG GẶP'}</span>
@@ -818,7 +875,7 @@ export default function Home() {
         </section> : null}
 
         {/* CTA Section */}
-        {shouldShow('home_cta') ? <section className="section" style={{ textAlign: 'center', padding: '60px 0', order: blockOrder('home_cta') }}>
+        {shouldShow('home_cta') ? <section {...mergeSectionProps('section', { textAlign: 'center', padding: '60px 0', order: blockOrder('home_cta') }, cmsCta, cmsMedia)}>
           <div className="container">
             <h2 style={{ fontSize: 'clamp(28px, 3vw, 42px)', marginBottom: '20px' }}>{cmsCta?.data?.title ?? 'Sẵn sàng tăng cường bán hàng?'}</h2>
             <p style={{ fontSize: '18px', color: 'var(--muted)', marginBottom: '30px', maxWidth: '600px', margin: '0 auto 30px' }}>

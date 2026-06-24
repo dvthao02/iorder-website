@@ -20,13 +20,14 @@ function formatDate(iso: string) {
 
 export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
   const [posts, setPosts] = useState<PostResponse[]>([])
-  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0 })
+  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0, hiddenSections: 0, missingAlt: 0, missingSeo: 0, expiringPromotions: 0 })
   const [homepageStatus, setHomepageStatus] = useState('—')
 
   useEffect(() => {
     Promise.all([listPosts(), listMedia(), listPartners(), listTestimonials(), getHomepage()])
       .then(([postRes, media, partners, testimonials, homepage]) => {
         const items = postRes.items
+        const soon = Date.now() + 14 * 24 * 60 * 60 * 1000
         setPosts(items)
         setCounts({
           posts: postRes.total,
@@ -35,6 +36,10 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
           media: media.total,
           partners: partners.total,
           testimonials: testimonials.total,
+          hiddenSections: homepage.item?.blocks.filter((block) => !block.isEnabled).length ?? 0,
+          missingAlt: media.items.filter((asset) => asset.mimeType.startsWith('image/') && !asset.altText?.trim()).length,
+          missingSeo: items.filter((post) => !post.seoTitle?.trim() || !post.seoDescription?.trim()).length,
+          expiringPromotions: items.filter((post) => post.type === 'promotion' && post.promotionEndAt && new Date(post.promotionEndAt).getTime() <= soon && new Date(post.promotionEndAt).getTime() >= Date.now()).length,
         })
         setHomepageStatus(homepage.item?.status ?? 'draft')
       })
@@ -55,6 +60,10 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
   if (counts.partners === 0) todos.push({ icon: Users, text: 'Chưa có đối tác nào — thêm logo đối tác', module: 'partners' })
   if (counts.testimonials === 0) todos.push({ icon: MessageSquareQuote, text: 'Chưa có đánh giá khách hàng', module: 'testimonials' })
   if (homepageStatus !== 'published') todos.push({ icon: Star, text: 'Trang chủ chưa được xuất bản', module: 'homepage' })
+  if (counts.hiddenSections > 0) todos.push({ icon: Star, text: `${counts.hiddenSections} section trang chủ đang ẩn`, module: 'homepage' })
+  if (counts.missingAlt > 0) todos.push({ icon: ImageIcon, text: `${counts.missingAlt} ảnh chưa có alt text`, module: 'media' })
+  if (counts.missingSeo > 0) todos.push({ icon: FileText, text: `${counts.missingSeo} bài viết thiếu thông tin SEO`, module: 'posts' })
+  if (counts.expiringPromotions > 0) todos.push({ icon: FileText, text: `${counts.expiringPromotions} khuyến mãi sắp hết hạn`, module: 'posts' })
   if (todos.length === 0) todos.push({ icon: Star, text: 'Mọi thứ đã sẵn sàng 🎉', module: 'dashboard' })
 
   return (
@@ -82,6 +91,13 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
             </span>
           </button>
         ))}
+      </div>
+
+      <div className="content-health-strip" aria-label="Sức khỏe nội dung">
+        <div><span>Section đang ẩn</span><strong>{counts.hiddenSections}</strong></div>
+        <div><span>Ảnh thiếu alt</span><strong>{counts.missingAlt}</strong></div>
+        <div><span>Bài thiếu SEO</span><strong>{counts.missingSeo}</strong></div>
+        <div><span>Khuyến mãi sắp hết hạn</span><strong>{counts.expiringPromotions}</strong></div>
       </div>
 
       <div className="dash-columns">

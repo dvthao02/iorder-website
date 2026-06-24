@@ -33,6 +33,7 @@
     "db:seed": "pnpm --filter @iorder/database db:seed"
   },
   "dependencies": {
+    "@iorder/contracts": "workspace:^",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
     "react": "latest",

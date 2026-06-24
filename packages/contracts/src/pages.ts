@@ -3,6 +3,49 @@ import { z } from 'zod'
 import { contentIdSchema } from './content.js'
 import { mediaAssetSchema } from './media.js'
 
+export const HOMEPAGE_SECTION_ORDER = [
+  'home_hero',
+  'home_stats',
+  'home_industries',
+  'home_features',
+  'home_testimonials',
+  'home_ecosystem_services',
+  'home_process',
+  'home_featured_posts',
+  'home_faq',
+  'home_cta',
+] as const
+
+export type HomepageSectionType = (typeof HOMEPAGE_SECTION_ORDER)[number]
+
+export const SECTION_BACKGROUND_COLORS = [
+  '#ffffff',
+  '#f6fbff',
+  '#eaf6ff',
+  '#0a1628',
+  '#0f2236',
+] as const
+
+export const DEFAULT_SECTION_APPEARANCE = {
+  backgroundMediaId: null,
+  mobileBackgroundMediaId: null,
+  backgroundColor: null,
+  backgroundFit: 'cover',
+  focalPointX: 50,
+  focalPointY: 50,
+  overlay: 'none',
+} as const
+
+export const sectionAppearanceSchema = z.object({
+  backgroundMediaId: contentIdSchema.nullable().default(null),
+  mobileBackgroundMediaId: contentIdSchema.nullable().default(null),
+  backgroundColor: z.enum(SECTION_BACKGROUND_COLORS).nullable().default(null),
+  backgroundFit: z.enum(['cover', 'contain']).default('cover'),
+  focalPointX: z.number().int().min(0).max(100).default(50),
+  focalPointY: z.number().int().min(0).max(100).default(50),
+  overlay: z.enum(['none', 'light', 'dark-soft', 'dark-medium']).default('none'),
+}).default(DEFAULT_SECTION_APPEARANCE)
+
 const optionalText = (max: number) => z.string().trim().max(max).nullable().default(null)
 const contentUrlSchema = z.string().trim().min(1).max(1000).refine(
   (value) => value.startsWith('/') || /^(https?:|mailto:|tel:)/.test(value),
@@ -19,6 +62,7 @@ const linkItemSchema = z.object({
 const homeHeroBlockSchema = z.object({
   type: z.literal('home_hero'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     title: z.string().trim().min(1).max(220),
@@ -41,6 +85,7 @@ const homeHeroBlockSchema = z.object({
 const homeStatsBlockSchema = z.object({
   type: z.literal('home_stats'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     stats: z.array(z.object({
       value: z.string().trim().min(1).max(80),
@@ -60,6 +105,7 @@ const homeStatsBlockSchema = z.object({
 const homeFeaturesBlockSchema = z.object({
   type: z.literal('home_features'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -76,6 +122,7 @@ const homeFeaturesBlockSchema = z.object({
 const homeIndustriesBlockSchema = z.object({
   type: z.literal('home_industries'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -96,6 +143,7 @@ const homeIndustriesBlockSchema = z.object({
 const homeEcosystemServicesBlockSchema = z.object({
   type: z.literal('home_ecosystem_services'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -115,6 +163,7 @@ const homeEcosystemServicesBlockSchema = z.object({
 const homeProcessBlockSchema = z.object({
   type: z.literal('home_process'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -138,6 +187,7 @@ const homeProcessBlockSchema = z.object({
 const homeTestimonialsBlockSchema = z.object({
   type: z.literal('home_testimonials'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -155,6 +205,7 @@ const homeTestimonialsBlockSchema = z.object({
 const homeFeaturedPostsBlockSchema = z.object({
   type: z.literal('home_featured_posts'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -170,6 +221,7 @@ const homeFeaturedPostsBlockSchema = z.object({
 const homeFaqBlockSchema = z.object({
   type: z.literal('home_faq'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
@@ -184,6 +236,7 @@ const homeFaqBlockSchema = z.object({
 const homeCtaBlockSchema = z.object({
   type: z.literal('home_cta'),
   isEnabled: z.boolean().default(true),
+  appearance: sectionAppearanceSchema,
   data: z.object({
     title: z.string().trim().min(1).max(220),
     description: z.string().trim().min(1).max(1200),
@@ -225,8 +278,38 @@ export const homepageInputSchema = homepageInputObjectSchema.superRefine((input,
 export const homepageResponseSchema = homepageInputObjectSchema.extend({
   id: contentIdSchema,
   status: z.enum(['draft', 'published', 'archived']),
+  draftVersion: z.number().int().nonnegative(),
   publishedAt: z.string().datetime().nullable(),
   updatedAt: z.string().datetime(),
+})
+
+export const homepageAutosaveInputSchema = z.object({
+  data: homepageInputSchema,
+  baseVersion: z.number().int().nonnegative(),
+})
+
+export const homepageVersionInputSchema = z.object({
+  baseVersion: z.number().int().nonnegative(),
+  changeNote: z.string().trim().max(500).nullable().default(null),
+})
+
+export const homepageRevisionSummarySchema = z.object({
+  id: contentIdSchema,
+  versionNumber: z.number().int().positive(),
+  changeNote: z.string().nullable(),
+  isPublished: z.boolean(),
+  editorName: z.string().nullable(),
+  createdAt: z.string().datetime(),
+})
+
+export const homepageRevisionDetailSchema = homepageRevisionSummarySchema.extend({
+  snapshot: homepageResponseSchema,
+})
+
+export const homepagePreviewSessionSchema = z.object({
+  token: z.string().min(1),
+  previewUrl: z.string().url(),
+  expiresAt: z.string().datetime(),
 })
 
 export const publicHomepageResponseSchema = z.object({
@@ -237,3 +320,9 @@ export const publicHomepageResponseSchema = z.object({
 export type HomepageBlock = z.infer<typeof homepageBlockSchema>
 export type HomepageInput = z.infer<typeof homepageInputSchema>
 export type HomepageResponse = z.infer<typeof homepageResponseSchema>
+export type HomepageAutosaveInput = z.infer<typeof homepageAutosaveInputSchema>
+export type HomepageVersionInput = z.infer<typeof homepageVersionInputSchema>
+export type HomepageRevisionSummary = z.infer<typeof homepageRevisionSummarySchema>
+export type HomepageRevisionDetail = z.infer<typeof homepageRevisionDetailSchema>
+export type HomepagePreviewSession = z.infer<typeof homepagePreviewSessionSchema>
+export type SectionAppearance = z.infer<typeof sectionAppearanceSchema>

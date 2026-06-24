@@ -29,6 +29,7 @@ export const posts = pgTable('posts', {
   contentJson: jsonb('content_json').$type<Record<string, unknown>>().notNull(),
   contentHtml: text('content_html'),
   status: contentStatusEnum('status').default('draft').notNull(),
+  draftVersion: integer('draft_version').default(0).notNull(),
   seoTitle: varchar('seo_title', { length: 70 }),
   seoDescription: varchar('seo_description', { length: 180 }),
   canonicalUrl: text('canonical_url'),
@@ -94,4 +95,3 @@ export const postTags = pgTable('post_tags', {
 }, (table) => [
   primaryKey({ columns: [table.postId, table.tagId] }),
 ])
-

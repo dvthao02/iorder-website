@@ -2341,6 +2341,35 @@
   flex-direction: column;
 }
 
+.cms-preview-banner {
+  position: sticky;
+  z-index: 1200;
+  top: 0;
+  order: -100;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.38);
+  background: rgba(255, 247, 214, 0.96);
+  color: #854d0e;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.cms-section-appearance {
+  background-color: var(--cms-bg-color, transparent) !important;
+  background-image: var(--cms-bg-overlay), var(--cms-bg-desktop) !important;
+  background-position: center, var(--cms-bg-position, 50% 50%) !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-size: cover, var(--cms-bg-fit, cover) !important;
+}
+
+@media (max-width: 640px) {
+  .cms-section-appearance {
+    background-image: var(--cms-bg-overlay), var(--cms-bg-mobile) !important;
+  }
+}
+
 /* ── Mỗi section = 1 viewport (trừ strip ngắn & compact nav) ────────── */
 .home-shell main > .section:not(.partners-section):not(.home-stats-bar):not(.industry-section) {
   min-height: calc(100vh - var(--header-height));

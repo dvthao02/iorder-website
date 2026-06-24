@@ -40,6 +40,7 @@
   --soft: #0d1f30;
   --bg: #0a1628;
   --bg-card: #0f2236;
+  --accent-on-dark: color-mix(in srgb, var(--primary) 20%, #7dd3fc 80%);
   --shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
 }
 
@@ -97,8 +98,36 @@
   color: var(--text);
 }
 
-[data-theme="dark"] main > section:not(.hero) .section-eyebrow {
-  color: var(--primary);
+[data-theme="dark"] main > section:not(.hero) .section-eyebrow,
+[data-theme="dark"] main > section:not(.hero) .section-title > span,
+[data-theme="dark"] .listing-kicker {
+  color: var(--accent-on-dark) !important;
+  background: rgba(56, 189, 248, 0.14) !important;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.08);
+  font-weight: 800;
+}
+
+[data-theme="dark"] main > section:not(.hero) .section-title h2,
+[data-theme="dark"] .industry-compact-header h2,
+[data-theme="dark"] .deployment-copy h2 {
+  color: #f8fafc !important;
+  font-weight: 800;
+  text-shadow: 0 0 28px rgba(56, 189, 248, 0.08);
+}
+
+[data-theme="dark"] main > section:not(.hero) .section-title p {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .feature-split-num,
+[data-theme="dark"] .ecosystem-card-head span {
+  color: var(--accent-on-dark) !important;
+}
+
+[data-theme="dark"] .feature-split-icon-wrap,
+[data-theme="dark"] .ecosystem-icon {
+  color: var(--accent-on-dark) !important;
 }
 
 

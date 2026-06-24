@@ -1,0 +1,1 @@
+ALTER TABLE "page_blocks" ADD COLUMN "appearance" jsonb;

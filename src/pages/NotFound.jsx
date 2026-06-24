@@ -1,17 +1,8 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowRight, Home, Search } from 'lucide-react'
+import { Home, RotateCcw } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
-
-const SUGGESTIONS = [
-  { label: 'Trang chủ', to: '/' },
-  { label: 'Phần mềm', to: '/phan-mem' },
-  { label: 'Giải pháp', to: '/giai-phap' },
-  { label: 'Dịch vụ', to: '/dich-vu' },
-  { label: 'Tin tức', to: '/tin-tuc' },
-  { label: 'Liên hệ', to: '/lien-he' },
-]
 
 export default function NotFound() {
   const location = useLocation()
@@ -31,26 +22,15 @@ export default function NotFound() {
             <p className="notfound-code">404</p>
             <h1>Không tìm thấy trang</h1>
             <p className="notfound-lead">
-              Trang <code>{location.pathname}</code> không tồn tại hoặc đã được di chuyển.
-              Bạn thử quay lại trang chủ hoặc chọn một mục bên dưới.
+              Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
             </p>
 
             <div className="notfound-actions">
-              <Link to="/" className="btn large primary">
-                <Home size={18} /> <span>Về trang chủ</span>
+              <Link to="/" className="btn primary notfound-home">
+                <RotateCcw size={19} />
+                <span>Quay về trang chủ</span>
+                <Home size={18} />
               </Link>
-              <Link to="/lien-he" className="btn large ghost">
-                <span>Liên hệ hỗ trợ</span> <ArrowRight size={18} />
-              </Link>
-            </div>
-
-            <div className="notfound-suggest">
-              <p><Search size={16} /> Có thể bạn đang tìm:</p>
-              <div className="notfound-links">
-                {SUGGESTIONS.map((item) => (
-                  <Link key={item.to} to={item.to}>{item.label}</Link>
-                ))}
-              </div>
             </div>
           </div>
         </section>

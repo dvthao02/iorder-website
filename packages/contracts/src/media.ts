@@ -36,7 +36,15 @@ export const mediaListResponseSchema = z.object({
   limit: z.number().int().positive(),
 })
 
+export const mediaUsageSchema = z.object({
+  entityType: z.enum(['homepage_section', 'post', 'offering', 'partner', 'testimonial', 'site_profile']),
+  entityId: contentIdSchema,
+  label: z.string(),
+  location: z.string(),
+})
+
 export type MediaAsset = z.infer<typeof mediaAssetSchema>
 export type MediaKind = z.infer<typeof mediaKindSchema>
 export type MediaListResponse = z.infer<typeof mediaListResponseSchema>
 export type MediaMetadataInput = z.infer<typeof mediaMetadataInputSchema>
+export type MediaUsage = z.infer<typeof mediaUsageSchema>

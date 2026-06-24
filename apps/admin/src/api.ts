@@ -3,6 +3,7 @@ import type {
   MediaAsset,
   MediaListResponse,
   MediaMetadataInput,
+  MediaUsage,
   OfferingInput,
   OfferingResponse,
   PartnerInput,
@@ -12,6 +13,9 @@ import type {
   TestimonialInput,
   TestimonialResponse,
   HomepageInput,
+  HomepagePreviewSession,
+  HomepageRevisionDetail,
+  HomepageRevisionSummary,
   HomepageResponse,
   SiteProfileInput,
   SiteProfileResponse,
@@ -61,6 +65,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>
 }
 
+export function autosaveHomepage(input: HomepageInput, baseVersion: number) {
+  return request<{ item: HomepageResponse; autosavedAt: string }>('/api/admin/homepage/autosave', {
+    method: 'PUT',
+    body: JSON.stringify({ data: input, baseVersion }),
+  })
+}
+
 export function login(username: string, password: string) {
   return request<AuthSessionResponse>('/api/admin/auth/login', {
     method: 'POST',
@@ -82,9 +93,12 @@ export function logout() {
   return request<void>('/api/admin/auth/logout', { method: 'POST' })
 }
 
-export function listMedia(kind?: 'image' | 'document') {
-  const query = kind ? `?kind=${kind}` : ''
-  return request<MediaListResponse>(`/api/admin/media${query}`)
+export function listMedia(kind?: 'image' | 'document', search?: string) {
+  const params = new URLSearchParams()
+  if (kind) params.set('kind', kind)
+  if (search?.trim()) params.set('search', search.trim())
+  const query = params.toString()
+  return request<MediaListResponse>(`/api/admin/media${query ? `?${query}` : ''}`)
 }
 
 export function uploadMedia(file: File, metadata: MediaMetadataInput) {
@@ -104,6 +118,10 @@ export function updateMedia(id: string, metadata: MediaMetadataInput) {
     method: 'PATCH',
     body: JSON.stringify(metadata),
   })
+}
+
+export function getMediaUsage(id: string) {
+  return request<{ items: MediaUsage[]; total: number; canDelete: boolean }>(`/api/admin/media/${id}/usage`)
 }
 
 export function listPosts() {
@@ -143,8 +161,37 @@ export function saveHomepage(input: HomepageInput) {
   })
 }
 
-export function publishHomepage() {
-  return request<{ item: HomepageResponse }>('/api/admin/homepage/publish', { method: 'POST' })
+export function checkpointHomepage(baseVersion: number, changeNote: string | null = null) {
+  return request<{ item: HomepageResponse; revisionId: string }>('/api/admin/homepage/checkpoint', {
+    method: 'POST',
+    body: JSON.stringify({ baseVersion, changeNote }),
+  })
+}
+
+export function publishHomepage(baseVersion: number, changeNote: string | null = null) {
+  return request<{ item: HomepageResponse }>('/api/admin/homepage/publish', {
+    method: 'POST',
+    body: JSON.stringify({ baseVersion, changeNote }),
+  })
+}
+
+export function listHomepageRevisions() {
+  return request<{ items: HomepageRevisionSummary[] }>('/api/admin/homepage/revisions')
+}
+
+export function getHomepageRevision(version: number) {
+  return request<{ item: HomepageRevisionDetail }>(`/api/admin/homepage/revisions/${version}`)
+}
+
+export function restoreHomepageRevision(version: number, baseVersion: number) {
+  return request<{ item: HomepageResponse }>(`/api/admin/homepage/revisions/${version}/restore`, {
+    method: 'POST',
+    body: JSON.stringify({ baseVersion, changeNote: null }),
+  })
+}
+
+export function createHomepagePreview() {
+  return request<HomepagePreviewSession>('/api/admin/homepage/preview-token', { method: 'POST' })
 }
 
 // ── Offerings ──────────────────────────────────────────────────────────────

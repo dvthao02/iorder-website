@@ -22,6 +22,7 @@ export const pages = pgTable('pages', {
   slug: varchar('slug', { length: 180 }).notNull(),
   template: varchar('template', { length: 80 }).default('default').notNull(),
   status: contentStatusEnum('status').default('draft').notNull(),
+  draftVersion: integer('draft_version').default(0).notNull(),
   seoTitle: varchar('seo_title', { length: 70 }),
   seoDescription: varchar('seo_description', { length: 180 }),
   canonicalUrl: text('canonical_url'),
@@ -40,6 +41,7 @@ export const pageBlocks = pgTable('page_blocks', {
   type: pageBlockTypeEnum('type').notNull(),
   sortOrder: integer('sort_order').default(0).notNull(),
   data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  appearance: jsonb('appearance').$type<Record<string, unknown>>(),
   isEnabled: boolean('is_enabled').default(true).notNull(),
   ...timestampColumns(),
 }, (table) => [

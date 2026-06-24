@@ -90,6 +90,15 @@ pnpm db:migrate           # áp dụng migration
 pnpm typecheck:cms        # type-check toàn bộ package CMS
 ```
 
+## Deploy
+
+- **Railway** (đang dùng): cấu hình ở `railway.json` + `nixpacks.toml` tại gốc. Frontend `dist/` được build sẵn và commit; Railway chỉ build API.
+- **Docker / VPS** (tùy chọn): các file trong `deploy/` (`Dockerfile`, `docker-compose.yml`, `.env.production.example`).
+  ```bash
+  cp deploy/.env.production.example deploy/.env.production   # điền giá trị thật
+  docker compose -f deploy/docker-compose.yml --env-file deploy/.env.production up -d
+  ```
+
 ## Tài khoản & ghi chú
 
 - Ảnh upload lưu ở `storage/media/` (không commit vào git).

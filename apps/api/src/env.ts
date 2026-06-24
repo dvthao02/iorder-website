@@ -8,6 +8,7 @@ const envSchema = z.object({
   PUBLIC_ORIGIN: z.string().url().default('http://127.0.0.1:5173'),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
+  CMS_PREVIEW_SECRET: z.string().min(32).optional(),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
   MEDIA_STORAGE_PATH: z.string().min(1).default('../../storage/media'),
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://127.0.0.1:4000/media'),

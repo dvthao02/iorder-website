@@ -16,8 +16,9 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      # Build context là gốc repo (file compose nằm trong deploy/)
+      context: ..
+      dockerfile: deploy/Dockerfile
     restart: unless-stopped
     depends_on:
       postgres:

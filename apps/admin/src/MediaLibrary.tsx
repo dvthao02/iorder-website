@@ -1,7 +1,7 @@
-import type { MediaAsset, MediaKind } from '@iorder/contracts'
+import type { MediaAsset, MediaKind, MediaUsage } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
 
-import { listMedia, updateMedia, uploadMedia } from './api'
+import { getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
 
 interface MediaLibraryProps {
   onBack: () => void
@@ -23,6 +23,7 @@ function MediaCard({ asset, onUpdated }: {
   const [caption, setCaption] = useState(asset.caption ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [usage, setUsage] = useState<MediaUsage[] | null>(null)
   const isImage = asset.mimeType.startsWith('image/')
 
   const handleSave = async () => {
@@ -41,6 +42,12 @@ function MediaCard({ asset, onUpdated }: {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleUsage = async () => {
+    if (usage) { setUsage(null); return }
+    try { setUsage((await getMediaUsage(asset.id)).items) }
+    catch { setMessage('Không thể kiểm tra nơi đang sử dụng.') }
   }
 
   return (
@@ -67,8 +74,10 @@ function MediaCard({ asset, onUpdated }: {
           <button className="secondary-button" disabled={isSaving} type="button" onClick={handleSave}>
             {isSaving ? 'Đang lưu...' : 'Lưu mô tả'}
           </button>
+          <button className="secondary-button" type="button" onClick={() => void handleUsage()}>{usage ? 'Ẩn nơi sử dụng' : 'Nơi sử dụng'}</button>
           {message ? <small role="status">{message}</small> : null}
         </div>
+        {usage ? <div className="media-usage"><strong>{usage.length === 0 ? 'File chưa được sử dụng.' : `Đang dùng tại ${usage.length} vị trí:`}</strong>{usage.length > 0 ? <ul>{usage.map((item) => <li key={`${item.entityType}-${item.entityId}`}>{item.location}: {item.label}</li>)}</ul> : null}</div> : null}
       </div>
     </article>
   )
@@ -77,6 +86,7 @@ function MediaCard({ asset, onUpdated }: {
 export function MediaLibrary({ onBack }: MediaLibraryProps) {
   const [items, setItems] = useState<MediaAsset[]>([])
   const [kind, setKind] = useState<MediaKind | undefined>()
+  const [search, setSearch] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [altText, setAltText] = useState('')
   const [caption, setCaption] = useState('')
@@ -84,12 +94,12 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState('')
 
-  const loadItems = async (selectedKind = kind) => {
+  const loadItems = async (selectedKind = kind, query = search) => {
     setIsLoading(true)
     setError('')
 
     try {
-      const response = await listMedia(selectedKind)
+      const response = await listMedia(selectedKind, query)
       setItems(response.items)
     } catch {
       setError('Không thể tải thư viện.')
@@ -101,6 +111,11 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
   useEffect(() => {
     void loadItems()
   }, [kind])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadItems(kind, search), 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -181,6 +196,7 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
         <button className={!kind ? 'is-active' : ''} type="button" onClick={() => handleKindChange()}>Tất cả</button>
         <button className={kind === 'image' ? 'is-active' : ''} type="button" onClick={() => handleKindChange('image')}>Hình ảnh</button>
         <button className={kind === 'document' ? 'is-active' : ''} type="button" onClick={() => handleKindChange('document')}>Tài liệu</button>
+        <input aria-label="Tìm trong thư viện" placeholder="Tìm theo tên file…" value={search} onChange={(event) => setSearch(event.target.value)} />
       </div>
 
       {isLoading ? <p>Đang tải thư viện...</p> : null}
