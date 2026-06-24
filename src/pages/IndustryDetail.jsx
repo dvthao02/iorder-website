@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, Printer, ScanBarcode, Smartphone, Wifi } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import StaticPage from './StaticPage'
 import { findIndustrySolution, industrySolutions } from '../data/industrySolutions'
 import { setPageSeo } from '../utils/seo'
 import { fetchOffering } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 import posHero from '../assets/products/pos.jpg'
 
 const hardwarePoints = [
@@ -21,10 +18,7 @@ const hardwarePoints = [
 
 export default function IndustryDetail() {
   const { slug } = useParams()
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsIndustry, setCmsIndustry] = useState(null)
-  const location = useLocation()
 
   useEffect(() => {
     fetchOffering('industry', slug).then(setCmsIndustry).catch(() => {})
@@ -43,27 +37,12 @@ export default function IndustryDetail() {
       title: industry ? `${industry.hero} - iOrder` : 'Giải pháp ngành hàng - iOrder',
       description: industry?.lead ?? 'Giải pháp iOrder theo từng ngành hàng: bán lẻ, nhà hàng, cafe, thời trang, điện máy, spa, khách sạn và nhiều mô hình khác.'
     })
-    setActiveDropdown('solutions')
-    setMobileOpen(false)
-  }, [industry, location.pathname])
+  }, [industry])
 
   if (!industry) return <StaticPage />
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={[]}
-        solutionPages={[]}
-        servicePages={[]}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero industry-hero">
           <div className="container article-hero-grid">
             <div>
@@ -178,9 +157,6 @@ export default function IndustryDetail() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowRight, CheckCircle, Database, Fingerprint, Network, Server, ShieldCheck, Wifi } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
-import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { solutionPages } from '../data/siteContent'
 import { fetchOfferings } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 import heroImg from '../assets/products/hero-img.png'
 import mhPosIot from '../assets/products/mh-pos-iot.png'
 import mhMtIot from '../assets/products/mh-mt-iot.png'
@@ -28,10 +25,7 @@ const staticSolutions = solutionPages
 const solutionVisuals = [mhPosIot, heroImg, mhMtIot, mhPhoneIot, posImg]
 
 export default function SolutionsPage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsSolutions, setCmsSolutions] = useState(null)
-  const location = useLocation()
 
   useEffect(() => {
     fetchOfferings('solution').then(setCmsSolutions).catch(() => {})
@@ -42,25 +36,10 @@ export default function SolutionsPage() {
       title: 'Giải pháp hạ tầng và triển khai - iOrder',
       description: 'Các giải pháp hạ tầng mạng, Wifi, camera, bảo mật, data center, server và kiểm soát ra vào dành cho doanh nghiệp.'
     })
-    setActiveDropdown('solutions')
-    setMobileOpen(false)
-  }, [location.pathname])
+  }, [])
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={cmsSolutions ?? staticSolutions}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="listing-hero solution-hero">
           <div className="container software-hero-grid">
             <div>
@@ -159,9 +138,6 @@ export default function SolutionsPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

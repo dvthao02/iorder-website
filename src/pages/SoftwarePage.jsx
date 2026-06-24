@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowRight, BarChart3, Boxes, CheckCircle, Printer, ReceiptText, ShieldCheck, Smartphone, Users } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
-import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { softwareProducts } from '../data/siteContent'
 import { fetchOfferings } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 import heroImg from '../assets/products/hero-img.png'
 import mhPosIot from '../assets/products/mh-pos-iot.png'
 import mhMtIot from '../assets/products/mh-mt-iot.png'
@@ -48,10 +45,7 @@ const productPages = softwareProducts // static fallback
 const productVisuals = [heroImg, mhPosIot, mhMtIot, mhPhoneIot, softWareImg, posImg]
 
 export default function SoftwarePage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsProducts, setCmsProducts] = useState(null)
-  const location = useLocation()
 
   useEffect(() => {
     fetchOfferings('software').then(setCmsProducts).catch(() => {})
@@ -62,25 +56,10 @@ export default function SoftwarePage() {
       title: 'Phần mềm quản lý bán hàng - iOrder',
       description: 'Khám phá các sản phẩm phần mềm iOrder cho bán hàng, quản lý trường mầm non, đồng bộ dữ liệu, trạm sạc xe điện, vận tải và hóa đơn điện tử.'
     })
-    setActiveDropdown('software')
-    setMobileOpen(false)
-  }, [location.pathname])
+  }, [])
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={(cmsProducts ?? productPages)}
-        solutionPages={solutionPages}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="listing-hero software-hero">
           <div className="container software-hero-grid">
             <div>
@@ -200,9 +179,6 @@ export default function SoftwarePage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

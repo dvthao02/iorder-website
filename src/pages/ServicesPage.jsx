@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useLocation, Link } from 'react-router-dom'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpen, Code2, Headphones, Network, Phone, Server, ShieldCheck, Sparkles, Video } from 'lucide-react'
-import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import PageLayout from '../components/PageLayout'
+import { servicePages } from '../data/siteContent'
 import { setPageSeo } from '../utils/seo'
 import { fetchOfferings } from '../utils/contentApi'
-
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 
 const serviceIconMap = {
   card: BookOpen,
@@ -24,10 +20,7 @@ const serviceIconMap = {
 const staticServices = servicePages
 
 export default function ServicesPage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsServices, setCmsServices] = useState(null)
-  const location = useLocation()
 
   useEffect(() => {
     fetchOfferings('service').then(setCmsServices).catch(() => {})
@@ -38,27 +31,10 @@ export default function ServicesPage() {
       title: 'Dịch vụ CNTT iOrder',
       description: 'Dịch vụ thi công mạng, bảo trì IT, hosting website, chữ ký số, phát triển phần mềm và tư vấn chuyển đổi số.',
     })
-    if (location.pathname.startsWith('/phan-mem')) setActiveDropdown('software')
-    else if (location.pathname.startsWith('/giai-phap')) setActiveDropdown('solutions')
-    else if (location.pathname.startsWith('/dich-vu')) setActiveDropdown('services')
-    else setActiveDropdown(null)
-  }, [location.pathname])
+  }, [])
 
   return (
-    <div className="page-shell">
-      <Header 
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={solutionPages}
-        servicePages={cmsServices ?? staticServices}
-      />
-
-      <main>
+    <PageLayout>
         <section className="listing-hero">
           <div className="container">
             <h1 className="listing-hero-title">Dịch vụ & Hỗ trợ</h1>
@@ -91,9 +67,6 @@ export default function ServicesPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

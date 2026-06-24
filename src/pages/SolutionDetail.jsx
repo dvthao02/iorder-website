@@ -1,22 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useParams, useLocation, Link } from 'react-router-dom'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import { useParams, Link } from 'react-router-dom'
+import PageLayout from '../components/PageLayout'
 import StaticPage from './StaticPage'
 import { CheckCircle, ArrowLeft } from 'lucide-react'
-import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { solutionPages } from '../data/siteContent'
 import { setPageSeo } from '../utils/seo'
 import { fetchOffering } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
-
 export default function SolutionDetail() {
   const { slug } = useParams()
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsSolution, setCmsSolution] = useState(null)
-  const location = useLocation()
 
   useEffect(() => {
     fetchOffering('solution', slug).then(setCmsSolution).catch(() => {})
@@ -29,31 +22,14 @@ export default function SolutionDetail() {
       title: solution ? `${solution.title} - iOrder` : 'Giải pháp iOrder',
       description: solution?.description ?? 'Giải pháp hạ tầng, mạng, bảo mật và thiết bị triển khai cho hệ sinh thái iOrder.',
     })
-    if (location.pathname.startsWith('/phan-mem')) setActiveDropdown('software')
-    else if (location.pathname.startsWith('/giai-phap')) setActiveDropdown('solutions')
-    else if (location.pathname.startsWith('/dich-vu')) setActiveDropdown('services')
-    else setActiveDropdown(null)
-  }, [location.pathname, solution])
+  }, [solution])
 
   if (!solution) {
     return <StaticPage />
   }
 
   return (
-    <div className="page-shell">
-      <Header 
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={solutionPages}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero">
           <div className="container">
             <Link to="/giai-phap" className="detail-back-link">
@@ -92,9 +68,6 @@ export default function SolutionDetail() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

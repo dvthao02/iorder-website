@@ -1,22 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useParams, useLocation, Link } from 'react-router-dom'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import { useParams, Link } from 'react-router-dom'
+import PageLayout from '../components/PageLayout'
 import StaticPage from './StaticPage'
 import { CheckCircle, ArrowLeft } from 'lucide-react'
-import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { servicePages } from '../data/siteContent'
 import { setPageSeo } from '../utils/seo'
 import { fetchOffering } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
-
 export default function ServiceDetail() {
   const { slug } = useParams()
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsService, setCmsService] = useState(null)
-  const location = useLocation()
 
   useEffect(() => {
     fetchOffering('service', slug).then(setCmsService).catch(() => {})
@@ -29,31 +22,14 @@ export default function ServiceDetail() {
       title: service ? `${service.title} - iOrder` : 'Dịch vụ iOrder',
       description: service?.description ?? 'Dịch vụ CNTT iOrder hỗ trợ triển khai, bảo trì và chuyển đổi số cho cửa hàng, doanh nghiệp.',
     })
-    if (location.pathname.startsWith('/phan-mem')) setActiveDropdown('software')
-    else if (location.pathname.startsWith('/giai-phap')) setActiveDropdown('solutions')
-    else if (location.pathname.startsWith('/dich-vu')) setActiveDropdown('services')
-    else setActiveDropdown(null)
-  }, [location.pathname, service])
+  }, [service])
 
   if (!service) {
     return <StaticPage />
   }
 
   return (
-    <div className="page-shell">
-      <Header 
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={solutionPages}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero">
           <div className="container">
             <Link to="/dich-vu" className="detail-back-link">
@@ -92,9 +68,6 @@ export default function ServiceDetail() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

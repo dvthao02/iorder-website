@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, CircleDollarSign, Clock, Gauge, ShieldCheck } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import StaticPage from './StaticPage'
 import { setPageSeo } from '../utils/seo'
-import { servicePages, softwareProducts, solutionPages } from '../data/siteContent'
+import { softwareProducts } from '../data/siteContent'
 import { fetchOffering } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 import posHero from '../assets/products/pos.jpg'
 
 const detailIcons = [Gauge, Clock, CircleDollarSign]
@@ -17,10 +14,7 @@ const rolloutSteps = ['Khảo sát mô hình', 'Nhập dữ liệu ban đầu', 
 
 export default function SoftwareDetail() {
   const { slug } = useParams()
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [cmsProduct, setCmsProduct] = useState(null)
-  const location = useLocation()
   const staticProduct = softwareProducts.find((item) => item.slug === slug)
   const product = cmsProduct ?? staticProduct
   const seoTitle = product
@@ -36,27 +30,12 @@ export default function SoftwareDetail() {
       title: seoTitle,
       description: product?.summary ?? 'Phần mềm iOrder hỗ trợ bán hàng, quản lý kho, nhân viên và báo cáo doanh thu cho cửa hàng.'
     })
-    setActiveDropdown('software')
-    setMobileOpen(false)
-  }, [location.pathname, product, seoTitle])
+  }, [product, seoTitle])
 
   if (!product) return <StaticPage />
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={solutionPages}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero software-detail-hero">
           <div className="container article-hero-grid">
             <div>
@@ -165,9 +144,6 @@ export default function SoftwareDetail() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }
