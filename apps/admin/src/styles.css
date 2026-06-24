@@ -42,9 +42,10 @@ button, input, textarea, select { font: inherit; }
 .sidebar-account button:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.4); }
 
 /* Logo thương hiệu trong sidebar */
-.sidebar-brand { display: grid; gap: 8px; justify-items: start; }
-.sidebar-logo-badge { display: inline-flex; padding: 9px 14px; background: #fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.2); }
-.sidebar-logo-badge img { display: block; height: 26px; width: auto; }
+.sidebar-brand { display: grid; gap: 8px; justify-items: start; padding: 4px 6px; }
+.sidebar-logo-badge { display: inline-flex; padding: 0; background: transparent; box-shadow: none; }
+/* Logo gốc màu xanh → chuyển trắng để nổi trên nền tối, giữ nền trong suốt */
+.sidebar-logo-badge img { display: block; height: 32px; width: auto; filter: brightness(0) invert(1); }
 .sidebar-brand-sub { color: #aac6dd; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 
 .admin-main { min-width: 0; padding: 32px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 220px); }
