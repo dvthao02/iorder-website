@@ -1,25 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowRight, Calendar, Clock, Newspaper, Search, Sparkles } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { newsArticles } from '../data/newsArticles'
 import { setPageSeo } from '../utils/seo'
 import { fetchPublishedPosts } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
-
-const softwareProducts = []
-const solutionPages = []
-const servicePages = []
-
 export default function NewsPage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState('Tất cả')
   const [cmsArticles, setCmsArticles] = useState([])
-  const location = useLocation()
 
   const articles = cmsArticles.length > 0 ? cmsArticles : newsArticles
 
@@ -44,25 +33,10 @@ export default function NewsPage() {
       title: 'Tin tức iOrder - Phần mềm quản lý bán hàng',
       description: 'Bài viết và hướng dẫn sử dụng iOrder cho order tại bàn, POS bán hàng, quản lý kho, báo cáo doanh thu và triển khai cửa hàng.'
     })
-    setActiveDropdown(null)
-    setMobileOpen(false)
-  }, [location.pathname])
+  }, [])
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={solutionPages}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="listing-hero news-hero">
           <div className="container news-hero-grid">
             <div>
@@ -171,9 +145,6 @@ export default function NewsPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }
