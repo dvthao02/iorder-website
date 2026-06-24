@@ -48,12 +48,12 @@ button, input, textarea, select { font: inherit; }
 .sidebar-logo-badge img { display: block; height: 32px; width: auto; filter: brightness(0) invert(1); }
 .sidebar-brand-sub { color: #aac6dd; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 
-.admin-main { min-width: 0; padding: 0 0 16px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 220px); }
-.admin-main > .admin-card { width: 100%; max-width: 1200px; margin: 0 auto; border-radius: 0; border-top: 0; }
-/* Trang quản lý nhiều cột (editor, danh sách): fill full, bớt padding 4 góc */
-.admin-main > .admin-card.content-manager { max-width: 100%; padding: 18px 22px; }
+.admin-main { min-width: 0; padding: 24px 28px 30px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 240px); }
+.admin-main > .admin-card { width: 100%; max-width: 1200px; margin: 0 auto; border-radius: 16px; }
+/* Trang quản lý: rộng nhưng có đệm & bo góc cho cân đối, không tràn sát viền */
+.admin-main > .admin-card.content-manager { max-width: 1600px; padding: 24px 26px; }
 
-.dashboard-page { width: 100%; max-width: 1280px; margin: 0 auto; }
+.dashboard-page { width: 100%; max-width: 1600px; margin: 0 auto; }
 
 /* Top bar */
 .dash-topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
@@ -576,7 +576,7 @@ button, input, textarea, select { font: inherit; }
 }
 
 /* ── Shared module layout ──────────────────────────────────────────────────── */
-.admin-module { width: 100%; max-width: 1400px; margin: 0; }
+.admin-module { width: 100%; max-width: 1600px; margin: 0 auto; }
 .module-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
 .module-header h2 { margin: 0; flex: 1; }
 .tab-nav { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid #e0ecf6; padding-bottom: 2px; }
