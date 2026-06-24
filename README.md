@@ -1,41 +1,97 @@
-# iOrder Website and CMS
+# iOrder — Website & CMS
 
-The public iOrder company website is built with React, Vite, and Vercel SPA routing. A separate CMS workspace is being added for company pages, posts, promotions, offerings, media, menus, links, and SEO content.
+Monorepo gồm **website công khai** (React + Vite), **CMS quản trị nội dung** (React) và **API** (Fastify + PostgreSQL). CMS độc lập hoàn toàn với hệ thống POS.
 
-The CMS is intentionally independent from the existing POS database and POS business workflows.
-
-## Current applications
+## Cấu trúc
 
 ```text
-./             Existing public website
-apps/admin     CMS administration application
-apps/api       CMS API
-packages/*     Database and shared contracts
+./                Website công khai (trang người dùng)
+apps/admin        CMS quản trị nội dung
+apps/api          API (Fastify)
+packages/database Schema + migration (Drizzle ORM)
+packages/contracts Kiểu dữ liệu dùng chung (Zod)
 ```
 
-## Commands
+## Yêu cầu
+
+- **Node.js 22+**
+- **pnpm 9** (`corepack enable`)
+- **PostgreSQL** đang chạy (mặc định cổng 5432)
+
+## 1. Cài đặt
 
 ```powershell
-pnpm.cmd dev
-pnpm.cmd build
-
-pnpm.cmd dev:admin
-pnpm.cmd dev:api
-pnpm.cmd typecheck:cms
-pnpm.cmd build:cms
-pnpm.cmd test:auth
-pnpm.cmd test:media
-pnpm.cmd test:posts
-pnpm.cmd test:homepage
-pnpm.cmd cms:create-admin
-pnpm.cmd cms:import-homepage
-pnpm.cmd cms:import-posts
-pnpm.cmd db:create
-pnpm.cmd db:generate
-pnpm.cmd db:migrate
-pnpm.cmd db:seed
+pnpm install
 ```
 
-Copy `.env.example` to `.env` and provide a valid PostgreSQL connection before starting the API or applying migrations.
+## 2. Cấu hình môi trường
 
-Read [CMS_IMPLEMENTATION_PLAN.md](./CMS_IMPLEMENTATION_PLAN.md) before continuing CMS implementation.
+Copy `.env.example` → `.env` rồi điền kết nối PostgreSQL và các biến CMS:
+
+```ini
+DATABASE_URL=postgresql://admin_iorder:123@127.0.0.1:5432/iorderCMS
+API_PORT=4000
+SESSION_SECRET=chuoi-bi-mat-toi-thieu-32-ky-tu
+CMS_ADMIN_USERNAME=admin
+CMS_ADMIN_PASSWORD=123
+CMS_ADMIN_NAME=Administrator
+```
+
+## 3. Chuẩn bị database (lần đầu)
+
+```powershell
+pnpm db:migrate          # tạo bảng
+pnpm cms:create-admin    # tạo tài khoản admin từ biến CMS_ADMIN_* trong .env
+```
+
+## 4. Chạy local — chạy cả 3 cùng lúc
+
+```powershell
+pnpm dev:all
+```
+
+Lệnh này khởi động đồng thời **web (5173)** + **api (4000)** + **admin (5174)**. Nhờ proxy, truy cập tất cả qua **một cổng 5173** giống production:
+
+| URL | Phục vụ |
+|-----|---------|
+| http://127.0.0.1:5173/ | Website (trang người dùng) |
+| http://127.0.0.1:5173/admin | CMS quản trị |
+| http://127.0.0.1:5173/api | API |
+
+> Đăng nhập CMS bằng `CMS_ADMIN_USERNAME` / `CMS_ADMIN_PASSWORD` đã đặt ở `.env`.
+
+### Chạy riêng từng phần (nếu cần)
+
+```powershell
+pnpm dev          # chỉ website   → http://127.0.0.1:5173
+pnpm dev:api      # chỉ API        → http://127.0.0.1:4000
+pnpm dev:admin    # chỉ admin       → http://127.0.0.1:5174/admin
+```
+
+## 5. Build production
+
+```powershell
+pnpm build        # build website  → dist/
+pnpm build:cms    # build contracts + database + api + admin
+# hoặc gộp:
+pnpm build:all
+```
+
+## Lệnh hữu ích
+
+```powershell
+pnpm lint                 # kiểm tra code website (src/)
+pnpm cms:create-admin     # tạo / đổi mật khẩu admin (theo .env)
+pnpm cms:import-homepage  # nhập nội dung trang chủ vào CMS
+pnpm cms:import-posts     # nhập bài viết
+pnpm cms:import-offerings # nhập phần mềm/giải pháp/dịch vụ
+pnpm db:generate          # sinh migration từ thay đổi schema
+pnpm db:migrate           # áp dụng migration
+pnpm typecheck:cms        # type-check toàn bộ package CMS
+```
+
+## Tài khoản & ghi chú
+
+- Ảnh upload lưu ở `storage/media/` (không commit vào git).
+- Ảnh chia sẻ mạng xã hội: `public/og-image.png`; favicon: `public/favicon.png`.
+- Tạo lại ảnh OG: xem hướng dẫn trong `scripts/make-og-image.mjs`.
