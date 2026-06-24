@@ -30,7 +30,7 @@ export default defineConfig({
       '/api': 'http://127.0.0.1:4000',
       '/media': 'http://127.0.0.1:4000',
       '/admin': {
-        target: 'http://127.0.0.1:5173',
+        target: 'http://127.0.0.1:5174',
         changeOrigin: true,
         ws: true,
       },
