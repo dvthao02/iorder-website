@@ -49,7 +49,7 @@ button, input, textarea, select { font: inherit; }
 .sidebar-brand-sub { color: #aac6dd; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 
 .admin-main { min-width: 0; padding: 0 0 16px; background: linear-gradient(180deg, #eef5fb 0%, #f4f8fb 220px); }
-.admin-main > .admin-card { width: 100%; max-width: 1200px; margin: 0 auto; }
+.admin-main > .admin-card { width: 100%; max-width: 1200px; margin: 0 auto; border-radius: 0; border-top: 0; }
 /* Trang quản lý nhiều cột (editor, danh sách): fill full, bớt padding 4 góc */
 .admin-main > .admin-card.content-manager { max-width: 100%; padding: 18px 22px; }
 
