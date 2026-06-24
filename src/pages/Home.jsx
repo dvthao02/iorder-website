@@ -4,7 +4,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { setPageSeo } from '../utils/seo'
 import { externalLinks, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
-import { fetchNavOfferings, fetchPartners, fetchSiteStats, fetchTestimonials } from '../utils/contentApi'
+import { fetchNavOfferings, fetchPartners, fetchTestimonials } from '../utils/contentApi'
 import {
   BarChart3, Boxes, CheckCircle, Headphones, Printer,
   ReceiptText, ShieldCheck, Smartphone, Users, Utensils,
@@ -39,9 +39,6 @@ import logoVietsunco from '../assets/partners/vietsunco.png'
 import logoShopee from '../assets/partners/shopeefood.png'
 import logoGrab from '../assets/partners/grabfood.png'
 import logoTaxnet from '../assets/partners/taxnet.png'
-import zaloIcon from '../assets/misc/zalo-96.png'
-import appStoreBadge from '../assets/footer/download_apple.png'
-import googlePlayBadge from '../assets/footer/download_android.png'
 import logoTTC from '../assets/partners/ttc.png'
 import { newsArticles } from '../data/newsArticles'
 import { industryGroups } from '../data/industrySolutions'
@@ -201,7 +198,6 @@ export default function Home() {
   })
   const [cmsPosts, setCmsPosts] = useState([])
   const [cmsNav, setCmsNav] = useState(null)
-  const [siteStats, setSiteStats] = useState(null)
   const [tablePartners, setTablePartners] = useState([])
   const [tableTestimonials, setTableTestimonials] = useState([])
   const [openFaq, setOpenFaq] = useState(null)
@@ -209,7 +205,6 @@ export default function Home() {
 
   useEffect(() => {
     fetchNavOfferings().then(setCmsNav).catch(() => {})
-    fetchSiteStats().then(setSiteStats).catch(() => {})
     fetchPartners().then(setTablePartners).catch(() => {})
     fetchTestimonials().then(setTableTestimonials).catch(() => {})
   }, [])

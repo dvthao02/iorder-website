@@ -13,6 +13,7 @@
     "build:all": "pnpm.cmd build && pnpm.cmd build:cms",
     "build": "vite build",
     "preview": "vite preview",
+    "lint": "eslint src",
     "dev:api": "pnpm --filter @iorder/api dev",
     "dev:admin": "pnpm --filter @iorder/admin dev",
     "build:cms": "pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api build && pnpm --filter @iorder/admin build",
@@ -40,7 +41,12 @@
     "vite": "latest"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.0",
-    "concurrently": "^10.0.3"
+    "concurrently": "^10.0.3",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0"
   }
 }
