@@ -9,7 +9,7 @@ import {
   type MediaAsset,
   type SectionAppearance,
 } from '@iorder/contracts'
-import { Eye, History, Save, UploadCloud } from 'lucide-react'
+import { Eye, History, Maximize2, Minimize2, Save, UploadCloud } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -118,6 +118,7 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light')
   const [showPreview, setShowPreview] = useState(true)
+  const [previewFullscreen, setPreviewFullscreen] = useState(false)
   const autosaveInFlight = useRef(false)
 
   useEffect(() => {
@@ -431,12 +432,13 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
         </div>
       ) : null}
       </article>)}</div>
-      {showPreview ? <aside className="homepage-preview-panel">
+      {showPreview ? <aside className={`homepage-preview-panel ${previewFullscreen ? 'is-fullscreen' : ''}`}>
         <div className="preview-toolbar">
           <strong>Live preview</strong>
           <div className="preview-toolbar-group"><button className={previewMode === 'desktop' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('desktop')}>Desktop</button><button className={previewMode === 'tablet' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('tablet')}>Tablet</button><button className={previewMode === 'mobile' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('mobile')}>Mobile</button></div>
           <div className="preview-toolbar-group"><button className={previewTheme === 'light' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('light')}>Sáng</button><button className={previewTheme === 'dark' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('dark')}>Tối</button></div>
-          <button className="preview-close" type="button" aria-label="Đóng xem trước" onClick={() => setShowPreview(false)}>✕</button>
+          <button className="preview-close" type="button" aria-label={previewFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'} onClick={() => setPreviewFullscreen((v) => !v)}>{previewFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
+          <button className="preview-close" type="button" aria-label="Đóng xem trước" onClick={() => { setPreviewFullscreen(false); setShowPreview(false) }}>✕</button>
         </div>
         {previewUrl ? <div className={`preview-frame-wrap is-${previewMode}`}><iframe key={`${previewUrl}-${previewTheme}`} src={`${previewUrl.split('&cmsTheme=')[0]}&cmsTheme=${previewTheme}`} title="Xem trước bản nháp trang chủ" /></div> : <div className="preview-placeholder"><p>Bản xem trước chỉ đọc nội dung đã autosave và không ảnh hưởng website công khai.</p><button className="primary-cta" type="button" onClick={() => void openPreview()}>Tạo bản xem trước</button></div>}
       </aside> : null}
