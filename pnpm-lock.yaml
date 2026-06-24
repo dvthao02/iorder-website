@@ -57,6 +57,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3
         version: 3.27.1
+      lucide-react:
+        specifier: ^1.21.0
+        version: 1.21.0(react@19.2.7)
       react:
         specifier: 19.2.7
         version: 19.2.7

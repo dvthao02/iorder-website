@@ -1,4 +1,5 @@
 import type { AuthUser } from '@iorder/contracts'
+import { Boxes, FileText, Home, Image as ImageIcon, LayoutDashboard, ListTree, Settings, Star, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
@@ -16,15 +17,20 @@ import { SiteProfileEditor } from './SiteProfileEditor'
 import { TestimonialsManager } from './TestimonialsManager'
 
 const navigation = [
-  { key: 'dashboard', slug: '', label: 'Tổng quan' },
-  { key: 'homepage', slug: 'trang-chu', label: 'Trang chủ' },
-  { key: 'offerings', slug: 'phan-mem', label: 'Phần mềm & Giải pháp' },
-  { key: 'posts', slug: 'bai-viet', label: 'Bài viết' },
-  { key: 'partners', slug: 'doi-tac', label: 'Đối tác & Khách hàng' },
-  { key: 'testimonials', slug: 'danh-gia', label: 'Đánh giá khách hàng' },
-  { key: 'media', slug: 'thu-vien', label: 'Ảnh & tài liệu' },
-  { key: 'navigation', slug: 'menu', label: 'Menu điều hướng' },
-  { key: 'settings', slug: 'cai-dat', label: 'Cài đặt website' },
+  { key: 'dashboard', slug: '', label: 'Tổng quan', icon: LayoutDashboard, group: 'content' },
+  { key: 'homepage', slug: 'trang-chu', label: 'Trang chủ', icon: Home, group: 'content' },
+  { key: 'offerings', slug: 'phan-mem', label: 'Phần mềm & Giải pháp', icon: Boxes, group: 'content' },
+  { key: 'posts', slug: 'bai-viet', label: 'Bài viết', icon: FileText, group: 'content' },
+  { key: 'partners', slug: 'doi-tac', label: 'Đối tác & Khách hàng', icon: Users, group: 'content' },
+  { key: 'testimonials', slug: 'danh-gia', label: 'Đánh giá khách hàng', icon: Star, group: 'content' },
+  { key: 'media', slug: 'thu-vien', label: 'Ảnh & tài liệu', icon: ImageIcon, group: 'content' },
+  { key: 'navigation', slug: 'menu', label: 'Menu điều hướng', icon: ListTree, group: 'config' },
+  { key: 'settings', slug: 'cai-dat', label: 'Cài đặt website', icon: Settings, group: 'config' },
+] as const
+
+const groups: { id: string; label: string }[] = [
+  { id: 'content', label: 'Quản trị nội dung' },
+  { id: 'config', label: 'Cấu hình website' },
 ]
 
 const slugByKey: Record<string, string> = Object.fromEntries(navigation.map((item) => [item.key, item.slug]))
@@ -98,7 +104,18 @@ export function AdminApp() {
         <span className="sidebar-logo-badge"><img src={logoIorder} alt="iOrder" /></span>
         <span className="sidebar-brand-sub">Quản trị nội dung</span>
       </div>
-      <nav aria-label="Chức năng quản trị">{navigation.map((item) => <button className={activeModule === item.key ? 'is-active' : ''} key={item.key} type="button" onClick={() => goTo(item.key)}>{item.label}</button>)}</nav>
+      <nav aria-label="Chức năng quản trị">
+        {groups.map((group) => (
+          <div className="nav-group" key={group.id}>
+            <p className="nav-group-label">{group.label}</p>
+            {navigation.filter((item) => item.group === group.id).map((item) => (
+              <button className={activeModule === item.key ? 'is-active' : ''} key={item.key} type="button" onClick={() => goTo(item.key)}>
+                <item.icon size={18} /> <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
       <div className="sidebar-account"><span>{user.fullName}</span><small>@{user.username}</small><button type="button" onClick={() => void handleLogout()}>Đăng xuất</button></div>
     </aside>
     <main className="admin-main">{content}</main>

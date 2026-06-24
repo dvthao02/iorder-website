@@ -1,29 +1,127 @@
+import type { PostResponse } from '@iorder/contracts'
+import { ArrowUpRight, ExternalLink, FileText, Image as ImageIcon, MessageSquareQuote, Plus, Star, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { getHomepage, listMedia, listPosts } from './api'
+import { getHomepage, listMedia, listPartners, listPosts, listTestimonials } from './api'
+
+const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? 'http://127.0.0.1:5173/'
+
+const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
+  published: { label: 'Đã xuất bản', cls: 'status-published' },
+  draft: { label: 'Nháp', cls: 'status-draft' },
+  archived: { label: 'Đã ẩn', cls: 'status-archived' },
+}
+
+const TYPE_LABEL: Record<string, string> = { news: 'Tin tức', promotion: 'Khuyến mãi' }
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
 export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
-  const [stats, setStats] = useState({ posts: 0, media: 0, homepage: 'Chưa cấu hình' })
+  const [posts, setPosts] = useState<PostResponse[]>([])
+  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0 })
+  const [homepageStatus, setHomepageStatus] = useState('—')
 
   useEffect(() => {
-    Promise.all([listPosts(), listMedia(), getHomepage()]).then(([posts, media, homepage]) => {
-      setStats({ posts: posts.total, media: media.total, homepage: homepage.item?.status ?? 'draft' })
-    }).catch(() => undefined)
+    Promise.all([listPosts(), listMedia(), listPartners(), listTestimonials(), getHomepage()])
+      .then(([postRes, media, partners, testimonials, homepage]) => {
+        const items = postRes.items
+        setPosts(items)
+        setCounts({
+          posts: postRes.total,
+          published: items.filter((p) => p.status === 'published').length,
+          drafts: items.filter((p) => p.status === 'draft').length,
+          media: media.total,
+          partners: partners.total,
+          testimonials: testimonials.total,
+        })
+        setHomepageStatus(homepage.item?.status ?? 'draft')
+      })
+      .catch(() => undefined)
   }, [])
 
-  return <section className="dashboard-page">
-    <div className="page-heading">
-      <div><p className="admin-kicker">Tổng quan nội dung</p><h1>Quản trị website iOrder</h1><p>Chọn công việc cần làm, không cần thao tác trực tiếp với database.</p></div>
-      <a className="secondary-button site-preview-link" href="http://127.0.0.1:5173/" rel="noreferrer" target="_blank">Xem website</a>
-    </div>
-    <div className="stats-grid">
-      <button type="button" onClick={() => onOpen('homepage')}><span>Trang chủ</span><strong>{stats.homepage}</strong><small>Sửa banner, section và nội dung nổi bật</small></button>
-      <button type="button" onClick={() => onOpen('posts')}><span>Bài viết</span><strong>{stats.posts}</strong><small>Tạo bài, xuất bản và đưa lên trang chủ</small></button>
-      <button type="button" onClick={() => onOpen('media')}><span>Thư viện</span><strong>{stats.media}</strong><small>Ảnh và tài liệu đang quản lý</small></button>
-    </div>
-    <div className="workflow-panel">
-      <h2>Quy trình đăng nội dung</h2>
-      <ol><li>Tải ảnh bìa lên Thư viện.</li><li>Tạo bài viết và lưu nháp.</li><li>Kiểm tra nội dung rồi bấm Xuất bản.</li><li>Block “Bài viết” trên trang chủ tự lấy các bài đã xuất bản.</li></ol>
-    </div>
-  </section>
+  const statCards = [
+    { key: 'posts', icon: FileText, tone: 'blue', label: 'Bài viết', value: counts.posts, note: `${counts.published} bài đã xuất bản`, module: 'posts' },
+    { key: 'partners', icon: Users, tone: 'teal', label: 'Đối tác', value: counts.partners, note: 'Logo trên trang chủ', module: 'partners' },
+    { key: 'testimonials', icon: Star, tone: 'amber', label: 'Đánh giá', value: counts.testimonials, note: 'Khách hàng nói gì', module: 'testimonials' },
+    { key: 'media', icon: ImageIcon, tone: 'violet', label: 'Thư viện', value: counts.media, note: 'Ảnh và tài liệu', module: 'media' },
+  ] as const
+
+  const recent = posts.slice(0, 6)
+
+  const todos: { icon: typeof FileText; text: string; module: string }[] = []
+  if (counts.drafts > 0) todos.push({ icon: FileText, text: `${counts.drafts} bài viết đang lưu nháp`, module: 'posts' })
+  if (counts.partners === 0) todos.push({ icon: Users, text: 'Chưa có đối tác nào — thêm logo đối tác', module: 'partners' })
+  if (counts.testimonials === 0) todos.push({ icon: MessageSquareQuote, text: 'Chưa có đánh giá khách hàng', module: 'testimonials' })
+  if (homepageStatus !== 'published') todos.push({ icon: Star, text: 'Trang chủ chưa được xuất bản', module: 'homepage' })
+  if (todos.length === 0) todos.push({ icon: Star, text: 'Mọi thứ đã sẵn sàng 🎉', module: 'dashboard' })
+
+  return (
+    <section className="dashboard-page">
+      <div className="dash-topbar">
+        <div>
+          <p className="admin-kicker">Tổng quan</p>
+          <h1>Tổng quan CMS iOrder</h1>
+          <p className="dash-sub">Theo dõi nội dung và tình trạng website một cách trực quan.</p>
+        </div>
+        <div className="dash-actions">
+          <a className="secondary-button" href={PUBLIC_SITE_URL} target="_blank" rel="noreferrer">Xem website <ExternalLink size={16} /></a>
+          <button className="primary-cta" type="button" onClick={() => onOpen('posts')}><Plus size={18} /> Tạo bài viết</button>
+        </div>
+      </div>
+
+      <div className="metric-grid">
+        {statCards.map((card) => (
+          <button key={card.key} type="button" className={`metric-card tone-${card.tone}`} onClick={() => onOpen(card.module)}>
+            <span className="metric-icon"><card.icon size={22} /></span>
+            <span className="metric-body">
+              <span className="metric-label">{card.label}</span>
+              <strong className="metric-value">{card.value}</strong>
+              <small className="metric-note">{card.note}</small>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="dash-columns">
+        <div className="dash-panel">
+          <div className="dash-panel-head">
+            <h2>Bài viết gần đây</h2>
+            <button className="text-button" type="button" onClick={() => onOpen('posts')}>Xem tất cả <ArrowUpRight size={15} /></button>
+          </div>
+          {recent.length === 0 ? <p className="dash-empty">Chưa có bài viết nào.</p> : (
+            <table className="dash-table">
+              <thead><tr><th>Tiêu đề</th><th>Loại</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead>
+              <tbody>
+                {recent.map((post) => (
+                  <tr key={post.id} onClick={() => onOpen('posts')}>
+                    <td className="dash-title-cell">{post.title}</td>
+                    <td>{TYPE_LABEL[post.type] ?? post.type}</td>
+                    <td><span className={`status-pill ${STATUS_BADGE[post.status]?.cls ?? ''}`}>{STATUS_BADGE[post.status]?.label ?? post.status}</span></td>
+                    <td className="dash-date-cell">{formatDate(post.updatedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="dash-panel">
+          <div className="dash-panel-head"><h2>Việc cần làm</h2></div>
+          <ul className="todo-list">
+            {todos.map((todo, idx) => (
+              <li key={idx}>
+                <button type="button" onClick={() => onOpen(todo.module)}>
+                  <span className="todo-icon"><todo.icon size={17} /></span>
+                  <span>{todo.text}</span>
+                  <ArrowUpRight size={16} className="todo-arrow" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
 }
