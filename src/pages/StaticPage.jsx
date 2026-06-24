@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle } from 'lucide-react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { setPageSeo } from '../utils/seo'
+import NotFound from './NotFound'
 import logoMain from '../assets/header/logo.png'
 import logoFooter from '../assets/header/logo.png'
 
@@ -356,35 +357,15 @@ const aliases = {
   '/giai-phap/dich-vu-cntt/tu-van-chuyen-doi-so': '/dich-vu/dich-vu-cntt/tu-van-chuyen-doi-so',
 }
 
-function buildFallback(pathname) {
-  const label = pathname
-    .split('/')
-    .filter(Boolean)
-    .at(-1)
-    ?.split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-
-  return {
-    title: label || 'Trang đang cập nhật',
-    lead: 'Nội dung chi tiết đang được hoàn thiện. Bạn vẫn có thể liên hệ iOrder để được tư vấn đúng nhu cầu.',
-    sections: [
-      {
-        title: 'Thông tin sẽ được bổ sung',
-        items: ['Tổng quan giải pháp', 'Tính năng chính', 'Quy trình triển khai', 'Kênh hỗ trợ liên hệ'],
-      },
-    ],
-  }
-}
-
 export default function StaticPage() {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const normalizedPath = aliases[location.pathname] ?? location.pathname
-  const page = pages[normalizedPath] ?? buildFallback(location.pathname)
+  const page = pages[normalizedPath]
 
   useEffect(() => {
+    if (!page) return
     setPageSeo({
       title: `${page.title} - iOrder`,
       description: page.lead,
@@ -395,7 +376,10 @@ export default function StaticPage() {
     else if (location.pathname.startsWith('/dich-vu')) setActiveDropdown('services')
     else if (location.pathname.startsWith('/ho-tro')) setActiveDropdown('support')
     else setActiveDropdown(null)
-  }, [location.pathname, page.title])
+  }, [location.pathname, page])
+
+  // URL không khớp trang nào → trang 404 thật (kèm noindex)
+  if (!page) return <NotFound />
 
   return (
     <div className="page-shell">

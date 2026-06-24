@@ -32,6 +32,7 @@ import NewsDetail from './pages/NewsDetail'
 import ContactPage from './pages/ContactPage'
 import ToolsDownloadPage from './pages/ToolsDownloadPage'
 import StaticPage from './pages/StaticPage'
+import NotFound from './pages/NotFound'
 
 
 export default function App() {
@@ -62,7 +63,7 @@ export default function App() {
       <Route path="/tin-tuc" element={<NewsPage />} />
       <Route path="/tin-tuc/:slug" element={<NewsDetail />} />
       <Route path="/lien-he" element={<ContactPage />} />
-      <Route path="*" element={<StaticPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }
