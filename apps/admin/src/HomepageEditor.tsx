@@ -166,7 +166,8 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
       }
     }
     void probe()
-    const timer = window.setInterval(() => void probe(), 3000)
+    // 8s đủ để hiện trạng thái API khi rảnh; lúc đang lưu, autosave tự phát hiện offline ngay.
+    const timer = window.setInterval(() => void probe(), 8000)
     return () => { active = false; window.clearInterval(timer) }
   }, [])
 
