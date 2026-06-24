@@ -1,11 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, Home, Search } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 
 const SUGGESTIONS = [
   { label: 'Trang chủ', to: '/' },
@@ -17,8 +14,6 @@ const SUGGESTIONS = [
 ]
 
 export default function NotFound() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -27,24 +22,10 @@ export default function NotFound() {
       description: 'Trang bạn tìm không tồn tại hoặc đã được di chuyển.',
       noindex: true,
     })
-    setActiveDropdown(null)
-    setMobileOpen(false)
   }, [location.pathname])
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        solutionPages={[]}
-        servicePages={[]}
-      />
-
-      <main>
+    <PageLayout>
         <section className="notfound-section">
           <div className="container notfound-box">
             <p className="notfound-code">404</p>
@@ -73,9 +54,6 @@ export default function NotFound() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

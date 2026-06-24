@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
 import { CheckCircle, Clock, Mail, MapPin, Phone } from 'lucide-react'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
-import { contactInfo, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
-
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
+import { contactInfo } from '../data/siteContent'
 
 const consultationChecklist = [
   'Danh sách sản phẩm, menu hoặc dịch vụ đang bán',
@@ -17,8 +12,6 @@ const consultationChecklist = [
 ]
 
 export default function ContactPage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -29,16 +22,13 @@ export default function ContactPage() {
     message: ''
   })
   const [formStatus, setFormStatus] = useState('')
-  const location = useLocation()
 
   useEffect(() => {
     setPageSeo({
       title: 'Liên hệ tư vấn iOrder',
       description: 'Gửi thông tin để iOrder tư vấn phần mềm bán hàng, order tại bàn, quản lý kho, thiết bị POS và quy trình triển khai phù hợp với cửa hàng.'
     })
-    setActiveDropdown(null)
-    setMobileOpen(false)
-  }, [location.pathname])
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -69,20 +59,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={softwareProducts}
-        solutionPages={solutionPages}
-        servicePages={servicePages}
-      />
-
-      <main>
+    <PageLayout>
         <section className="contact-hero">
           <div className="container contact-hero-grid">
             <div>
@@ -276,9 +253,6 @@ export default function ContactPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

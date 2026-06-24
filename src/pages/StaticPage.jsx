@@ -1,12 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, CheckCircle } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
 import NotFound from './NotFound'
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 
 const pages = {
   '/phan-mem/quan-ly-ban-hang-iorder': {
@@ -358,8 +355,6 @@ const aliases = {
 }
 
 export default function StaticPage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const normalizedPath = aliases[location.pathname] ?? location.pathname
   const page = pages[normalizedPath]
@@ -370,31 +365,13 @@ export default function StaticPage() {
       title: `${page.title} - iOrder`,
       description: page.lead,
     })
-
-    if (location.pathname.startsWith('/phan-mem')) setActiveDropdown('software')
-    else if (location.pathname.startsWith('/giai-phap')) setActiveDropdown('solutions')
-    else if (location.pathname.startsWith('/dich-vu')) setActiveDropdown('services')
-    else if (location.pathname.startsWith('/ho-tro')) setActiveDropdown('support')
-    else setActiveDropdown(null)
   }, [location.pathname, page])
 
   // URL không khớp trang nào → trang 404 thật (kèm noindex)
   if (!page) return <NotFound />
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        solutionPages={[]}
-        servicePages={[]}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero">
           <div className="container">
             <h1 className="detail-title">{page.title}</h1>
@@ -432,9 +409,6 @@ export default function StaticPage() {
             </Link>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

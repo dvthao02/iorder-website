@@ -7,7 +7,7 @@ import logo from '../assets/header/logo.png'
 // Khung chung cho mọi trang: Header + Footer + state dropdown/mobile.
 // Header tự lấy menu từ CMS (fetchNavOfferings), fallback dữ liệu tĩnh khi CMS chưa có
 // → không cần truyền nav ở đây. Trang chỉ cần đặt nội dung phần thân vào children.
-export default function PageLayout({ children }) {
+export default function PageLayout({ children, mainClassName }) {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
@@ -28,7 +28,7 @@ export default function PageLayout({ children }) {
         location={location}
         logoMain={logo}
       />
-      <main>{children}</main>
+      <main className={mainClassName}>{children}</main>
       <Footer logoFooter={logo} />
     </div>
   )

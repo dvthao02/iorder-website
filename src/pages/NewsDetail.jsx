@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle, Clock, ExternalLink } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { findNewsArticle, newsArticles } from '../data/newsArticles'
 import { setPageSeo } from '../utils/seo'
 import { fetchPublishedPost, fetchPublishedPosts } from '../utils/contentApi'
 
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
-
 export default function NewsDetail() {
   const { slug } = useParams()
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const location = useLocation()
   const [article, setArticle] = useState(() => findNewsArticle(slug))
   const [relatedArticles, setRelatedArticles] = useState(() => newsArticles.filter((item) => item.slug !== slug).slice(0, 3))
   const [isLoadingArticle, setIsLoadingArticle] = useState(true)
@@ -34,52 +27,23 @@ export default function NewsDetail() {
       title: article ? `${article.title} - iOrder` : 'Tin tức - iOrder',
       description: article?.excerpt ?? 'Tin tức và hướng dẫn vận hành iOrder cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.'
     })
-    setActiveDropdown(null)
-    setMobileOpen(false)
-  }, [article, location.pathname])
+  }, [article])
 
   if (isLoadingArticle && !article) return <main className="detail-not-found"><div className="container"><p>Đang tải bài viết...</p></div></main>
 
   if (!article) {
     return (
-      <div className="page-shell">
-        <Header
-          activeDropdown={activeDropdown}
-          setActiveDropdown={setActiveDropdown}
-          mobileOpen={mobileOpen}
-          setMobileOpen={setMobileOpen}
-          location={location}
-          logoMain={logoMain}
-          softwareProducts={[]}
-          solutionPages={[]}
-          servicePages={[]}
-        />
-        <main className="detail-not-found">
-          <div className="container">
-            <h1>Không tìm thấy bài viết</h1>
-            <Link to="/tin-tuc" className="btn primary">Quay lại tin tức</Link>
-          </div>
-        </main>
-        <Footer logoFooter={logoFooter} />
-      </div>
+      <PageLayout mainClassName="detail-not-found">
+        <div className="container">
+          <h1>Không tìm thấy bài viết</h1>
+          <Link to="/tin-tuc" className="btn primary">Quay lại tin tức</Link>
+        </div>
+      </PageLayout>
     )
   }
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        softwareProducts={[]}
-        solutionPages={[]}
-        servicePages={[]}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero article-hero">
           <div className="container article-hero-grid">
             <div>
@@ -187,9 +151,6 @@ export default function NewsDetail() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }

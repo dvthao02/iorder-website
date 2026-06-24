@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ArrowRight,
   CheckCircle,
@@ -9,11 +9,8 @@ import {
   Printer,
   ShieldCheck,
 } from 'lucide-react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
-import logoMain from '../assets/header/logo.png'
-import logoFooter from '../assets/header/logo.png'
 
 const downloads = [
   {
@@ -53,32 +50,15 @@ const setupNotes = [
 ]
 
 export default function ToolsDownloadPage() {
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const location = useLocation()
-
   useEffect(() => {
     setPageSeo({
       title: 'Tải công cụ iOrder - Hỗ trợ',
       description: 'Tải tài liệu hỗ trợ cài đặt, cấu hình thiết bị, nhập dữ liệu và triển khai vận hành iOrder cho cửa hàng.',
     })
-    setActiveDropdown('support')
   }, [])
 
   return (
-    <div className="page-shell">
-      <Header
-        activeDropdown={activeDropdown}
-        setActiveDropdown={setActiveDropdown}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        location={location}
-        logoMain={logoMain}
-        solutionPages={[]}
-        servicePages={[]}
-      />
-
-      <main>
+    <PageLayout>
         <section className="detail-hero tools-download-hero">
           <div className="container tools-hero-grid">
             <div>
@@ -153,9 +133,6 @@ export default function ToolsDownloadPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer logoFooter={logoFooter} />
-    </div>
+    </PageLayout>
   )
 }
