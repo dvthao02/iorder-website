@@ -22,6 +22,29 @@ export const postInputSchema = z.object({
   ctaLabel: z.string().trim().max(80).nullable().default(null),
   ctaUrl: z.string().url().nullable().default(null),
   badgeText: z.string().trim().max(60).nullable().default(null),
+  categoryIds: z.array(contentIdSchema).max(20).default([]),
+  tags: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
+})
+
+// ── Chuyên mục & Thẻ (taxonomy) ──────────────────────────────────────────────
+export const categoryRefSchema = z.object({ id: contentIdSchema, name: z.string(), slug: z.string() })
+export const tagRefSchema = categoryRefSchema
+
+export const categoryInputSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(2000).nullable().default(null),
+  parentId: contentIdSchema.nullable().default(null),
+  sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
+})
+
+export const categoryResponseSchema = z.object({
+  id: contentIdSchema,
+  name: z.string(),
+  slug: z.string(),
+  description: z.string().nullable(),
+  parentId: contentIdSchema.nullable(),
+  sortOrder: z.number(),
+  postCount: z.number().int().nonnegative(),
 })
 
 export const postListQuerySchema = z.object({
@@ -30,6 +53,7 @@ export const postListQuerySchema = z.object({
   type: managedPostTypeSchema.optional(),
   status: managedPostStatusSchema.optional(),
   search: z.string().trim().max(120).optional(),
+  category: z.string().trim().max(180).optional(),
 })
 
 export const postResponseSchema = z.object({
@@ -53,6 +77,8 @@ export const postResponseSchema = z.object({
   ctaUrl: z.string().nullable(),
   badgeText: z.string().nullable(),
   viewCount: z.number().int().nonnegative(),
+  categories: z.array(categoryRefSchema),
+  tags: z.array(tagRefSchema),
   publishedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -61,3 +87,7 @@ export const postResponseSchema = z.object({
 export type PostInput = z.infer<typeof postInputSchema>
 export type PostListQuery = z.infer<typeof postListQuerySchema>
 export type PostResponse = z.infer<typeof postResponseSchema>
+export type CategoryInput = z.infer<typeof categoryInputSchema>
+export type CategoryResponse = z.infer<typeof categoryResponseSchema>
+export type CategoryRef = z.infer<typeof categoryRefSchema>
+export type TagRef = z.infer<typeof tagRefSchema>

@@ -979,6 +979,9 @@
 .article-highlight-box { margin-top: 26px; padding: 20px 22px; border: 1px solid #d8ebfb; border-radius: 14px; background: #f4f9fe; }
 .article-highlight-box h2 { margin: 0 0 12px; font-size: 18px; font-weight: 800; color: #1f3147; }
 
+.article-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; padding-top: 18px; border-top: 0.5px solid #e6eef6; }
+.article-tag { padding: 5px 12px; border-radius: 999px; background: #eef4f9; color: #46607a; font-size: 13px; font-weight: 600; }
+
 /* Sidebar */
 .article-sidebar { position: sticky; top: 88px; display: grid; gap: 18px; }
 .sidebar-card { padding: 18px; border: 1px solid #e6eef6; border-radius: 14px; background: #fff; }

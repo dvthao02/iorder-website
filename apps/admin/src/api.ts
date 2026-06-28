@@ -1,5 +1,7 @@
 import type {
   AuthSessionResponse,
+  CategoryInput,
+  CategoryResponse,
   MediaAsset,
   MediaListResponse,
   MediaMetadataInput,
@@ -148,6 +150,22 @@ export function updatePost(id: string, input: PostInput) {
 
 export function publishPost(id: string) {
   return request<{ item: PostResponse }>(`/api/admin/posts/${id}/publish`, { method: 'POST' })
+}
+
+export function listCategories() {
+  return request<{ items: CategoryResponse[] }>('/api/admin/categories')
+}
+
+export function createCategory(input: CategoryInput) {
+  return request<{ item: CategoryResponse }>('/api/admin/categories', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function updateCategory(id: string, input: CategoryInput) {
+  return request<{ item: CategoryResponse }>(`/api/admin/categories/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+}
+
+export function deleteCategory(id: string) {
+  return request<void>(`/api/admin/categories/${id}`, { method: 'DELETE' })
 }
 
 export function archivePost(id: string) {

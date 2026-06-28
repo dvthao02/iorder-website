@@ -13,14 +13,19 @@ export default function NewsPage() {
 
   const articles = cmsArticles.length > 0 ? cmsArticles : newsArticles
 
-  const categories = useMemo(
-    () => ['Tất cả', ...new Set(articles.map((article) => article.category))],
-    [articles]
-  )
+  // Ưu tiên chuyên mục thật (taxonomy); nếu chưa có thì dùng "Chủ đề" văn bản như trước.
+  const categories = useMemo(() => {
+    const taxNames = articles.flatMap((article) => (article.categories ?? []).map((category) => category.name))
+    const names = taxNames.length > 0 ? taxNames : articles.map((article) => article.category).filter(Boolean)
+    return ['Tất cả', ...new Set(names)]
+  }, [articles])
 
-  const filteredArticles = activeCategory === 'Tất cả'
-    ? articles
-    : articles.filter((article) => article.category === activeCategory)
+  const matchesCategory = (article) => {
+    if (activeCategory === 'Tất cả') return true
+    if (article.categories?.length) return article.categories.some((category) => category.name === activeCategory)
+    return article.category === activeCategory
+  }
+  const filteredArticles = articles.filter(matchesCategory)
 
   const featuredArticle = articles[0]
   const secondaryArticles = articles.slice(1, 3)

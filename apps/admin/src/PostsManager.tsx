@@ -1,8 +1,8 @@
-import type { MediaAsset, PostInput, PostResponse } from '@iorder/contracts'
+import type { CategoryResponse, MediaAsset, PostInput, PostResponse } from '@iorder/contracts'
 import { Calendar, ChevronDown, ChevronRight, Eye, FileText, Image as ImageIcon, MoreVertical, Plus, Search, Send, SlidersHorizontal, Trash2, Upload } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { archivePost, createPost, listMedia, listPosts, publishPost, updatePost } from './api'
+import { archivePost, createCategory, createPost, deleteCategory, listCategories, listMedia, listPosts, publishPost, updatePost } from './api'
 import { RichTextEditor } from './RichTextEditor'
 import { EditorFooter, ImagePicker, PageHeader, StatusDot } from './ui'
 
@@ -32,6 +32,8 @@ const emptyPost: PostInput = {
   ctaLabel: null,
   ctaUrl: null,
   badgeText: null,
+  categoryIds: [],
+  tags: [],
 }
 
 function slugify(value: string) {
@@ -63,6 +65,8 @@ function toInput(post: PostResponse): PostInput {
     ctaLabel: post.ctaLabel,
     ctaUrl: post.ctaUrl,
     badgeText: post.badgeText,
+    categoryIds: post.categories.map((category) => category.id),
+    tags: post.tags.map((tag) => tag.name),
   }
 }
 
@@ -75,9 +79,23 @@ function formatViews(count: number) {
   return String(count)
 }
 
+// Date <-> giá trị input datetime-local (giữ theo giờ địa phương).
+function toLocalInput(value: Date | null) {
+  if (!value) return ''
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+}
+function fromLocalInput(value: string): Date | null {
+  return value ? new Date(value) : null
+}
+
 export function PostsManager() {
   const [posts, setPosts] = useState<PostResponse[]>([])
   const [images, setImages] = useState<MediaAsset[]>([])
+  const [categories, setCategories] = useState<CategoryResponse[]>([])
+  const [newCategory, setNewCategory] = useState('')
+  const [tagInput, setTagInput] = useState('')
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -96,10 +114,56 @@ export function PostsManager() {
   const didInit = useRef(false)
 
   const loadData = async () => {
-    const [postResult, mediaResult] = await Promise.all([listPosts(), listMedia('image')])
+    const [postResult, mediaResult, categoryResult] = await Promise.all([listPosts(), listMedia('image'), listCategories()])
     setPosts(postResult.items)
     setImages(mediaResult.items)
+    setCategories(categoryResult.items)
     return postResult.items
+  }
+
+  const addCategory = async () => {
+    const name = newCategory.trim()
+    if (!name) return
+    try {
+      const result = await createCategory({ name, description: null, parentId: null, sortOrder: categories.length })
+      setCategories((prev) => [...prev, result.item])
+      setForm((current) => ({ ...current, categoryIds: [...current.categoryIds, result.item.id] }))
+      setNewCategory('')
+    } catch {
+      setMessage('Không thể tạo chuyên mục.')
+    }
+  }
+
+  const removeCategory = async (id: string) => {
+    if (!window.confirm('Xóa chuyên mục này? Bài viết sẽ bị gỡ khỏi chuyên mục.')) return
+    try {
+      await deleteCategory(id)
+      setCategories((prev) => prev.filter((category) => category.id !== id))
+      setForm((current) => ({ ...current, categoryIds: current.categoryIds.filter((cid) => cid !== id) }))
+    } catch {
+      setMessage('Không thể xóa chuyên mục.')
+    }
+  }
+
+  const toggleCategory = (id: string) => {
+    setForm((current) => ({
+      ...current,
+      categoryIds: current.categoryIds.includes(id) ? current.categoryIds.filter((cid) => cid !== id) : [...current.categoryIds, id],
+    }))
+  }
+
+  const commitTag = () => {
+    const value = tagInput.trim().replace(/,$/, '').trim()
+    if (!value) return
+    if (!form.tags.includes(value)) patchForm('tags', [...form.tags, value])
+    setTagInput('')
+  }
+
+  const onTagKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); commitTag() }
+    else if (event.key === 'Backspace' && tagInput === '' && form.tags.length > 0) {
+      patchForm('tags', form.tags.slice(0, -1))
+    }
   }
 
   useEffect(() => {
@@ -370,6 +434,66 @@ export function PostsManager() {
                 <textarea maxLength={600} rows={3} value={form.excerpt ?? ''} onChange={(event) => patchForm('excerpt', event.target.value || null)} />
                 <span className="char-counter">{(form.excerpt ?? '').length}/600</span>
               </label>
+
+              <div className="form-field">
+                <span className="field-label">Chuyên mục</span>
+                <div className="cat-list">
+                  {categories.length === 0 ? <small className="field-hint">Chưa có chuyên mục — thêm bên dưới.</small> : null}
+                  {categories.map((category) => (
+                    <span key={category.id} className={`cat-chip${form.categoryIds.includes(category.id) ? ' is-on' : ''}`}>
+                      <label>
+                        <input type="checkbox" checked={form.categoryIds.includes(category.id)} onChange={() => toggleCategory(category.id)} />
+                        {category.name}
+                      </label>
+                      <button type="button" className="cat-del" title="Xóa chuyên mục" onClick={() => void removeCategory(category.id)}>×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="cat-add">
+                  <input placeholder="Thêm chuyên mục mới…" value={newCategory} onChange={(event) => setNewCategory(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void addCategory() } }} />
+                  <button type="button" className="secondary-button" onClick={() => void addCategory()}>Thêm</button>
+                </div>
+              </div>
+
+              <div className="form-field">
+                <span className="field-label">Thẻ (tags)</span>
+                <div className="tag-input">
+                  {form.tags.map((tag) => (
+                    <span key={tag} className="tag-chip">{tag}<button type="button" onClick={() => patchForm('tags', form.tags.filter((value) => value !== tag))}>×</button></span>
+                  ))}
+                  <input placeholder="Nhập thẻ rồi Enter…" value={tagInput} onChange={(event) => setTagInput(event.target.value)} onKeyDown={onTagKey} onBlur={commitTag} />
+                </div>
+              </div>
+
+              {form.type === 'promotion' ? (
+                <>
+                  <h2 className="section-label">Khuyến mãi</h2>
+                  <div className="form-row">
+                    <label>
+                      Nhãn nổi bật (badge)
+                      <input maxLength={60} placeholder="VD: Giảm 20%" value={form.badgeText ?? ''} onChange={(event) => patchForm('badgeText', event.target.value || null)} />
+                    </label>
+                    <label>
+                      Nhãn nút (CTA)
+                      <input maxLength={80} placeholder="VD: Nhận ưu đãi" value={form.ctaLabel ?? ''} onChange={(event) => patchForm('ctaLabel', event.target.value || null)} />
+                    </label>
+                  </div>
+                  <label className="full-field">
+                    Link nút CTA
+                    <input type="url" placeholder="https://..." value={form.ctaUrl ?? ''} onChange={(event) => patchForm('ctaUrl', event.target.value || null)} />
+                  </label>
+                  <div className="form-row">
+                    <label>
+                      Bắt đầu khuyến mãi
+                      <input type="datetime-local" value={toLocalInput(form.promotionStartAt)} onChange={(event) => patchForm('promotionStartAt', fromLocalInput(event.target.value))} />
+                    </label>
+                    <label>
+                      Kết thúc khuyến mãi
+                      <input type="datetime-local" value={toLocalInput(form.promotionEndAt)} onChange={(event) => patchForm('promotionEndAt', fromLocalInput(event.target.value))} />
+                    </label>
+                  </div>
+                </>
+              ) : null}
 
               <h2 className="section-label">Nội dung bài viết</h2>
               <RichTextEditor value={form.body} placeholder="Soạn nội dung bài viết..." onChange={(html) => patchForm('body', html)} />

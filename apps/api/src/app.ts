@@ -17,6 +17,7 @@ import { registerNavigationRoutes } from './navigation/navigation-routes.js'
 import { registerOfferingRoutes } from './offerings/offering-routes.js'
 import { registerPartnerRoutes } from './partners/partner-routes.js'
 import { registerHomepageRoutes } from './pages/homepage-routes.js'
+import { registerCategoryRoutes } from './posts/category-routes.js'
 import { registerPostRoutes } from './posts/post-routes.js'
 import { registerSettingsRoutes } from './settings/settings-routes.js'
 import { registerStatsRoutes } from './stats/stats-routes.js'
@@ -135,6 +136,7 @@ export async function buildApp(env: ApiEnv) {
     maxFileSizeBytes: env.MEDIA_MAX_FILE_SIZE_MB * 1024 * 1024,
   })
   registerPostRoutes(app, { db: database.db })
+  registerCategoryRoutes(app, { db: database.db })
   registerHomepageRoutes(app, {
     db: database.db,
     slug: env.HOMEPAGE_SLUG,

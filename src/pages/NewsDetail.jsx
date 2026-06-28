@@ -183,6 +183,14 @@ export default function NewsDetail() {
                     </div>
                   </div>
                 ) : null}
+
+                {article.tags?.length ? (
+                  <div className="article-tags">
+                    {article.tags.map((tag) => (
+                      <span key={tag.id ?? tag.slug ?? tag} className="article-tag">#{tag.name ?? tag}</span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </main>
 

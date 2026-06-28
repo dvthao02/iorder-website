@@ -191,6 +191,8 @@ button, input, textarea, select { font: inherit; }
 
 /* Header trang quản lý: tiêu đề chuẩn + toolbar nhẹ */
 .manager-heading h1 { font-size: 19px; line-height: 26px; margin: 0 0 2px; font-weight: 800; letter-spacing: -0.02em; color: var(--heading); }
+/* Hairline ngăn header với nội dung bên dưới (mọi trang) */
+.manager-heading { padding-bottom: 14px; border-bottom: 0.5px solid var(--border); }
 .admin-module .manager-heading { margin-bottom: 16px; }
 .content-manager .post-actions button { min-height: 40px; padding: 0 14px; font-size: 13px; font-weight: 700; }
 .content-manager .post-actions svg { width: 15px; height: 15px; }
@@ -708,10 +710,11 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 
 /* ── Post manager (master–detail) ───────────────────────────────────────────── */
 .editor-status { font-size: 13px; font-weight: 600; color: #15803d; }
-.post-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px; margin-top: 14px; align-items: start; }
+.post-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 0; margin-top: 14px; align-items: start; }
 
 /* Cột danh sách */
-.post-panel { display: grid; gap: 12px; }
+.post-panel { display: grid; gap: 12px; padding-right: 20px; border-right: 0.5px solid var(--border); }
+.post-editor-pane { padding-left: 24px; }
 .post-search-row { display: flex; gap: 8px; }
 .post-search { flex: 1; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #cddbe7; border-radius: 12px; background: #fff; color: #94a3b8; }
 .post-search input { flex: 1; min-height: 38px; border: none; background: transparent; font: inherit; color: #1e293b; }
@@ -792,6 +795,24 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .split-main { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .split-caret { display: inline-flex; align-items: center; padding: 0 8px; border-top-left-radius: 0; border-bottom-left-radius: 0; box-shadow: inset 1px 0 0 rgba(255,255,255,.25); }
 
+/* Chuyên mục & thẻ trong trình soạn bài */
+.cat-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border: 1px solid #d7e3ee; border-radius: 999px; background: #fff; font-size: 13px; }
+.cat-chip.is-on { border-color: var(--brand); background: #eaf6fe; }
+.cat-chip label { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; cursor: pointer; }
+.cat-chip input { width: 15px; height: 15px; }
+.cat-del { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: #94a3b8; font-size: 15px; line-height: 1; cursor: pointer; }
+.cat-del:hover { background: #fee2e2; color: #b91c1c; }
+.cat-add { display: flex; gap: 8px; margin-top: 8px; }
+.cat-add input { flex: 1; }
+.cat-add .secondary-button { min-height: 40px; padding: 0 14px; }
+
+.tag-input { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid #cddbe7; border-radius: 10px; background: #fff; }
+.tag-input input { flex: 1; min-width: 140px; min-height: 28px; border: 0; padding: 4px; outline: none; }
+.tag-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 4px 3px 10px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 12px; font-weight: 700; }
+.tag-chip button { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: #0369a1; font-size: 14px; line-height: 1; cursor: pointer; }
+.tag-chip button:hover { background: rgba(3,105,161,.16); }
+
 .advanced-section { border: 1px solid var(--border); border-radius: 12px; background: #fff; }
 .advanced-section > summary { padding: 12px 14px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; list-style: none; }
 .advanced-section > summary::-webkit-details-marker { display: none; }
@@ -799,7 +820,9 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .advanced-body { display: grid; gap: 12px; padding: 14px; }
 
 @media (max-width: 1100px) {
-  .post-layout { grid-template-columns: 1fr; }
+  .post-layout { grid-template-columns: 1fr; gap: 18px; }
+  .post-panel { padding-right: 0; border-right: 0; }
+  .post-editor-pane { padding-left: 0; }
 }
 
 /* ── Partner logo picker (lưới chọn logo trực quan) ─────────────────────────── */

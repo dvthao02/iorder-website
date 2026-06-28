@@ -1,10 +1,15 @@
 import { contentIdSchema, postInputSchema, postListQuerySchema } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
-import { auditLogs, mediaAssets, postRevisions, posts } from '@iorder/database'
-import { and, count, desc, eq, ilike, isNull, lte, max, ne, or, sql } from 'drizzle-orm'
+import { auditLogs, categories, mediaAssets, postCategories, postRevisions, postTags, posts, tags } from '@iorder/database'
+import { and, count, desc, eq, ilike, inArray, isNull, lte, max, ne, or, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 
 import { createAuthGuard, requireCmsUser } from '../auth/auth-guard.js'
+import { slugify } from './category-routes.js'
+
+type TaxRef = { id: string; name: string; slug: string }
+type PostTaxonomy = { categories: TaxRef[]; tags: TaxRef[] }
+const EMPTY_TAXONOMY: PostTaxonomy = { categories: [], tags: [] }
 
 type PostRecord = typeof posts.$inferSelect
 
@@ -39,7 +44,7 @@ function postMetadata(post: PostRecord) {
   }
 }
 
-function serializePost(post: PostRecord, coverUrl: string | null = null) {
+function serializePost(post: PostRecord, coverUrl: string | null = null, taxonomy: PostTaxonomy = EMPTY_TAXONOMY) {
   return {
     id: post.id,
     type: post.type,
@@ -60,10 +65,56 @@ function serializePost(post: PostRecord, coverUrl: string | null = null) {
     ctaUrl: post.ctaUrl,
     badgeText: post.badgeText,
     viewCount: post.viewCount,
+    categories: taxonomy.categories,
+    tags: taxonomy.tags,
     publishedAt: post.publishedAt?.toISOString() ?? null,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString(),
   }
+}
+
+// Lấy chuyên mục + thẻ cho nhiều bài (tránh N+1).
+async function loadTaxonomy(db: CmsDatabase, postIds: string[]) {
+  const map = new Map<string, PostTaxonomy>()
+  if (postIds.length === 0) return map
+  for (const id of postIds) map.set(id, { categories: [], tags: [] })
+  const [catRows, tagRows] = await Promise.all([
+    db.select({ postId: postCategories.postId, id: categories.id, name: categories.name, slug: categories.slug })
+      .from(postCategories).innerJoin(categories, eq(categories.id, postCategories.categoryId))
+      .where(inArray(postCategories.postId, postIds)),
+    db.select({ postId: postTags.postId, id: tags.id, name: tags.name, slug: tags.slug })
+      .from(postTags).innerJoin(tags, eq(tags.id, postTags.tagId))
+      .where(inArray(postTags.postId, postIds)),
+  ])
+  for (const row of catRows) map.get(row.postId)?.categories.push({ id: row.id, name: row.name, slug: row.slug })
+  for (const row of tagRows) map.get(row.postId)?.tags.push({ id: row.id, name: row.name, slug: row.slug })
+  return map
+}
+
+async function taxonomyFor(db: CmsDatabase, postId: string): Promise<PostTaxonomy> {
+  return (await loadTaxonomy(db, [postId])).get(postId) ?? { categories: [], tags: [] }
+}
+
+async function syncPostCategories(db: CmsDatabase, postId: string, categoryIds: string[]) {
+  await db.delete(postCategories).where(eq(postCategories.postId, postId))
+  if (categoryIds.length === 0) return
+  const valid = await db.select({ id: categories.id }).from(categories).where(inArray(categories.id, categoryIds))
+  if (valid.length) await db.insert(postCategories).values(valid.map((row) => ({ postId, categoryId: row.id })))
+}
+
+async function syncPostTags(db: CmsDatabase, postId: string, tagNames: string[]) {
+  await db.delete(postTags).where(eq(postTags.postId, postId))
+  const names = [...new Set(tagNames.map((name) => name.trim()).filter(Boolean))]
+  if (names.length === 0) return
+  const ids: string[] = []
+  for (const name of names) {
+    const slug = slugify(name) || name.toLowerCase()
+    const [existing] = await db.select({ id: tags.id }).from(tags).where(eq(tags.slug, slug)).limit(1)
+    if (existing) { ids.push(existing.id); continue }
+    const [created] = await db.insert(tags).values({ name, slug }).returning({ id: tags.id })
+    if (created) ids.push(created.id)
+  }
+  if (ids.length) await db.insert(postTags).values(ids.map((tagId) => ({ postId, tagId })))
 }
 
 async function coverExists(db: CmsDatabase, id: string | null) {
@@ -130,8 +181,9 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
       options.db.select({ value: count() }).from(posts).where(where),
     ])
 
+    const tax = await loadTaxonomy(options.db, rows.map((row) => row.post.id))
     return {
-      items: rows.map((row) => serializePost(row.post, row.coverUrl)),
+      items: rows.map((row) => serializePost(row.post, row.coverUrl, tax.get(row.post.id))),
       total: totals[0]?.value ?? 0,
       page: parsed.data.page,
       limit: parsed.data.limit,
@@ -143,7 +195,7 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
     if (!id.success) return reply.code(400).send({ error: 'INVALID_POST_ID' })
     const row = await findPost(options.db, id.data)
     if (!row) return reply.code(404).send({ error: 'POST_NOT_FOUND' })
-    return { item: serializePost(row.post, row.coverUrl) }
+    return { item: serializePost(row.post, row.coverUrl, await taxonomyFor(options.db, row.post.id)) }
   })
 
   app.post('/api/admin/posts', { preHandler: adminGuard }, async (request, reply) => {
@@ -173,10 +225,12 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
     }).returning()
 
     if (!created) throw new Error('Post was not created')
+    await syncPostCategories(options.db, created.id, input.data.categoryIds)
+    await syncPostTags(options.db, created.id, input.data.tags)
     await createRevision(options.db, created, user.id, 'Created draft')
     await options.db.insert(auditLogs).values({ userId: user.id, action: 'post.create', entityType: 'post', entityId: created.id, afterData: serializePost(created) })
     const createdWithCover = await findPost(options.db, created.id)
-    return reply.code(201).send({ item: serializePost(created, createdWithCover?.coverUrl ?? null) })
+    return reply.code(201).send({ item: serializePost(created, createdWithCover?.coverUrl ?? null, await taxonomyFor(options.db, created.id)) })
   })
 
   app.patch('/api/admin/posts/:id', { preHandler: adminGuard }, async (request, reply) => {
@@ -208,10 +262,12 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
 
     if (!updated) return reply.code(404).send({ error: 'POST_NOT_FOUND' })
     const user = requireCmsUser(request)
+    await syncPostCategories(options.db, updated.id, input.data.categoryIds)
+    await syncPostTags(options.db, updated.id, input.data.tags)
     await createRevision(options.db, updated, user.id, 'Updated content')
     await options.db.insert(auditLogs).values({ userId: user.id, action: 'post.update', entityType: 'post', entityId: updated.id, beforeData: serializePost(existing.post), afterData: serializePost(updated) })
     const updatedWithCover = await findPost(options.db, updated.id)
-    return { item: serializePost(updated, updatedWithCover?.coverUrl ?? null) }
+    return { item: serializePost(updated, updatedWithCover?.coverUrl ?? null, await taxonomyFor(options.db, updated.id)) }
   })
 
   app.post('/api/admin/posts/:id/publish', { preHandler: adminGuard }, async (request, reply) => {
@@ -224,7 +280,7 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
     const user = requireCmsUser(request)
     await createRevision(options.db, updated, user.id, 'Published')
     await options.db.insert(auditLogs).values({ userId: user.id, action: 'post.publish', entityType: 'post', entityId: updated.id })
-    return { item: serializePost(updated, existing.coverUrl) }
+    return { item: serializePost(updated, existing.coverUrl, await taxonomyFor(options.db, updated.id)) }
   })
 
   app.post('/api/admin/posts/:id/archive', { preHandler: adminGuard }, async (request, reply) => {
@@ -237,7 +293,7 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
     const user = requireCmsUser(request)
     await createRevision(options.db, updated, user.id, 'Archived')
     await options.db.insert(auditLogs).values({ userId: user.id, action: 'post.archive', entityType: 'post', entityId: updated.id })
-    return { item: serializePost(updated, existing.coverUrl) }
+    return { item: serializePost(updated, existing.coverUrl, await taxonomyFor(options.db, updated.id)) }
   })
 
   app.get('/api/public/posts', async (request, reply) => {
@@ -245,6 +301,14 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
     if (!parsed.success) return reply.code(400).send({ error: 'INVALID_QUERY' })
     const filters = [eq(posts.status, 'published'), isNull(posts.deletedAt), lte(posts.publishedAt, new Date())]
     if (parsed.data.type) filters.push(eq(posts.type, parsed.data.type))
+    if (parsed.data.category) {
+      filters.push(inArray(
+        posts.id,
+        options.db.select({ id: postCategories.postId }).from(postCategories)
+          .innerJoin(categories, eq(categories.id, postCategories.categoryId))
+          .where(eq(categories.slug, parsed.data.category)),
+      ))
+    }
     const offset = (parsed.data.page - 1) * parsed.data.limit
     const rows = await options.db
       .select({ post: posts, coverUrl: mediaAssets.publicUrl })
@@ -254,7 +318,8 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
       .orderBy(desc(posts.publishedAt))
       .limit(parsed.data.limit)
       .offset(offset)
-    return { items: rows.map((row) => serializePost(row.post, row.coverUrl)), page: parsed.data.page, limit: parsed.data.limit }
+    const tax = await loadTaxonomy(options.db, rows.map((row) => row.post.id))
+    return { items: rows.map((row) => serializePost(row.post, row.coverUrl, tax.get(row.post.id))), page: parsed.data.page, limit: parsed.data.limit }
   })
 
   app.get('/api/public/posts/:slug', async (request, reply) => {
@@ -274,6 +339,6 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
       // Tăng ngầm, không chặn phản hồi; lỗi (nếu có) bỏ qua.
       void options.db.update(posts).set({ viewCount: sql`${posts.viewCount} + 1` }).where(eq(posts.id, row.post.id)).then(undefined, () => {})
     }
-    return { item: serializePost({ ...row.post, viewCount }, row.coverUrl) }
+    return { item: serializePost({ ...row.post, viewCount }, row.coverUrl, await taxonomyFor(options.db, row.post.id)) }
   })
 }

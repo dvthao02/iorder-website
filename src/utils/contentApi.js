@@ -35,9 +35,16 @@ export function normalizeCmsPost(post) {
   }
 }
 
-export async function fetchPublishedPosts(limit = 50) {
-  const payload = await apiFetch(`/api/public/posts?limit=${limit}`)
+export async function fetchPublishedPosts(limit = 50, category = null) {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (category) params.set('category', category)
+  const payload = await apiFetch(`/api/public/posts?${params}`)
   return (payload.items ?? []).map(normalizeCmsPost)
+}
+
+export async function fetchCategories() {
+  const payload = await apiFetch('/api/public/categories')
+  return (payload.items ?? []).filter((category) => category.postCount > 0)
 }
 
 export async function fetchPublishedPost(slug) {
