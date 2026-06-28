@@ -71,6 +71,20 @@
       "when": 1782284537735,
       "tag": "0009_handy_firestar",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782537376822,
+      "tag": "0010_moaning_gertrude_yorkes",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782542998715,
+      "tag": "0011_overjoyed_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

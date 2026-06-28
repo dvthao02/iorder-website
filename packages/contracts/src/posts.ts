@@ -52,6 +52,7 @@ export const postResponseSchema = z.object({
   ctaLabel: z.string().nullable(),
   ctaUrl: z.string().nullable(),
   badgeText: z.string().nullable(),
+  viewCount: z.number().int().nonnegative(),
   publishedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

@@ -53,6 +53,8 @@ export const pageBlockTypeEnum = pgEnum('page_block_type', [
   'contact_info',
 ])
 
+export const partnerKindEnum = pgEnum('partner_kind', ['partner', 'customer'])
+
 export const linkTypeEnum = pgEnum('link_type', [
   'internal',
   'external',

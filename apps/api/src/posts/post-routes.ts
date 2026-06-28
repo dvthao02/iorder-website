@@ -1,12 +1,30 @@
 import { contentIdSchema, postInputSchema, postListQuerySchema } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
 import { auditLogs, mediaAssets, postRevisions, posts } from '@iorder/database'
-import { and, count, desc, eq, ilike, isNull, lte, max, ne, or } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, isNull, lte, max, ne, or, sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 
 import { createAuthGuard, requireCmsUser } from '../auth/auth-guard.js'
 
 type PostRecord = typeof posts.$inferSelect
+
+// Đếm lượt xem có chống trùng: cùng một người xem (IP + trình duyệt) trong 30 phút
+// chỉ tính 1 lượt. Lưu tạm trong bộ nhớ tiến trình — đủ cho mục đích thống kê.
+const VIEW_DEDUP_WINDOW_MS = 30 * 60 * 1000
+const recentViews = new Map<string, number>()
+
+function shouldCountView(key: string) {
+  const now = Date.now()
+  const last = recentViews.get(key)
+  if (last && now - last < VIEW_DEDUP_WINDOW_MS) return false
+  recentViews.set(key, now)
+  if (recentViews.size > 5000) {
+    for (const [entryKey, timestamp] of recentViews) {
+      if (now - timestamp > VIEW_DEDUP_WINDOW_MS) recentViews.delete(entryKey)
+    }
+  }
+  return true
+}
 
 function postBody(post: PostRecord) {
   const body = (post.contentJson as { body?: unknown }).body
@@ -41,6 +59,7 @@ function serializePost(post: PostRecord, coverUrl: string | null = null) {
     ctaLabel: post.ctaLabel,
     ctaUrl: post.ctaUrl,
     badgeText: post.badgeText,
+    viewCount: post.viewCount,
     publishedAt: post.publishedAt?.toISOString() ?? null,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString(),
@@ -247,6 +266,14 @@ export function registerPostRoutes(app: FastifyInstance, options: { db: CmsDatab
       .where(and(eq(posts.slug, slug), eq(posts.status, 'published'), isNull(posts.deletedAt), or(isNull(posts.publishedAt), lte(posts.publishedAt, new Date()))))
       .limit(1)
     if (!row) return reply.code(404).send({ error: 'POST_NOT_FOUND' })
-    return { item: serializePost(row.post, row.coverUrl) }
+
+    let viewCount = row.post.viewCount
+    const viewerKey = `${row.post.id}|${request.ip}|${request.headers['user-agent'] ?? ''}`
+    if (shouldCountView(viewerKey)) {
+      viewCount += 1
+      // Tăng ngầm, không chặn phản hồi; lỗi (nếu có) bỏ qua.
+      void options.db.update(posts).set({ viewCount: sql`${posts.viewCount} + 1` }).where(eq(posts.id, row.post.id)).then(undefined, () => {})
+    }
+    return { item: serializePost({ ...row.post, viewCount }, row.coverUrl) }
   })
 }

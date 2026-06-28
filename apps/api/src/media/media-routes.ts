@@ -34,6 +34,35 @@ function serializeMediaAsset(asset: typeof mediaAssets.$inferSelect) {
   }
 }
 
+type MediaUsageItem = {
+  entityType: 'homepage_section' | 'post' | 'offering' | 'partner' | 'testimonial' | 'site_profile'
+  entityId: string
+  label: string
+  location: string
+}
+
+async function collectMediaUsage(db: CmsDatabase, mediaId: string): Promise<MediaUsageItem[]> {
+  const [blocks, postRows, offeringRows, partnerRows, testimonialRows, profiles] = await Promise.all([
+    db.select({ id: pageBlocks.id, type: pageBlocks.type, data: pageBlocks.data, appearance: pageBlocks.appearance }).from(pageBlocks),
+    db.select({ id: posts.id, title: posts.title, coverMediaId: posts.coverMediaId }).from(posts).where(isNull(posts.deletedAt)),
+    db.select({ id: offerings.id, title: offerings.title, coverMediaId: offerings.coverMediaId }).from(offerings).where(isNull(offerings.deletedAt)),
+    db.select({ id: partners.id, name: partners.name, logoMediaId: partners.logoMediaId }).from(partners),
+    db.select({ id: testimonials.id, authorName: testimonials.authorName, avatarMediaId: testimonials.avatarMediaId }).from(testimonials),
+    db.select({ id: siteProfile.id, companyName: siteProfile.companyName, logoMediaId: siteProfile.logoMediaId }).from(siteProfile),
+  ])
+
+  const items: MediaUsageItem[] = []
+  for (const block of blocks) {
+    if (JSON.stringify({ data: block.data, appearance: block.appearance }).includes(mediaId)) items.push({ entityType: 'homepage_section', entityId: block.id, label: block.type, location: 'Trang chủ' })
+  }
+  for (const row of postRows) if (row.coverMediaId === mediaId) items.push({ entityType: 'post', entityId: row.id, label: row.title, location: 'Ảnh bìa bài viết' })
+  for (const row of offeringRows) if (row.coverMediaId === mediaId) items.push({ entityType: 'offering', entityId: row.id, label: row.title, location: 'Ảnh bìa phần mềm/giải pháp' })
+  for (const row of partnerRows) if (row.logoMediaId === mediaId) items.push({ entityType: 'partner', entityId: row.id, label: row.name, location: 'Logo đối tác' })
+  for (const row of testimonialRows) if (row.avatarMediaId === mediaId) items.push({ entityType: 'testimonial', entityId: row.id, label: row.authorName, location: 'Ảnh khách hàng' })
+  for (const row of profiles) if (row.logoMediaId === mediaId) items.push({ entityType: 'site_profile', entityId: row.id, label: row.companyName, location: 'Logo website' })
+  return items
+}
+
 export function registerMediaRoutes(app: FastifyInstance, options: MediaRouteOptions) {
   const adminGuard = createAuthGuard(options.db, ['admin'])
 
@@ -224,24 +253,36 @@ export function registerMediaRoutes(app: FastifyInstance, options: MediaRouteOpt
     const [asset] = await options.db.select({ id: mediaAssets.id }).from(mediaAssets).where(eq(mediaAssets.id, id.data)).limit(1)
     if (!asset) return reply.code(404).send({ error: 'MEDIA_NOT_FOUND' })
 
-    const [blocks, postRows, offeringRows, partnerRows, testimonialRows, profiles] = await Promise.all([
-      options.db.select({ id: pageBlocks.id, type: pageBlocks.type, data: pageBlocks.data, appearance: pageBlocks.appearance }).from(pageBlocks),
-      options.db.select({ id: posts.id, title: posts.title, coverMediaId: posts.coverMediaId }).from(posts).where(isNull(posts.deletedAt)),
-      options.db.select({ id: offerings.id, title: offerings.title, coverMediaId: offerings.coverMediaId }).from(offerings).where(isNull(offerings.deletedAt)),
-      options.db.select({ id: partners.id, name: partners.name, logoMediaId: partners.logoMediaId }).from(partners),
-      options.db.select({ id: testimonials.id, authorName: testimonials.authorName, avatarMediaId: testimonials.avatarMediaId }).from(testimonials),
-      options.db.select({ id: siteProfile.id, companyName: siteProfile.companyName, logoMediaId: siteProfile.logoMediaId }).from(siteProfile),
-    ])
-
-    const items: Array<{ entityType: 'homepage_section' | 'post' | 'offering' | 'partner' | 'testimonial' | 'site_profile'; entityId: string; label: string; location: string }> = []
-    for (const block of blocks) {
-      if (JSON.stringify({ data: block.data, appearance: block.appearance }).includes(id.data)) items.push({ entityType: 'homepage_section', entityId: block.id, label: block.type, location: 'Trang chủ' })
-    }
-    for (const row of postRows) if (row.coverMediaId === id.data) items.push({ entityType: 'post', entityId: row.id, label: row.title, location: 'Ảnh bìa bài viết' })
-    for (const row of offeringRows) if (row.coverMediaId === id.data) items.push({ entityType: 'offering', entityId: row.id, label: row.title, location: 'Ảnh bìa phần mềm/giải pháp' })
-    for (const row of partnerRows) if (row.logoMediaId === id.data) items.push({ entityType: 'partner', entityId: row.id, label: row.name, location: 'Logo đối tác' })
-    for (const row of testimonialRows) if (row.avatarMediaId === id.data) items.push({ entityType: 'testimonial', entityId: row.id, label: row.authorName, location: 'Ảnh khách hàng' })
-    for (const row of profiles) if (row.logoMediaId === id.data) items.push({ entityType: 'site_profile', entityId: row.id, label: row.companyName, location: 'Logo website' })
+    const items = await collectMediaUsage(options.db, id.data)
     return { items, total: items.length, canDelete: items.length === 0 }
+  })
+
+  app.delete('/api/admin/media/:id', { preHandler: adminGuard }, async (request, reply) => {
+    const id = contentIdSchema.safeParse((request.params as { id?: unknown }).id)
+    if (!id.success) return reply.code(400).send({ error: 'INVALID_MEDIA_ID' })
+
+    const [asset] = await options.db.select().from(mediaAssets).where(eq(mediaAssets.id, id.data)).limit(1)
+    if (!asset) return reply.code(404).send({ error: 'MEDIA_NOT_FOUND' })
+
+    const usage = await collectMediaUsage(options.db, id.data)
+    if (usage.length > 0) return reply.code(409).send({ error: 'MEDIA_IN_USE', usage })
+
+    await options.db.delete(mediaAssets).where(eq(mediaAssets.id, id.data))
+    try {
+      await options.storage.delete(asset.storageKey)
+    } catch {
+      // File trên storage có thể đã bị xóa trước đó — bản ghi DB vẫn được gỡ.
+    }
+
+    const user = requireCmsUser(request)
+    await options.db.insert(auditLogs).values({
+      userId: user.id,
+      action: 'media.delete',
+      entityType: 'media_asset',
+      entityId: id.data,
+      beforeData: serializeMediaAsset(asset),
+    })
+
+    return reply.code(204).send()
   })
 }

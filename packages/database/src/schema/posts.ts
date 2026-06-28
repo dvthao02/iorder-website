@@ -30,6 +30,7 @@ export const posts = pgTable('posts', {
   contentHtml: text('content_html'),
   status: contentStatusEnum('status').default('draft').notNull(),
   draftVersion: integer('draft_version').default(0).notNull(),
+  viewCount: integer('view_count').default(0).notNull(),
   seoTitle: varchar('seo_title', { length: 70 }),
   seoDescription: varchar('seo_description', { length: 180 }),
   canonicalUrl: text('canonical_url'),

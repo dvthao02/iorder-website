@@ -12,6 +12,7 @@ function serializePartner(partner: PartnerRecord, logoUrl: string | null = null)
   return {
     id: partner.id,
     name: partner.name,
+    kind: partner.kind,
     description: partner.description,
     websiteUrl: partner.websiteUrl,
     logoMediaId: partner.logoMediaId,
@@ -62,6 +63,7 @@ export function registerPartnerRoutes(app: FastifyInstance, options: { db: CmsDa
     try {
       const [created] = await options.db.insert(partners).values({
         name: input.data.name,
+        kind: input.data.kind,
         description: input.data.description,
         websiteUrl: input.data.websiteUrl,
         logoMediaId: input.data.logoMediaId,
@@ -90,6 +92,7 @@ export function registerPartnerRoutes(app: FastifyInstance, options: { db: CmsDa
     try {
       const [updated] = await options.db.update(partners).set({
         name: input.data.name,
+        kind: input.data.kind,
         description: input.data.description,
         websiteUrl: input.data.websiteUrl,
         logoMediaId: input.data.logoMediaId,

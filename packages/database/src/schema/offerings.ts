@@ -12,7 +12,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 
-import { contentStatusEnum, offeringTypeEnum } from './enums.js'
+import { contentStatusEnum, offeringTypeEnum, partnerKindEnum } from './enums.js'
 import { users } from './identity.js'
 import { mediaAssets } from './media.js'
 import { timestampColumns } from './shared.js'
@@ -57,6 +57,7 @@ export const offeringRevisions = pgTable('offering_revisions', {
 export const partners = pgTable('partners', {
   id: uuid('id').defaultRandom().primaryKey(),
   logoMediaId: uuid('logo_media_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
+  kind: partnerKindEnum('kind').default('partner').notNull(),
   name: varchar('name', { length: 180 }).notNull(),
   description: text('description'),
   websiteUrl: text('website_url'),
