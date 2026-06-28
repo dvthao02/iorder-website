@@ -14,6 +14,9 @@ const envSchema = z.object({
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://127.0.0.1:4000/media'),
   MEDIA_MAX_FILE_SIZE_MB: z.coerce.number().int().min(1).max(100).default(20),
   HOMEPAGE_SLUG: z.string().regex(/^[a-z0-9-]+$/).default('home'),
+  // Tin cậy proxy phía trước (nginx) để lấy IP thật từ X-Forwarded-For.
+  // Giá trị: 'true' | 'false' | số hop | danh sách IP/subnet cách nhau dấu phẩy.
+  TRUST_PROXY: z.string().default('false'),
   // Tùy chọn: danh sách URL DB iOrder app (cách nhau dấu phẩy) để đếm số cửa hàng thực tế
   IORDER_APP_DB_URLS: z.string().optional(),
 })

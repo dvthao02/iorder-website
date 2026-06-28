@@ -14,6 +14,7 @@ const app = await buildApp({
   MEDIA_PUBLIC_BASE_URL: 'http://127.0.0.1:4000/media',
   MEDIA_MAX_FILE_SIZE_MB: 20,
   HOMEPAGE_SLUG: 'home',
+  TRUST_PROXY: 'false',
 })
 
 const passwordHash = await hashPassword('correct-horse-battery-staple')

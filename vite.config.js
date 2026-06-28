@@ -27,8 +27,9 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     proxy: {
-      '/api': 'http://127.0.0.1:4000',
-      '/media': 'http://127.0.0.1:4000',
+      // xfwd: chuyển tiếp X-Forwarded-For để API lấy IP thật (đếm lượt xem chính xác khi bật TRUST_PROXY).
+      '/api': { target: 'http://127.0.0.1:4000', xfwd: true },
+      '/media': { target: 'http://127.0.0.1:4000', xfwd: true },
       '/admin': {
         target: 'http://127.0.0.1:5174',
         changeOrigin: true,

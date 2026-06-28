@@ -22,11 +22,23 @@ import { registerSettingsRoutes } from './settings/settings-routes.js'
 import { registerStatsRoutes } from './stats/stats-routes.js'
 import { registerTestimonialRoutes } from './testimonials/testimonial-routes.js'
 
+// Chuyển TRUST_PROXY (chuỗi env) sang giá trị Fastify chấp nhận:
+// 'true'/'false' → boolean, số → số hop, còn lại → danh sách IP/subnet.
+function parseTrustProxy(value: string): boolean | number | string {
+  const trimmed = value.trim()
+  if (trimmed === '' || trimmed.toLowerCase() === 'false') return false
+  if (trimmed.toLowerCase() === 'true') return true
+  if (/^\d+$/.test(trimmed)) return Number(trimmed)
+  return trimmed
+}
+
 export async function buildApp(env: ApiEnv) {
   const database = createDatabase(env.DATABASE_URL)
   const mediaRoot = resolve(env.MEDIA_STORAGE_PATH)
   const mediaStorage = new LocalMediaStorage(mediaRoot, env.MEDIA_PUBLIC_BASE_URL)
   const app = Fastify({
+    // Sau nginx/reverse proxy: lấy IP thật từ X-Forwarded-For để đếm lượt xem chính xác.
+    trustProxy: parseTrustProxy(env.TRUST_PROXY),
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
     },
