@@ -2,10 +2,7 @@ import type { MediaAsset, TestimonialInput, TestimonialResponse } from '@iorder/
 import { useEffect, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
-
-interface TestimonialsManagerProps {
-  onBack: () => void
-}
+import { PageHeader, StatusDot, ToggleSwitch } from './ui'
 
 const emptyTestimonial: TestimonialInput = {
   authorName: '',
@@ -31,7 +28,7 @@ function toInput(item: TestimonialResponse): TestimonialInput {
   }
 }
 
-export function TestimonialsManager({ onBack }: TestimonialsManagerProps) {
+export function TestimonialsManager() {
   const [items, setItems] = useState<TestimonialResponse[]>([])
   const [images, setImages] = useState<MediaAsset[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -103,15 +100,11 @@ export function TestimonialsManager({ onBack }: TestimonialsManagerProps) {
 
   return (
     <section className="admin-card content-manager">
-      <button className="text-button" type="button" onClick={onBack}>← Tổng quan</button>
-      <p className="admin-kicker">Nội dung website</p>
-      <div className="manager-heading">
-        <div>
-          <h1>Đánh giá khách hàng</h1>
-          <p>Lời chứng thực hiển thị ở mục "Khách hàng nói gì" trên trang chủ.</p>
-        </div>
-        <button className="secondary-button" type="button" onClick={newItem}>+ Đánh giá mới</button>
-      </div>
+      <PageHeader
+        title="Đánh giá khách hàng"
+        description={'Lời chứng thực hiển thị ở mục "Khách hàng nói gì" trên trang chủ.'}
+        actions={<button className="secondary-button" type="button" onClick={newItem}>+ Đánh giá mới</button>}
+      />
 
       <div className="content-manager-grid">
         <aside className="post-list" aria-label="Danh sách đánh giá">
@@ -119,7 +112,7 @@ export function TestimonialsManager({ onBack }: TestimonialsManagerProps) {
           {items.map((item) => (
             <button className={item.id === selectedId ? 'is-active' : ''} key={item.id} type="button" onClick={() => selectItem(item)}>
               <strong>{item.authorName}</strong>
-              <span>{item.company ?? item.authorRole ?? '—'} · {item.isEnabled ? 'Hiển thị' : 'Ẩn'}</span>
+              <span><StatusDot tone={item.isEnabled ? 'on' : 'muted'} />{item.company ?? item.authorRole ?? '—'} · {item.isEnabled ? 'Hiển thị' : 'Ẩn'}</span>
             </button>
           ))}
         </aside>
@@ -166,9 +159,12 @@ export function TestimonialsManager({ onBack }: TestimonialsManagerProps) {
             </label>
           </div>
           {avatarUrl ? <div className="partner-logo-preview"><img src={avatarUrl} alt={form.authorName || 'Ảnh đại diện'} /></div> : null}
-          <label className="inline-check">
-            <input type="checkbox" checked={form.isEnabled} onChange={(event) => patchForm('isEnabled', event.target.checked)} /> Hiển thị trên website
-          </label>
+          <ToggleSwitch
+            checked={form.isEnabled}
+            onChange={(next) => patchForm('isEnabled', next)}
+            label="Hiển thị trên website"
+            hint="Tắt để ẩn đánh giá khỏi trang chủ"
+          />
           {message ? <p role="status">{message}</p> : null}
           <div className="post-actions">
             <button disabled={isSaving || !form.authorName || !form.quote} type="submit">{isSaving ? 'Đang lưu...' : 'Lưu đánh giá'}</button>

@@ -1,105 +1,48 @@
 import type { MediaAsset, MediaKind, MediaUsage } from '@iorder/contracts'
-import { useEffect, useState } from 'react'
+import { Copy, ExternalLink, MapPin, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
-import { getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
-
-interface MediaLibraryProps {
-  onBack: () => void
-}
+import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
+import { PageHeader } from './ui'
 
 function formatFileSize(bytes: number) {
-  if (bytes < 1024 * 1024) {
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`
-  }
-
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function MediaCard({ asset, onUpdated }: {
-  asset: MediaAsset
-  onUpdated: (asset: MediaAsset) => void
-}) {
-  const [altText, setAltText] = useState(asset.altText ?? '')
-  const [caption, setCaption] = useState(asset.caption ?? '')
-  const [isSaving, setIsSaving] = useState(false)
-  const [message, setMessage] = useState('')
-  const [usage, setUsage] = useState<MediaUsage[] | null>(null)
-  const isImage = asset.mimeType.startsWith('image/')
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    setMessage('')
-
-    try {
-      const response = await updateMedia(asset.id, {
-        altText: altText.trim() || null,
-        caption: caption.trim() || null,
-      })
-      onUpdated(response.item)
-      setMessage('Đã lưu mô tả.')
-    } catch {
-      setMessage('Không thể lưu mô tả.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleUsage = async () => {
-    if (usage) { setUsage(null); return }
-    try { setUsage((await getMediaUsage(asset.id)).items) }
-    catch { setMessage('Không thể kiểm tra nơi đang sử dụng.') }
-  }
-
-  return (
-    <article className="media-item">
-      <div className="media-preview">
-        {isImage
-          ? <img alt={asset.altText ?? asset.originalName} src={asset.publicUrl} />
-          : <span aria-hidden="true">TÀI LIỆU</span>}
-      </div>
-      <div className="media-item-body">
-        <a href={asset.publicUrl} rel="noreferrer" target="_blank">{asset.originalName}</a>
-        <small>{asset.mimeType} · {formatFileSize(asset.fileSize)}</small>
-        {isImage ? (
-          <label>
-            Alt text
-            <input value={altText} onChange={(event) => setAltText(event.target.value)} />
-          </label>
-        ) : null}
-        <label>
-          Mô tả
-          <textarea rows={2} value={caption} onChange={(event) => setCaption(event.target.value)} />
-        </label>
-        <div className="media-item-actions">
-          <button className="secondary-button" disabled={isSaving} type="button" onClick={handleSave}>
-            {isSaving ? 'Đang lưu...' : 'Lưu mô tả'}
-          </button>
-          <button className="secondary-button" type="button" onClick={() => void handleUsage()}>{usage ? 'Ẩn nơi sử dụng' : 'Nơi sử dụng'}</button>
-          {message ? <small role="status">{message}</small> : null}
-        </div>
-        {usage ? <div className="media-usage"><strong>{usage.length === 0 ? 'File chưa được sử dụng.' : `Đang dùng tại ${usage.length} vị trí:`}</strong>{usage.length > 0 ? <ul>{usage.map((item) => <li key={`${item.entityType}-${item.entityId}`}>{item.location}: {item.label}</li>)}</ul> : null}</div> : null}
-      </div>
-    </article>
-  )
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-export function MediaLibrary({ onBack }: MediaLibraryProps) {
+type KindFilter = 'all' | MediaKind
+
+export function MediaLibrary() {
   const [items, setItems] = useState<MediaAsset[]>([])
-  const [kind, setKind] = useState<MediaKind | undefined>()
+  const [kind, setKind] = useState<KindFilter>('all')
   const [search, setSearch] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-  const [altText, setAltText] = useState('')
-  const [caption, setCaption] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState('')
+
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [uploadAlt, setUploadAlt] = useState('')
+  const [uploadCaption, setUploadCaption] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+
+  const [editing, setEditing] = useState<MediaAsset | null>(null)
+  const [editAlt, setEditAlt] = useState('')
+  const [editCaption, setEditCaption] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [editMessage, setEditMessage] = useState('')
+  const [usage, setUsage] = useState<MediaUsage[] | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const loadItems = async (selectedKind = kind, query = search) => {
     setIsLoading(true)
     setError('')
-
     try {
-      const response = await listMedia(selectedKind, query)
+      const response = await listMedia(selectedKind === 'all' ? undefined : selectedKind, query)
       setItems(response.items)
     } catch {
       setError('Không thể tải thư viện.')
@@ -108,10 +51,7 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
     }
   }
 
-  useEffect(() => {
-    void loadItems()
-  }, [kind])
-
+  useEffect(() => { void loadItems(kind, search) }, [kind])
   useEffect(() => {
     const timer = window.setTimeout(() => void loadItems(kind, search), 300)
     return () => window.clearTimeout(timer)
@@ -119,91 +59,225 @@ export function MediaLibrary({ onBack }: MediaLibraryProps) {
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!file) {
-      setError('Vui lòng chọn một file.')
-      return
-    }
-
+    if (!file) { setUploadError('Vui lòng chọn một file.'); return }
     setIsUploading(true)
-    setError('')
-
+    setUploadError('')
     try {
-      await uploadMedia(file, {
-        altText: altText.trim() || null,
-        caption: caption.trim() || null,
-      })
+      await uploadMedia(file, { altText: uploadAlt.trim() || null, caption: uploadCaption.trim() || null })
       setFile(null)
-      setAltText('')
-      setCaption('')
-      event.currentTarget.reset()
+      setUploadAlt('')
+      setUploadCaption('')
+      setUploadOpen(false)
       await loadItems()
-    } catch (uploadError) {
-      const code = uploadError instanceof Error ? uploadError.message : ''
-      setError(code === 'FILE_TOO_LARGE'
-        ? 'File vượt quá giới hạn dung lượng.'
-        : 'File không hợp lệ hoặc tải lên thất bại.')
+    } catch (uploadErr) {
+      const code = uploadErr instanceof Error ? uploadErr.message : ''
+      setUploadError(code === 'FILE_TOO_LARGE' ? 'File vượt quá giới hạn dung lượng (20 MB).' : 'File không hợp lệ hoặc tải lên thất bại.')
     } finally {
       setIsUploading(false)
     }
   }
 
-  const handleKindChange = (nextKind?: MediaKind) => {
-    setKind(nextKind)
+  const openEdit = (asset: MediaAsset) => {
+    setEditing(asset)
+    setEditAlt(asset.altText ?? '')
+    setEditCaption(asset.caption ?? '')
+    setEditMessage('')
+    setUsage(null)
+    setCopied(false)
   }
 
-  const handleUpdated = (updated: MediaAsset) => {
-    setItems((current) => current.map((item) => item.id === updated.id ? updated : item))
+  const saveEdit = async () => {
+    if (!editing) return
+    setIsSaving(true)
+    setEditMessage('')
+    try {
+      const response = await updateMedia(editing.id, { altText: editAlt.trim() || null, caption: editCaption.trim() || null })
+      setItems((current) => current.map((item) => item.id === response.item.id ? response.item : item))
+      setEditing(response.item)
+      setEditMessage('Đã lưu mô tả.')
+    } catch {
+      setEditMessage('Không thể lưu mô tả.')
+    } finally {
+      setIsSaving(false)
+    }
   }
+
+  const loadUsage = async (id: string) => {
+    if (usage) { setUsage(null); return }
+    try { setUsage((await getMediaUsage(id)).items) }
+    catch { setEditMessage('Không thể kiểm tra nơi đang sử dụng.') }
+  }
+
+  const handleDelete = async (asset: MediaAsset) => {
+    if (!window.confirm(`Xóa "${asset.originalName}" khỏi thư viện? Hành động không thể hoàn tác.`)) return
+    setError('')
+    try {
+      await deleteMedia(asset.id)
+      if (editing?.id === asset.id) setEditing(null)
+      await loadItems()
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      setError(code === 'MEDIA_IN_USE'
+        ? 'Không thể xóa: file đang được sử dụng. Hãy gỡ khỏi các nơi sử dụng trước (xem "Nơi sử dụng").'
+        : 'Không thể xóa file.')
+    }
+  }
+
+  const copyLink = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch { /* clipboard không khả dụng */ }
+  }
+
+  const isImage = (asset: MediaAsset) => asset.mimeType.startsWith('image/')
+
+  const counts = useMemo(() => ({
+    image: items.filter(isImage).length,
+    document: items.filter((item) => !isImage(item)).length,
+  }), [items])
 
   return (
-    <section className="admin-card media-library">
-      <div className="admin-header">
-        <div>
-          <button className="text-button" type="button" onClick={onBack}>← Tổng quan</button>
-          <p className="admin-kicker">Nội dung website</p>
-          <h1>Tài liệu và hình ảnh</h1>
-          <p>Ảnh JPG, PNG, GIF, WebP; tài liệu PDF, Word, Excel hoặc ZIP. Tối đa 20 MB.</p>
-        </div>
-      </div>
+    <section className="admin-card content-manager">
+      <PageHeader
+        title="Tài liệu và hình ảnh"
+        description="Ảnh JPG, PNG, GIF, WebP; tài liệu PDF, Word, Excel hoặc ZIP. Tối đa 20 MB."
+        actions={<button className="btn-primary btn-icon" type="button" onClick={() => { setUploadOpen(true); setUploadError('') }}><Plus size={16} /> Tải lên</button>}
+      />
 
-      <form className="upload-form" onSubmit={handleUpload}>
-        <label>
-          Chọn file
-          <input
-            required
-            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip"
-            type="file"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          />
-        </label>
-        <label>
-          Alt text cho hình ảnh
-          <input maxLength={500} value={altText} onChange={(event) => setAltText(event.target.value)} />
-        </label>
-        <label>
-          Mô tả
-          <textarea maxLength={2000} rows={3} value={caption} onChange={(event) => setCaption(event.target.value)} />
-        </label>
-        <button disabled={isUploading} type="submit">
-          {isUploading ? 'Đang tải lên...' : 'Tải lên'}
-        </button>
-      </form>
+      <div className="toolbar">
+        <input className="toolbar-search" type="search" placeholder="Tìm theo tên file…" value={search} onChange={(event) => setSearch(event.target.value)} />
+        <select value={kind} onChange={(event) => setKind(event.target.value as KindFilter)}>
+          <option value="all">Tất cả ({items.length})</option>
+          <option value="image">Hình ảnh ({counts.image})</option>
+          <option value="document">Tài liệu ({counts.document})</option>
+        </select>
+      </div>
 
       {error ? <p className="form-error" role="alert">{error}</p> : null}
 
-      <div className="media-toolbar" aria-label="Lọc thư viện">
-        <button className={!kind ? 'is-active' : ''} type="button" onClick={() => handleKindChange()}>Tất cả</button>
-        <button className={kind === 'image' ? 'is-active' : ''} type="button" onClick={() => handleKindChange('image')}>Hình ảnh</button>
-        <button className={kind === 'document' ? 'is-active' : ''} type="button" onClick={() => handleKindChange('document')}>Tài liệu</button>
-        <input aria-label="Tìm trong thư viện" placeholder="Tìm theo tên file…" value={search} onChange={(event) => setSearch(event.target.value)} />
+      <div className="data-table-wrap">
+        <table className="data-table media-table">
+          <thead>
+            <tr>
+              <th className="col-stt">STT</th>
+              <th>Xem trước</th>
+              <th>Tên file</th>
+              <th>Loại</th>
+              <th>Dung lượng</th>
+              <th>Mô tả</th>
+              <th>Tải lên</th>
+              <th className="col-actions">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? <tr><td colSpan={8} className="table-empty">Đang tải thư viện…</td></tr> : null}
+            {!isLoading && items.length === 0 ? <tr><td colSpan={8} className="table-empty">Chưa có file nào.</td></tr> : null}
+            {items.map((asset, index) => (
+              <tr key={asset.id}>
+                <td className="col-stt">{index + 1}</td>
+                <td>
+                  <span className="cell-cover">
+                    {isImage(asset) ? <img src={asset.publicUrl} alt={asset.altText ?? asset.originalName} /> : <span className="cell-doc">TÀI LIỆU</span>}
+                  </span>
+                </td>
+                <td>
+                  <a className="cell-filename" href={asset.publicUrl} target="_blank" rel="noreferrer">{asset.originalName}</a>
+                  {asset.width && asset.height ? <span className="cell-slug">{asset.width}×{asset.height}px</span> : null}
+                </td>
+                <td><span className={`kind-badge ${isImage(asset) ? 'kind-partner' : 'kind-customer'}`}>{isImage(asset) ? 'Hình ảnh' : 'Tài liệu'}</span></td>
+                <td className="cell-date">{formatFileSize(asset.fileSize)}</td>
+                <td><span className="cell-desc">{asset.altText || asset.caption || <span className="muted">—</span>}</span></td>
+                <td className="cell-date">{formatDate(asset.createdAt)}</td>
+                <td className="col-actions">
+                  <button type="button" className="row-action icon-only" title="Sửa mô tả" aria-label={`Sửa ${asset.originalName}`} onClick={() => openEdit(asset)}><Pencil size={16} /></button>
+                  <button type="button" className="row-action icon-only" title="Copy link" aria-label={`Copy link ${asset.originalName}`} onClick={() => void copyLink(asset.publicUrl)}><Copy size={16} /></button>
+                  <a className="row-action icon-only" title="Mở" aria-label={`Mở ${asset.originalName}`} href={asset.publicUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} /></a>
+                  <button type="button" className="row-action icon-only is-danger" title="Xóa" aria-label={`Xóa ${asset.originalName}`} onClick={() => void handleDelete(asset)}><Trash2 size={16} /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+      <p className="table-hint">{items.length} file</p>
 
-      {isLoading ? <p>Đang tải thư viện...</p> : null}
-      {!isLoading && items.length === 0 ? <p>Chưa có file nào.</p> : null}
-      <div className="media-grid">
-        {items.map((asset) => <MediaCard key={asset.id} asset={asset} onUpdated={handleUpdated} />)}
-      </div>
+      {uploadOpen ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setUploadOpen(false)}>
+          <form className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={handleUpload}>
+            <div className="modal-head">
+              <h2>Tải file lên</h2>
+              <button type="button" className="modal-close" onClick={() => setUploadOpen(false)} aria-label="Đóng">✕</button>
+            </div>
+            <div className="modal-body">
+              <label>
+                Chọn file
+                <input required accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip" type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+              </label>
+              <label>
+                Alt text cho hình ảnh
+                <input maxLength={500} value={uploadAlt} onChange={(event) => setUploadAlt(event.target.value)} />
+              </label>
+              <label>
+                Mô tả
+                <textarea maxLength={2000} rows={3} value={uploadCaption} onChange={(event) => setUploadCaption(event.target.value)} />
+              </label>
+              {uploadError ? <p className="form-error" role="alert">{uploadError}</p> : null}
+            </div>
+            <div className="modal-foot">
+              <button type="button" className="secondary-button" onClick={() => setUploadOpen(false)}>Hủy</button>
+              <button className="btn-primary" disabled={isUploading} type="submit">{isUploading ? 'Đang tải lên...' : 'Tải lên'}</button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {editing ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setEditing(null)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <h2>Chi tiết file</h2>
+              <button type="button" className="modal-close" onClick={() => setEditing(null)} aria-label="Đóng">✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="media-detail-preview">
+                {isImage(editing) ? <img src={editing.publicUrl} alt={editing.altText ?? editing.originalName} /> : <span className="cell-doc">TÀI LIỆU</span>}
+              </div>
+              <p className="media-detail-meta">
+                <strong>{editing.originalName}</strong><br />
+                {editing.mimeType} · {formatFileSize(editing.fileSize)}{editing.width && editing.height ? ` · ${editing.width}×${editing.height}px` : ''}
+              </p>
+              {isImage(editing) ? (
+                <label>
+                  Alt text
+                  <input value={editAlt} onChange={(event) => setEditAlt(event.target.value)} />
+                </label>
+              ) : null}
+              <label>
+                Mô tả
+                <textarea rows={3} value={editCaption} onChange={(event) => setEditCaption(event.target.value)} />
+              </label>
+              <div className="modal-inline-actions">
+                <button type="button" className="secondary-button btn-icon" onClick={() => void copyLink(editing.publicUrl)}><Copy size={15} /> {copied ? 'Đã copy!' : 'Copy link'}</button>
+                <button type="button" className="secondary-button btn-icon" onClick={() => void loadUsage(editing.id)}><MapPin size={15} /> {usage ? 'Ẩn nơi sử dụng' : 'Nơi sử dụng'}</button>
+              </div>
+              {usage ? (
+                <div className="media-usage">
+                  <strong>{usage.length === 0 ? 'File chưa được sử dụng.' : `Đang dùng tại ${usage.length} vị trí:`}</strong>
+                  {usage.length > 0 ? <ul>{usage.map((item) => <li key={`${item.entityType}-${item.entityId}`}>{item.location}: {item.label}</li>)}</ul> : null}
+                </div>
+              ) : null}
+              {editMessage ? <p className="editor-status" role="status">{editMessage}</p> : null}
+            </div>
+            <div className="modal-foot">
+              <button type="button" className="btn-danger btn-icon modal-foot-start" onClick={() => void handleDelete(editing)}><Trash2 size={15} /> Xóa</button>
+              <button type="button" className="secondary-button" onClick={() => setEditing(null)}>Đóng</button>
+              <button className="btn-primary" disabled={isSaving} type="button" onClick={() => void saveEdit()}>{isSaving ? 'Đang lưu...' : 'Lưu mô tả'}</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

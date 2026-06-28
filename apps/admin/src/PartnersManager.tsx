@@ -1,14 +1,13 @@
-import type { MediaAsset, PartnerInput, PartnerResponse } from '@iorder/contracts'
-import { useEffect, useState } from 'react'
+import type { MediaAsset, PartnerInput, PartnerKind, PartnerResponse } from '@iorder/contracts'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { createPartner, deletePartner, listMedia, listPartners, updatePartner } from './api'
-
-interface PartnersManagerProps {
-  onBack: () => void
-}
+import { ImagePicker, PageHeader, StatusDot, ToggleSwitch } from './ui'
 
 const emptyPartner: PartnerInput = {
   name: '',
+  kind: 'partner',
   description: null,
   websiteUrl: null,
   logoMediaId: null,
@@ -16,9 +15,15 @@ const emptyPartner: PartnerInput = {
   isEnabled: true,
 }
 
+const KIND_LABEL: Record<PartnerKind, string> = { partner: 'Đối tác', customer: 'Khách hàng' }
+
+type StatusFilter = 'all' | 'enabled' | 'disabled'
+type KindFilter = 'all' | PartnerKind
+
 function toInput(partner: PartnerResponse): PartnerInput {
   return {
     name: partner.name,
+    kind: partner.kind,
     description: partner.description,
     websiteUrl: partner.websiteUrl,
     logoMediaId: partner.logoMediaId,
@@ -27,13 +32,21 @@ function toInput(partner: PartnerResponse): PartnerInput {
   }
 }
 
-export function PartnersManager({ onBack }: PartnersManagerProps) {
+export function PartnersManager() {
   const [items, setItems] = useState<PartnerResponse[]>([])
   const [images, setImages] = useState<MediaAsset[]>([])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [kindFilter, setKindFilter] = useState<KindFilter>('all')
+
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerInput>(emptyPartner)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState('')
+
+  const [dragId, setDragId] = useState<string | null>(null)
 
   const loadData = async () => {
     const [partnerResult, mediaResult] = await Promise.all([listPartners(), listMedia('image')])
@@ -45,19 +58,28 @@ export function PartnersManager({ onBack }: PartnersManagerProps) {
     void loadData().catch(() => setMessage('Không thể tải danh sách đối tác.'))
   }, [])
 
+  const logoUrl = (id: string | null) => images.find((image) => image.id === id)?.publicUrl ?? null
+
   const patchForm = <Key extends keyof PartnerInput>(key: Key, value: PartnerInput[Key]) => {
     setForm((current) => ({ ...current, [key]: value }))
   }
 
-  const selectPartner = (partner: PartnerResponse) => {
-    setSelectedId(partner.id)
-    setForm(toInput(partner))
+  const openCreate = () => {
+    setEditingId(null)
+    setForm({ ...emptyPartner, sortOrder: items.length })
     setMessage('')
+    setEditorOpen(true)
   }
 
-  const newPartner = () => {
-    setSelectedId(null)
-    setForm({ ...emptyPartner, sortOrder: items.length })
+  const openEdit = (partner: PartnerResponse) => {
+    setEditingId(partner.id)
+    setForm(toInput(partner))
+    setMessage('')
+    setEditorOpen(true)
+  }
+
+  const closeEditor = () => {
+    setEditorOpen(false)
     setMessage('')
   }
 
@@ -66,103 +88,254 @@ export function PartnersManager({ onBack }: PartnersManagerProps) {
     setIsSaving(true)
     setMessage('')
     try {
-      const result = selectedId ? await updatePartner(selectedId, form) : await createPartner(form)
-      setSelectedId(result.item.id)
-      setForm(toInput(result.item))
+      if (editingId) await updatePartner(editingId, form)
+      else await createPartner(form)
       await loadData()
-      setMessage('Đã lưu đối tác.')
+      setEditorOpen(false)
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      setMessage(code === 'NAME_EXISTS' ? 'Tên đối tác đã tồn tại.' : 'Không thể lưu đối tác.')
+      setMessage(code === 'NAME_EXISTS' ? 'Tên đã tồn tại.' : 'Không thể lưu.')
     } finally {
       setIsSaving(false)
     }
   }
 
-  const remove = async () => {
-    if (!selectedId) return
-    if (!window.confirm('Xóa đối tác này khỏi danh sách?')) return
-    setIsSaving(true)
+  const toggleEnabled = async (partner: PartnerResponse) => {
     try {
-      await deletePartner(selectedId)
-      setSelectedId(null)
-      setForm(emptyPartner)
+      await updatePartner(partner.id, { ...toInput(partner), isEnabled: !partner.isEnabled })
       await loadData()
-      setMessage('Đã xóa đối tác.')
     } catch {
-      setMessage('Không thể xóa đối tác.')
-    } finally {
-      setIsSaving(false)
+      setMessage('Không thể đổi trạng thái.')
     }
   }
 
-  const logoUrl = (id: string | null) => images.find((image) => image.id === id)?.publicUrl ?? null
-  const currentLogo = logoUrl(form.logoMediaId)
+  const remove = async (partner: PartnerResponse) => {
+    if (!window.confirm(`Xóa "${partner.name}" khỏi danh sách?`)) return
+    try {
+      await deletePartner(partner.id)
+      await loadData()
+    } catch {
+      setMessage('Không thể xóa.')
+    }
+  }
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return items.filter((partner) => {
+      if (statusFilter === 'enabled' && !partner.isEnabled) return false
+      if (statusFilter === 'disabled' && partner.isEnabled) return false
+      if (kindFilter !== 'all' && partner.kind !== kindFilter) return false
+      if (query && !partner.name.toLowerCase().includes(query) && !(partner.websiteUrl ?? '').toLowerCase().includes(query)) return false
+      return true
+    })
+  }, [items, search, statusFilter, kindFilter])
+
+  // Chỉ cho kéo-thả khi đang xem toàn bộ (không lọc/tìm) để thứ tự không bị nhập nhằng.
+  const isReorderable = !search.trim() && statusFilter === 'all' && kindFilter === 'all'
+
+  const persistOrder = async (ordered: PartnerResponse[]) => {
+    const changed = ordered
+      .map((partner, index) => ({ partner, index }))
+      .filter(({ partner, index }) => partner.sortOrder !== index)
+    setItems(ordered.map((partner, index) => ({ ...partner, sortOrder: index })))
+    try {
+      await Promise.all(changed.map(({ partner, index }) => updatePartner(partner.id, { ...toInput(partner), sortOrder: index })))
+      await loadData()
+    } catch {
+      setMessage('Không thể lưu thứ tự.')
+      await loadData()
+    }
+  }
+
+  const onDrop = (targetId: string) => {
+    if (!dragId || dragId === targetId) return
+    const ordered = [...items].sort((a, b) => a.sortOrder - b.sortOrder)
+    const from = ordered.findIndex((p) => p.id === dragId)
+    const to = ordered.findIndex((p) => p.id === targetId)
+    if (from === -1 || to === -1) return
+    const [moved] = ordered.splice(from, 1)
+    if (!moved) return
+    ordered.splice(to, 0, moved)
+    setDragId(null)
+    void persistOrder(ordered)
+  }
+
+  const enabledPreview = useMemo(
+    () => items.filter((p) => p.isEnabled).sort((a, b) => a.sortOrder - b.sortOrder),
+    [items],
+  )
 
   return (
     <section className="admin-card content-manager">
-      <button className="text-button" type="button" onClick={onBack}>← Tổng quan</button>
-      <p className="admin-kicker">Nội dung website</p>
-      <div className="manager-heading">
-        <div>
-          <h1>Đối tác &amp; Khách hàng</h1>
-          <p>Quản lý logo đối tác hiển thị trên website. Tải logo trong "Ảnh &amp; tài liệu" trước khi chọn.</p>
+      <PageHeader
+        title={<>Đối tác &amp; Khách hàng</>}
+        description={<>Quản lý logo đối tác/khách hàng hiển thị trên website. Tải logo trong "Ảnh &amp; tài liệu" trước khi chọn.</>}
+        actions={<button className="btn-primary btn-icon" type="button" onClick={openCreate}><Plus size={16} /> Thêm đối tác</button>}
+      />
+
+      <div className="toolbar">
+        <input className="toolbar-search" type="search" placeholder="Tìm theo tên hoặc website…" value={search} onChange={(event) => setSearch(event.target.value)} />
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}>
+          <option value="all">Mọi trạng thái</option>
+          <option value="enabled">Đang hiển thị</option>
+          <option value="disabled">Đã ẩn</option>
+        </select>
+        <select value={kindFilter} onChange={(event) => setKindFilter(event.target.value as KindFilter)}>
+          <option value="all">Mọi loại</option>
+          <option value="partner">Đối tác</option>
+          <option value="customer">Khách hàng</option>
+        </select>
+      </div>
+
+      {message ? <p className="form-error" role="status">{message}</p> : null}
+
+      <div className="data-table-wrap">
+        <table className="data-table partner-table">
+          <thead>
+            <tr>
+              <th className="col-grip" aria-label="Kéo thả" />
+              <th className="col-stt">STT</th>
+              <th>Logo</th>
+              <th>Tên</th>
+              <th>Loại</th>
+              <th>Website</th>
+              <th>Trạng thái</th>
+              <th className="col-order">Thứ tự</th>
+              <th className="col-actions">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr><td colSpan={9} className="table-empty">Không có đối tác nào khớp.</td></tr>
+            ) : null}
+            {filtered.map((partner, index) => {
+              const thumb = logoUrl(partner.logoMediaId)
+              return (
+                <tr
+                  key={partner.id}
+                  className={dragId === partner.id ? 'is-dragging' : ''}
+                  draggable={isReorderable}
+                  onDragStart={() => isReorderable && setDragId(partner.id)}
+                  onDragOver={(event) => { if (isReorderable) event.preventDefault() }}
+                  onDrop={() => isReorderable && onDrop(partner.id)}
+                  onDragEnd={() => setDragId(null)}
+                >
+                  <td className="col-grip">{isReorderable ? <span className="drag-grip" title="Kéo để sắp xếp" aria-hidden="true">⠿</span> : null}</td>
+                  <td className="col-stt">{index + 1}</td>
+                  <td>
+                    <span className="cell-logo">
+                      {thumb ? <img src={thumb} alt="" /> : <span className="cell-logo-fallback">{partner.name.charAt(0).toUpperCase() || '?'}</span>}
+                    </span>
+                  </td>
+                  <td><strong>{partner.name}</strong></td>
+                  <td><span className={`kind-badge kind-${partner.kind}`}>{KIND_LABEL[partner.kind]}</span></td>
+                  <td className="cell-website">
+                    {partner.websiteUrl ? <a href={partner.websiteUrl} target="_blank" rel="noreferrer">{partner.websiteUrl.replace(/^https?:\/\//, '')}</a> : <span className="muted">—</span>}
+                  </td>
+                  <td>
+                    <button type="button" className="status-pill" onClick={() => void toggleEnabled(partner)} title="Bấm để bật/tắt">
+                      <StatusDot tone={partner.isEnabled ? 'on' : 'muted'} />{partner.isEnabled ? 'Đang hiển thị' : 'Đã ẩn'}
+                    </button>
+                  </td>
+                  <td className="col-order">#{partner.sortOrder}</td>
+                  <td className="col-actions">
+                    <button type="button" className="row-action icon-only" title="Sửa" aria-label={`Sửa ${partner.name}`} onClick={() => openEdit(partner)}><Pencil size={16} /></button>
+                    <button type="button" className="row-action icon-only is-danger" title="Xóa" aria-label={`Xóa ${partner.name}`} onClick={() => void remove(partner)}><Trash2 size={16} /></button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="table-hint">{isReorderable ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.' : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}</p>
+
+      <div className="preview-panel">
+        <div className="preview-head">
+          <h2>Xem trước hiển thị trên website</h2>
+          <span className="muted">{enabledPreview.length} mục đang hiển thị</span>
         </div>
-        <button className="secondary-button" type="button" onClick={newPartner}>+ Đối tác mới</button>
+        {enabledPreview.length === 0 ? (
+          <p className="muted">Chưa có mục nào đang hiển thị.</p>
+        ) : (
+          <div className="preview-strip">
+            {enabledPreview.map((partner) => {
+              const thumb = logoUrl(partner.logoMediaId)
+              return (
+                <span className="preview-logo" key={partner.id} title={`${partner.name} · ${KIND_LABEL[partner.kind]}`}>
+                  {thumb ? <img src={thumb} alt={partner.name} /> : <span className="preview-logo-text">{partner.name}</span>}
+                </span>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="content-manager-grid">
-        <aside className="post-list" aria-label="Danh sách đối tác">
-          {items.length === 0 ? <p>Chưa có đối tác nào.</p> : null}
-          {items.map((partner) => (
-            <button className={partner.id === selectedId ? 'is-active' : ''} key={partner.id} type="button" onClick={() => selectPartner(partner)}>
-              <strong>{partner.name}</strong>
-              <span>{partner.isEnabled ? 'Đang hiển thị' : 'Đã ẩn'} · #{partner.sortOrder}</span>
-            </button>
-          ))}
-        </aside>
-
-        <form className="post-form" onSubmit={save}>
-          <label>
-            Tên đối tác
-            <input required maxLength={180} value={form.name} onChange={(event) => patchForm('name', event.target.value)} />
-          </label>
-          <div className="form-row">
-            <label>
-              Logo
-              <select value={form.logoMediaId ?? ''} onChange={(event) => patchForm('logoMediaId', event.target.value || null)}>
-                <option value="">Không chọn</option>
-                {images.map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}
-              </select>
-            </label>
-            <label>
-              Thứ tự hiển thị
-              <input type="number" min={0} max={9999} value={form.sortOrder} onChange={(event) => patchForm('sortOrder', Number(event.target.value))} />
-            </label>
-          </div>
-          {currentLogo ? (
-            <div className="partner-logo-preview">
-              <img src={currentLogo} alt={form.name || 'Logo đối tác'} />
+      {editorOpen ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
+          <form className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={save}>
+            <div className="modal-head">
+              <h2>{editingId ? 'Sửa đối tác' : 'Thêm đối tác'}</h2>
+              <button type="button" className="modal-close" onClick={closeEditor} aria-label="Đóng">✕</button>
             </div>
-          ) : null}
-          <label>
-            Website
-            <input type="url" placeholder="https://..." value={form.websiteUrl ?? ''} onChange={(event) => patchForm('websiteUrl', event.target.value || null)} />
-          </label>
-          <label>
-            Mô tả ngắn
-            <textarea maxLength={2000} rows={3} value={form.description ?? ''} onChange={(event) => patchForm('description', event.target.value || null)} />
-          </label>
-          <label className="inline-check">
-            <input type="checkbox" checked={form.isEnabled} onChange={(event) => patchForm('isEnabled', event.target.checked)} /> Hiển thị trên website
-          </label>
-          {message ? <p role="status">{message}</p> : null}
-          <div className="post-actions">
-            <button disabled={isSaving || !form.name} type="submit">{isSaving ? 'Đang lưu...' : 'Lưu đối tác'}</button>
-            {selectedId ? <button className="secondary-button" disabled={isSaving} type="button" onClick={() => void remove()}>Xóa</button> : null}
-          </div>
-        </form>
-      </div>
+
+            <div className="modal-body">
+              <div className="form-row">
+                <label>
+                  Tên đối tác
+                  <input required maxLength={180} value={form.name} onChange={(event) => patchForm('name', event.target.value)} />
+                </label>
+                <label>
+                  Loại
+                  <select value={form.kind} onChange={(event) => patchForm('kind', event.target.value as PartnerKind)}>
+                    <option value="partner">Đối tác</option>
+                    <option value="customer">Khách hàng</option>
+                  </select>
+                </label>
+              </div>
+
+              <ImagePicker
+                label="Logo"
+                ariaLabel="Chọn logo"
+                images={images}
+                value={form.logoMediaId}
+                onChange={(id) => patchForm('logoMediaId', id)}
+                onUploaded={(asset) => setImages((prev) => [asset, ...prev])}
+              />
+
+              <div className="form-row">
+                <label>
+                  Website
+                  <input type="url" placeholder="https://..." value={form.websiteUrl ?? ''} onChange={(event) => patchForm('websiteUrl', event.target.value || null)} />
+                </label>
+                <label>
+                  Thứ tự hiển thị
+                  <input type="number" min={0} max={9999} value={form.sortOrder} onChange={(event) => patchForm('sortOrder', Number(event.target.value))} />
+                </label>
+              </div>
+
+              <label>
+                Mô tả ngắn
+                <textarea maxLength={2000} rows={3} value={form.description ?? ''} onChange={(event) => patchForm('description', event.target.value || null)} />
+              </label>
+
+              <ToggleSwitch
+                checked={form.isEnabled}
+                onChange={(next) => patchForm('isEnabled', next)}
+                label="Hiển thị trên website"
+                hint="Tắt để ẩn khỏi trang công khai"
+              />
+
+              {message ? <p className="form-error" role="status">{message}</p> : null}
+            </div>
+
+            <div className="modal-foot">
+              <button type="button" className="secondary-button" onClick={closeEditor}>Hủy</button>
+              <button className="btn-primary" disabled={isSaving || !form.name} type="submit">{isSaving ? 'Đang lưu...' : 'Lưu'}</button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </section>
   )
 }

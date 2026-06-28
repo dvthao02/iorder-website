@@ -3,6 +3,7 @@ import { ArrowUpRight, ExternalLink, FileText, Image as ImageIcon, MessageSquare
 import { useEffect, useState } from 'react'
 
 import { getHomepage, listMedia, listPartners, listPosts, listTestimonials } from './api'
+import { PageHeader } from './ui'
 
 const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? 'http://127.0.0.1:5173/'
 
@@ -68,17 +69,14 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
 
   return (
     <section className="dashboard-page">
-      <div className="dash-topbar">
-        <div>
-          <p className="admin-kicker">Tổng quan</p>
-          <h1>Tổng quan CMS iOrder</h1>
-          <p className="dash-sub">Theo dõi nội dung và tình trạng website một cách trực quan.</p>
-        </div>
-        <div className="dash-actions">
+      <PageHeader
+        title="Tổng quan CMS iOrder"
+        description="Theo dõi nội dung và tình trạng website một cách trực quan."
+        actions={<div className="dash-actions">
           <a className="secondary-button" href={PUBLIC_SITE_URL} target="_blank" rel="noreferrer">Xem website <ExternalLink size={16} /></a>
           <button className="primary-cta" type="button" onClick={() => onOpen('posts')}><Plus size={18} /> Tạo bài viết</button>
-        </div>
-      </div>
+        </div>}
+      />
 
       <div className="metric-grid">
         {statCards.map((card) => (

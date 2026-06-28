@@ -1,4 +1,5 @@
 import type { OfferingResponse, OfferingInput, OfferingContent } from '@iorder/contracts'
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   archiveOffering,
@@ -8,6 +9,13 @@ import {
   publishOffering,
   updateOffering,
 } from './api'
+import { PageHeader, StatusDot, ToggleSwitch } from './ui'
+
+const STATUS_TONE: Record<string, 'on' | 'muted' | 'danger'> = {
+  published: 'on',
+  draft: 'muted',
+  archived: 'danger',
+}
 
 const TYPES = [
   { key: 'software', label: 'Phần mềm' },
@@ -129,10 +137,12 @@ function OfferingForm({
         </div>
       </div>
       <div className="form-row">
-        <label>
-          <input type="checkbox" checked={form.isFeatured} onChange={(e) => set({ isFeatured: e.target.checked })} />
-          {' '}Nổi bật
-        </label>
+        <ToggleSwitch
+          checked={form.isFeatured}
+          onChange={(next) => set({ isFeatured: next })}
+          label="Nổi bật"
+          hint="Ưu tiên hiển thị ở vị trí nổi bật"
+        />
       </div>
 
       <hr className="form-divider" />
@@ -223,7 +233,7 @@ function OfferingRow({
     <div className="offering-row">
       <div className="offering-row-info">
         <strong>{offering.title}</strong>
-        <small>/{offering.slug} · <span className={`status-badge status-${offering.status}`}>{STATUS_LABELS[offering.status]}</span></small>
+        <small><StatusDot tone={STATUS_TONE[offering.status] ?? 'muted'} />/{offering.slug} · <span className={`status-badge status-${offering.status}`}>{STATUS_LABELS[offering.status]}</span></small>
       </div>
       <div className="offering-row-actions">
         <button type="button" onClick={onEdit} disabled={busy}>Sửa</button>
@@ -239,7 +249,7 @@ function OfferingRow({
   )
 }
 
-export function OfferingsManager({ onBack }: { onBack: () => void }) {
+export function OfferingsManager() {
   const [activeType, setActiveType] = useState<OfferingType>('software')
   const [items, setItems] = useState<OfferingResponse[]>([])
   const [loading, setLoading] = useState(false)
@@ -305,11 +315,11 @@ export function OfferingsManager({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="admin-module">
-      <div className="module-header">
-        <button type="button" onClick={onBack}>← Tổng quan</button>
-        <h2>Phần mềm & Giải pháp</h2>
-        <button type="button" className="btn-primary" onClick={() => setEditing('new')}>+ Thêm mới</button>
-      </div>
+      <PageHeader
+        title="Phần mềm & Giải pháp"
+        description="Quản lý phần mềm, giải pháp, dịch vụ và ngành hàng hiển thị trên website."
+        actions={<button type="button" className="btn-primary btn-icon" onClick={() => setEditing('new')}><Plus size={16} /> Thêm mới</button>}
+      />
 
       <div className="tab-nav">
         {TYPES.map((t) => (

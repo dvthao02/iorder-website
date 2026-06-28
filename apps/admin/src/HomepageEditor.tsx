@@ -9,7 +9,7 @@ import {
   type MediaAsset,
   type SectionAppearance,
 } from '@iorder/contracts'
-import { Eye, History, Maximize2, Minimize2, Save, UploadCloud } from 'lucide-react'
+import { Eye, History, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -23,6 +23,7 @@ import {
   publishHomepage,
   restoreHomepageRevision,
 } from './api'
+import { EditorFooter, PageHeader, ToggleSwitch } from './ui'
 
 const defaultInput: HomepageInput = {
   title: 'Trang chủ', seoTitle: null, seoDescription: null, canonicalUrl: null, blocks: [],
@@ -100,7 +101,7 @@ function fixedBlocks(blocks: HomepageBlock[], mediaId = '') {
   return HOMEPAGE_SECTION_ORDER.map((type) => byType.get(type) ?? newBlock(type, mediaId))
 }
 
-export function HomepageEditor({ onBack }: { onBack: () => void }) {
+export function HomepageEditor() {
   const [form, setForm] = useState<HomepageInput>(defaultInput)
   const [status, setStatus] = useState('draft')
   const [message, setMessage] = useState('')
@@ -117,8 +118,12 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
   const [previewUrl, setPreviewUrl] = useState('')
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light')
-  const [showPreview, setShowPreview] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
   const [previewFullscreen, setPreviewFullscreen] = useState(false)
+  const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null)
+  const [previewSize, setPreviewSize] = useState<{ w: number; h: number } | null>(null)
+  const dragRef = useRef<{ dx: number; dy: number } | null>(null)
+  const resizeRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null)
   const autosaveInFlight = useRef(false)
 
   useEffect(() => {
@@ -299,11 +304,11 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
     finally { setBusy(false) }
   }
 
-  // Bật/tắt panel xem trước; lần đầu bật thì tự tạo bản preview
+  // Bật/tắt panel xem trước; mỗi lần bật đều tạo lại bản preview để phản ánh thay đổi mới nhất
   const togglePreview = () => {
     setShowPreview((current) => {
       const next = !current
-      if (next && !previewUrl) void openPreview()
+      if (next) void openPreview()
       return next
     })
   }
@@ -326,24 +331,77 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
     } finally { setBusy(false) }
   }
 
+  // Kéo thả cửa sổ xem trước bằng thanh tiêu đề (pointer capture → mượt, không cần listener toàn cục)
+  const startPreviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (previewFullscreen || (e.target as HTMLElement).closest('button')) return
+    const panel = e.currentTarget.parentElement as HTMLElement
+    const rect = panel.getBoundingClientRect()
+    dragRef.current = { dx: e.clientX - rect.left, dy: e.clientY - rect.top }
+    setPreviewPos({ x: rect.left, y: rect.top })
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const onPreviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return
+    const x = Math.max(8, Math.min(window.innerWidth - 160, e.clientX - dragRef.current.dx))
+    const y = Math.max(8, Math.min(window.innerHeight - 80, e.clientY - dragRef.current.dy))
+    setPreviewPos({ x, y })
+  }
+  const endPreviewDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = null
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ignore */ }
+  }
+  // Kéo giãn kích thước cửa sổ preview bằng góc dưới-phải
+  const startPreviewResize = (e: React.PointerEvent<HTMLSpanElement>) => {
+    if (previewFullscreen) return
+    e.stopPropagation()
+    const panel = e.currentTarget.parentElement as HTMLElement
+    const rect = panel.getBoundingClientRect()
+    resizeRef.current = { x: e.clientX, y: e.clientY, w: rect.width, h: rect.height }
+    setPreviewSize({ w: rect.width, h: rect.height })
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const onPreviewResize = (e: React.PointerEvent<HTMLSpanElement>) => {
+    if (!resizeRef.current) return
+    const w = Math.max(300, Math.min(window.innerWidth - 24, resizeRef.current.w + (e.clientX - resizeRef.current.x)))
+    const h = Math.max(220, Math.min(window.innerHeight - 24, resizeRef.current.h + (e.clientY - resizeRef.current.y)))
+    setPreviewSize({ w, h })
+  }
+  const endPreviewResize = (e: React.PointerEvent<HTMLSpanElement>) => {
+    resizeRef.current = null
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ignore */ }
+  }
+  const defaultWidth = previewMode === 'mobile' ? 430 : previewMode === 'tablet' ? 812 : 1040
+  const defaultHeight = previewMode === 'mobile' ? 760 : 640
+  const floatingStyle: React.CSSProperties | undefined = previewFullscreen
+    ? undefined
+    : {
+        ...(previewPos ? { left: previewPos.x, top: previewPos.y, right: 'auto' } : {}),
+        width: previewSize?.w ?? defaultWidth,
+        height: previewSize?.h ?? defaultHeight,
+      }
+
   return <section className="admin-card content-manager">
-    <button className="text-button" type="button" onClick={onBack}>← Tổng quan</button>
-    <p className="admin-kicker">Nội dung website</p>
-    <div className="manager-heading"><div><h1>Trang chủ</h1><p>Trạng thái: {status} · Phiên bản nháp: {draftVersion} · <span className={`autosave-state is-${autosaveState}`}>{autosaveState === 'saving' ? 'Đang tự lưu…' : autosaveState === 'pending' ? 'Chờ tự lưu' : autosaveState === 'saved' ? 'Đã tự lưu' : autosaveState === 'offline' ? 'Chưa đồng bộ' : autosaveState === 'conflict' ? 'Xung đột dữ liệu' : 'Đã tải'}</span> · <span className={`api-state is-${apiStatus}`}>API {apiStatus === 'online' ? 'online' : apiStatus === 'offline' ? 'offline' : 'đang kiểm tra'}</span></p></div><div className="post-actions"><button className="secondary-button" disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void save()}><Save size={16} /> Lưu phiên bản</button><button className="publish-button" disabled={busy || form.blocks.length === 0 || autosaveState === 'conflict'} type="button" onClick={() => void publish()}><UploadCloud size={16} /> {busy ? 'Đang xử lý...' : 'Xuất bản'}</button><button className={`secondary-button ${showPreview ? 'is-active' : ''}`} disabled={busy || autosaveState === 'conflict'} type="button" onClick={togglePreview}><Eye size={16} /> {showPreview ? 'Ẩn xem trước' : 'Xem trước'}</button><button className="secondary-button" type="button" onClick={() => setShowRevisions((current) => !current)}><History size={16} /> Lịch sử ({revisions.length})</button></div></div>
+    <PageHeader
+      title="Trang chủ"
+      description={<>Trạng thái: {status} · Phiên bản nháp: {draftVersion} · <span className={`autosave-state is-${autosaveState}`}>{autosaveState === 'saving' ? 'Đang tự lưu…' : autosaveState === 'pending' ? 'Chờ tự lưu' : autosaveState === 'saved' ? 'Đã tự lưu' : autosaveState === 'offline' ? 'Chưa đồng bộ' : autosaveState === 'conflict' ? 'Xung đột dữ liệu' : 'Đã tải'}</span> · <span className={`api-state is-${apiStatus}`}>API {apiStatus === 'online' ? 'online' : apiStatus === 'offline' ? 'offline' : 'đang kiểm tra'}</span></>}
+    />
     {message ? <p className={`publish-notice ${apiStatus === 'offline' ? 'is-error' : ''}`} role="status">{message}</p> : null}
-    <div className="post-form homepage-meta">
-      <label>Tiêu đề SEO<input maxLength={70} value={form.seoTitle ?? ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value || null })} /><small>Hiển thị trên tab trình duyệt và công cụ tìm kiếm.</small></label>
-      <label>Mô tả SEO<textarea maxLength={180} value={form.seoDescription ?? ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value || null })} /><small>Phần mô tả dành cho Google và chia sẻ mạng xã hội.</small></label>
-    </div>
-    <div className={`fixed-editor-layout ${showPreview ? '' : 'no-preview'}`}>
+    <details className="seo-disclosure">
+      <summary>Tiêu đề &amp; mô tả SEO <span>{form.seoTitle ? '· đã có tiêu đề' : '· chưa đặt'}</span></summary>
+      <div className="post-form homepage-meta">
+        <label>Tiêu đề SEO<input maxLength={70} value={form.seoTitle ?? ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value || null })} /><small>Hiển thị trên tab trình duyệt và công cụ tìm kiếm.</small></label>
+        <label>Mô tả SEO<textarea maxLength={180} value={form.seoDescription ?? ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value || null })} /><small>Phần mô tả dành cho Google và chia sẻ mạng xã hội.</small></label>
+      </div>
+    </details>
+    <div className="fixed-editor-layout no-preview">
       <aside className="fixed-section-nav" aria-label="Các khu vực trang chủ">
         <div className="fixed-section-nav-head"><strong>Cấu trúc cố định</strong><small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small></div>
         {form.blocks.map((block, index) => <button className={block.type === selectedType ? 'is-active' : ''} key={block.type} type="button" onClick={() => setSelectedType(block.type)}><span>{index + 1}</span><b>{labels[block.type]}</b><small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small></button>)}
       </aside>
       <div className="block-list">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
       <div className="block-card-heading"><strong>{index + 1}. {labels[block.type]}</strong><span className="fixed-structure-badge">Section cố định</span></div>
-      <label className="inline-check"><input checked={block.isEnabled} type="checkbox" onChange={(e) => setForm({ ...form, blocks: form.blocks.map((item, i) => i === index ? { ...item, isEnabled: e.target.checked } : item) })} /> Hiển thị block</label>
-      <fieldset className="appearance-editor">
+      <ToggleSwitch checked={block.isEnabled} onChange={(next) => setForm({ ...form, blocks: form.blocks.map((item, i) => i === index ? { ...item, isEnabled: next } : item) })} label="Hiển thị block" hint="Tắt để ẩn khu vực này khỏi trang chủ" />
+      {block.type === 'home_hero' ? <p className="editor-hint">🎞️ Banner dùng <strong>ảnh carousel</strong> bên dưới làm hình nền — thêm/sửa/xóa ảnh banner tại mục “Ảnh carousel”. Banner không dùng ảnh nền section riêng.</p> : <fieldset className="appearance-editor">
         <legend>Background của section</legend>
         <div className="form-row">
           <label>Ảnh nền desktop<select value={block.appearance.backgroundMediaId ?? ''} onChange={(e) => updateAppearance(index, { backgroundMediaId: e.target.value || null })}><option value="">Dùng giao diện mặc định</option>{images.map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}</select></label>
@@ -359,7 +417,7 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
           <label>Điểm lấy nét dọc: {block.appearance.focalPointY}%<input min={0} max={100} type="range" value={block.appearance.focalPointY} onChange={(e) => updateAppearance(index, { focalPointY: Number(e.target.value) })} /></label>
         </div>
         <div className="appearance-actions"><button className="secondary-button" type="button" onClick={() => updateAppearance(index, { ...DEFAULT_SECTION_APPEARANCE })}>Khôi phục background mặc định</button>{block.appearance.backgroundMediaId && block.appearance.overlay === 'none' ? <small className="contrast-warning">Nên chọn lớp phủ nếu chữ khó đọc trên ảnh nền.</small> : null}</div>
-      </fieldset>
+      </fieldset>}
       {'eyebrow' in block.data ? <label>Nhãn nhỏ / eyebrow<input value={block.data.eyebrow ?? ''} onChange={(e) => updateBlock(index, { eyebrow: e.target.value || null })} /></label> : null}
       {'heading' in block.data ? <label>Tiêu đề<input value={String(block.data.heading)} onChange={(e) => updateBlock(index, { heading: e.target.value })} /></label> : null}
       {'title' in block.data ? <label>Tiêu đề<input value={String(block.data.title)} onChange={(e) => updateBlock(index, { title: e.target.value })} /></label> : null}
@@ -432,17 +490,26 @@ export function HomepageEditor({ onBack }: { onBack: () => void }) {
         </div>
       ) : null}
       </article>)}</div>
-      {showPreview ? <aside className={`homepage-preview-panel ${previewFullscreen ? 'is-fullscreen' : ''}`}>
-        <div className="preview-toolbar">
-          <strong>Live preview</strong>
+      {showPreview ? <aside className={`homepage-preview-panel ${previewFullscreen ? 'is-fullscreen' : 'is-floating'}`} style={floatingStyle}>
+        <div className="preview-toolbar" onPointerDown={startPreviewDrag} onPointerMove={onPreviewDrag} onPointerUp={endPreviewDrag}>
+          <strong>⠿ Live preview</strong>
           <div className="preview-toolbar-group"><button className={previewMode === 'desktop' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('desktop')}>Desktop</button><button className={previewMode === 'tablet' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('tablet')}>Tablet</button><button className={previewMode === 'mobile' ? 'is-active' : ''} type="button" onClick={() => setPreviewMode('mobile')}>Mobile</button></div>
           <div className="preview-toolbar-group"><button className={previewTheme === 'light' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('light')}>Sáng</button><button className={previewTheme === 'dark' ? 'is-active' : ''} type="button" onClick={() => setPreviewTheme('dark')}>Tối</button></div>
+          <button className="preview-win-btn" type="button" aria-label="Làm mới bản xem trước" title="Làm mới theo nội dung mới nhất" disabled={busy} onClick={() => void openPreview()}><RefreshCw size={15} /></button>
           <button className="preview-win-btn" type="button" aria-label={previewFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'} onClick={() => setPreviewFullscreen((v) => !v)}>{previewFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
           <button className="preview-win-btn is-close" type="button" aria-label="Đóng xem trước" onClick={() => { setPreviewFullscreen(false); setShowPreview(false) }}>✕</button>
         </div>
         {previewUrl ? <div className={`preview-frame-wrap is-${previewMode}`}><iframe key={`${previewUrl}-${previewTheme}`} src={`${previewUrl.split('&cmsTheme=')[0]}&cmsTheme=${previewTheme}`} title="Xem trước bản nháp trang chủ" /></div> : <div className="preview-placeholder"><p>Bản xem trước chỉ đọc nội dung đã autosave và không ảnh hưởng website công khai.</p><button className="primary-cta" type="button" onClick={() => void openPreview()}>Tạo bản xem trước</button></div>}
+        {!previewFullscreen ? <span className="preview-resize" onPointerDown={startPreviewResize} onPointerMove={onPreviewResize} onPointerUp={endPreviewResize} aria-hidden="true" /> : null}
       </aside> : null}
     </div>
     {showRevisions ? <aside className="revision-drawer" aria-label="Lịch sử phiên bản"><div className="revision-drawer-head"><div><strong>Lịch sử phiên bản</strong><small>Khôi phục luôn tạo bản nháp mới.</small></div><button type="button" onClick={() => setShowRevisions(false)}>Đóng</button></div>{revisions.length === 0 ? <p>Chưa có phiên bản nào.</p> : <ol>{revisions.map((revision) => <li key={revision.id}><div><strong>Phiên bản {revision.versionNumber}</strong><span>{revision.isPublished ? 'Đã xuất bản' : 'Bản lưu'} · {new Date(revision.createdAt).toLocaleString('vi-VN')}</span><small>{revision.changeNote ?? 'Không có ghi chú'}{revision.editorName ? ` · ${revision.editorName}` : ''}</small></div><button disabled={busy} type="button" onClick={() => void restoreRevision(revision.versionNumber)}>Khôi phục</button></li>)}</ol>}</aside> : null}
+
+    <EditorFooter>
+      <button className={`secondary-button ${showPreview ? 'is-active' : ''}`} disabled={busy || autosaveState === 'conflict'} type="button" onClick={togglePreview}><Eye size={16} /> {showPreview ? 'Ẩn xem trước' : 'Xem trước'}</button>
+      <button className="secondary-button" type="button" onClick={() => setShowRevisions((current) => !current)}><History size={16} /> Lịch sử ({revisions.length})</button>
+      <button className="secondary-button" disabled={busy || autosaveState === 'conflict'} type="button" onClick={() => void save()}><Save size={16} /> Lưu phiên bản</button>
+      <button className="publish-button" disabled={busy || form.blocks.length === 0 || autosaveState === 'conflict'} type="button" onClick={() => void publish()}><UploadCloud size={16} /> {busy ? 'Đang xử lý...' : 'Xuất bản'}</button>
+    </EditorFooter>
   </section>
 }

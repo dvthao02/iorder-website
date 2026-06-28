@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { deleteContentLink, deleteMenuItem, listLinkGroups, listMenus, seedDefaultMenus, upsertContentLink, upsertMenuItem } from './api'
+import { PageHeader, StatusDot, ToggleSwitch } from './ui'
 
 type MenuItem = {
   id: string
@@ -97,12 +98,13 @@ function MenuItemRow({
           </select>
           <input placeholder="Icon key (tuỳ chọn)" value={form.icon} onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))} style={{ width: 120 }} />
           <input type="number" placeholder="Thứ tự" value={form.sortOrder} onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))} style={{ width: 80 }} />
-          <label><input type="checkbox" checked={form.isEnabled} onChange={(e) => setForm((f) => ({ ...f, isEnabled: e.target.checked }))} /> Hiển thị</label>
+          <ToggleSwitch checked={form.isEnabled} onChange={(next) => setForm((f) => ({ ...f, isEnabled: next }))} label="Hiển thị" />
           <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>Lưu</button>
           <button type="button" onClick={() => setEditing(false)} disabled={busy}>Hủy</button>
         </div>
       ) : (
         <div className="nav-item-row">
+          <StatusDot tone={item.isEnabled ? 'on' : 'muted'} />
           <span className={item.isEnabled ? '' : 'nav-disabled'}>
             <strong>{item.label}</strong> <small>→ {item.url}</small>
             {item.target === '_blank' && <small> ↗</small>}
@@ -184,6 +186,7 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
       <h4>{group.name} <small>({group.code})</small></h4>
       {group.links.map((link) => (
         <div key={link.id} className="nav-item-row">
+          <StatusDot tone={link.isEnabled ? 'on' : 'muted'} />
           <span className={link.isEnabled ? '' : 'nav-disabled'}>
             <strong>{link.label}</strong> <small>→ {link.url}</small>
           </span>
@@ -210,7 +213,7 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
   )
 }
 
-export function NavigationEditor({ onBack }: { onBack: () => void }) {
+export function NavigationEditor() {
   const [menus, setMenus] = useState<Menu[]>([])
   const [linkGroups, setLinkGroups] = useState<LinkGroup[]>([])
   const [activeTab, setActiveTab] = useState<'menus' | 'links'>('menus')
@@ -252,10 +255,10 @@ export function NavigationEditor({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="admin-module">
-      <div className="module-header">
-        <button type="button" onClick={onBack}>← Tổng quan</button>
-        <h2>Menu & Điều hướng</h2>
-      </div>
+      <PageHeader
+        title="Menu &amp; Điều hướng"
+        description="Sắp xếp menu điều hướng và các nhóm liên kết hiển thị trên website."
+      />
 
       <div className="tab-nav">
         <button type="button" className={activeTab === 'menus' ? 'is-active' : ''} onClick={() => setActiveTab('menus')}>Menu điều hướng</button>

@@ -1,9 +1,10 @@
 import type { AuthUser } from '@iorder/contracts'
-import { Boxes, FileText, Home, Image as ImageIcon, LayoutDashboard, ListTree, Settings, Star, Users } from 'lucide-react'
+import { Boxes, FileText, Home, Image as ImageIcon, LayoutDashboard, ListTree, LogOut, PanelLeftClose, PanelLeftOpen, Settings, Star, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import logoIorder from './assets/logo.png'
+import logoIorderMark from './assets/logo-circle.jpg'
 import { getSession, login, logout } from './api'
 import { Dashboard } from './Dashboard'
 import { HomepageEditor } from './HomepageEditor'
@@ -45,6 +46,7 @@ const errorMessages: Record<string, string> = {
 
 export function AdminApp() {
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('admin.sidebar.collapsed') === '1')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -57,6 +59,12 @@ export function AdminApp() {
     const slug = slugByKey[key] ?? ''
     navigate(slug ? `/${slug}` : '/')
   }
+
+  const toggleSidebar = () => setCollapsed((value) => {
+    const next = !value
+    localStorage.setItem('admin.sidebar.collapsed', next ? '1' : '0')
+    return next
+  })
 
   useEffect(() => {
     getSession().then((session) => setUser(session.user)).catch(() => setUser(null)).finally(() => setIsLoading(false))
@@ -84,39 +92,47 @@ export function AdminApp() {
     return <main className="admin-shell"><section className="admin-card login-card"><img className="login-logo" src={logoIorder} alt="iOrder" /><p className="admin-kicker">Hệ thống quản trị nội dung</p><h1>Đăng nhập quản trị</h1><p>Quản lý nội dung website iOrder. Hệ thống này độc lập với tài khoản POS.</p><LoginForm error={error} isSubmitting={isSubmitting} onSubmit={handleLogin} /></section></main>
   }
 
-  const back = () => goTo('dashboard')
   let content: React.ReactNode
   switch (activeModule) {
-    case 'homepage': content = <HomepageEditor onBack={back} />; break
-    case 'offerings': content = <OfferingsManager onBack={back} />; break
-    case 'posts': content = <PostsManager onBack={back} />; break
-    case 'partners': content = <PartnersManager onBack={back} />; break
-    case 'testimonials': content = <TestimonialsManager onBack={back} />; break
-    case 'media': content = <MediaLibrary onBack={back} />; break
-    case 'navigation': content = <NavigationEditor onBack={back} />; break
-    case 'settings': content = <SiteProfileEditor onBack={back} />; break
+    case 'homepage': content = <HomepageEditor />; break
+    case 'offerings': content = <OfferingsManager />; break
+    case 'posts': content = <PostsManager />; break
+    case 'partners': content = <PartnersManager />; break
+    case 'testimonials': content = <TestimonialsManager />; break
+    case 'media': content = <MediaLibrary />; break
+    case 'navigation': content = <NavigationEditor />; break
+    case 'settings': content = <SiteProfileEditor />; break
     default: content = <Dashboard onOpen={goTo} />
   }
 
-  return <div className="admin-workspace">
+  return <div className={`admin-workspace${collapsed ? ' is-collapsed' : ''}`}>
     <aside className="admin-sidebar">
-      <div className="sidebar-brand">
-        <span className="sidebar-logo-badge"><img src={logoIorder} alt="iOrder" /></span>
-        <span className="sidebar-brand-sub">Quản trị nội dung</span>
+      <div className="sidebar-header">
+        <span className={`sidebar-logo-badge${collapsed ? ' is-mark' : ''}`}>
+          <img src={collapsed ? logoIorderMark : logoIorder} alt="iOrder" />
+        </span>
+        <button type="button" className="sidebar-toggle" onClick={toggleSidebar} title={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'} aria-label={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'}>
+          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </button>
       </div>
+      <p className="sidebar-brand-sub">Quản trị nội dung</p>
       <nav aria-label="Chức năng quản trị">
         {groups.map((group) => (
           <div className="nav-group" key={group.id}>
             <p className="nav-group-label">{group.label}</p>
             {navigation.filter((item) => item.group === group.id).map((item) => (
-              <button className={activeModule === item.key ? 'is-active' : ''} key={item.key} type="button" onClick={() => goTo(item.key)}>
+              <button className={activeModule === item.key ? 'is-active' : ''} key={item.key} type="button" title={item.label} onClick={() => goTo(item.key)}>
                 <item.icon size={18} /> <span>{item.label}</span>
               </button>
             ))}
           </div>
         ))}
       </nav>
-      <div className="sidebar-account"><span>{user.fullName}</span><small>@{user.username}</small><button type="button" onClick={() => void handleLogout()}>Đăng xuất</button></div>
+      <div className="sidebar-account">
+        <span>{user.fullName}</span>
+        <small>@{user.username}</small>
+        <button type="button" title="Đăng xuất" onClick={() => void handleLogout()}><LogOut size={16} /> <span>Đăng xuất</span></button>
+      </div>
     </aside>
     <main className="admin-main">{content}</main>
   </div>

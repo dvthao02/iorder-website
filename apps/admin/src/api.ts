@@ -124,6 +124,10 @@ export function getMediaUsage(id: string) {
   return request<{ items: MediaUsage[]; total: number; canDelete: boolean }>(`/api/admin/media/${id}/usage`)
 }
 
+export function deleteMedia(id: string) {
+  return request<void>(`/api/admin/media/${id}`, { method: 'DELETE' })
+}
+
 export function listPosts() {
   return request<{ items: PostResponse[]; total: number }>('/api/admin/posts')
 }

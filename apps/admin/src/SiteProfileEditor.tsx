@@ -1,6 +1,7 @@
 import type { ExternalLinks, SiteProfileInput, SiteProfileResponse } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
 import { type AppearanceSettings, getAppearance, getExternalLinks, getSiteProfile, updateAppearance, updateExternalLinks, updateSiteProfile } from './api'
+import { PageHeader, ToggleSwitch } from './ui'
 
 const PROFILE_FIELDS: { key: keyof SiteProfileInput; label: string; type?: string }[] = [
   { key: 'companyName', label: 'Tên công ty *' },
@@ -51,7 +52,7 @@ const emptyAppearance = (): AppearanceSettings => ({
   darkMode: false,
 })
 
-export function SiteProfileEditor({ onBack }: { onBack: () => void }) {
+export function SiteProfileEditor() {
   const [profile, setProfile] = useState<SiteProfileInput>(emptyProfile())
   const [links, setLinks] = useState<ExternalLinks>(emptyLinks())
   const [appearance, setAppearance] = useState<AppearanceSettings>(emptyAppearance())
@@ -135,10 +136,10 @@ export function SiteProfileEditor({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="admin-module">
-      <div className="module-header">
-        <button type="button" onClick={onBack}>← Tổng quan</button>
-        <h2>Cài đặt website</h2>
-      </div>
+      <PageHeader
+        title="Cài đặt website"
+        description="Thông tin công ty, logo và các liên kết ngoài của website."
+      />
 
       <div className="tab-nav">
         <button type="button" className={activeTab === 'profile' ? 'is-active' : ''} onClick={() => setActiveTab('profile')}>Thông tin công ty</button>
@@ -234,18 +235,12 @@ export function SiteProfileEditor({ onBack }: { onBack: () => void }) {
 
           <div className="form-row" style={{ alignItems: 'center' }}>
             <label>Chế độ tối/sáng</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 500 }}>
-                <input
-                  type="checkbox"
-                  checked={appearance.darkMode}
-                  onChange={(e) => setAppearance((a) => ({ ...a, darkMode: e.target.checked }))}
-                  style={{ width: 18, height: 18 }}
-                />
-                Bật chế độ tối (Dark mode)
-              </label>
-              <span style={{ fontSize: 13, color: '#888' }}>Áp dụng giao diện nền tối trên toàn website</span>
-            </div>
+            <ToggleSwitch
+              checked={appearance.darkMode}
+              onChange={(next) => setAppearance((a) => ({ ...a, darkMode: next }))}
+              label="Bật chế độ tối (Dark mode)"
+              hint="Áp dụng giao diện nền tối trên toàn website"
+            />
           </div>
 
           <div className="form-row">
