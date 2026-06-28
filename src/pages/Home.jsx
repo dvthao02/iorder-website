@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { HOMEPAGE_SECTION_ORDER } from '@iorder/contracts'
 import PageLayout from '../components/PageLayout'
+import SafeImage from '../components/SafeImage'
 import { setPageSeo } from '../utils/seo'
 import { externalLinks, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
 import { fetchNavOfferings, fetchPartners, fetchTestimonials } from '../utils/contentApi'
@@ -39,8 +40,10 @@ import logoTTC from '../assets/partners/ttc.png'
 import { newsArticles } from '../data/newsArticles'
 import { industryGroups } from '../data/industrySolutions'
 
+const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
 const localApiHost = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
-const API_URL = import.meta.env.VITE_API_URL ?? `http://${localApiHost}:4000`
+// Khi mở qua IP LAN thì gọi tương đối để đi qua proxy của vite (giống contentApi.js).
+const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
 const overlayGradients = {
   none: 'linear-gradient(transparent, transparent)',
@@ -620,12 +623,12 @@ export default function Home() {
                 <div className="home-partner-track partner-track">
                   {resolvedPartners.map((p, idx) => (
                     <div key={`a-${idx}`} className="model-card" title={p.name}>
-                      <img src={p.src} alt={p.name} loading="lazy" decoding="async" />
+                      <SafeImage src={p.src} alt={p.name} loading="lazy" decoding="async" />
                     </div>
                   ))}
                   {resolvedPartners.map((p, idx) => (
                     <div key={`b-${idx}`} className="model-card" title={p.name}>
-                      <img src={p.src} alt={p.name} loading="lazy" decoding="async" />
+                      <SafeImage src={p.src} alt={p.name} loading="lazy" decoding="async" />
                     </div>
                   ))}
                 </div>
@@ -787,7 +790,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="deployment-visual deployment-model-feature">
-              <img src={processFeatureImage} alt={cmsProcess?.data?.heading ?? 'Mô hình máy POS kết nối thiết bị IoT iOrder'} loading="lazy" decoding="async" width="1536" height="1024" sizes="(max-width: 1023px) 100vw, 42vw" />
+              <SafeImage src={processFeatureImage} alt={cmsProcess?.data?.heading ?? 'Mô hình máy POS kết nối thiết bị IoT iOrder'} loading="lazy" decoding="async" width="1536" height="1024" sizes="(max-width: 1023px) 100vw, 42vw" />
             </div>
             <div className="deployment-steps">
               {(cmsProcess?.data?.steps ?? [
@@ -827,7 +830,7 @@ export default function Home() {
                 {homeNews.map((article) => (
                   <Link to={`/tin-tuc/${article.slug}`} className="home-news-card" key={article.slug}>
                     <div className="home-news-image">
-                      <img src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
+                      <SafeImage src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
                     </div>
                     <div className="home-news-copy">
                       <span>{article.category}</span>

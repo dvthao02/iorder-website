@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Calendar, Clock, Newspaper, Search, Sparkles } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
+import SafeImage from '../components/SafeImage'
 import { newsArticles } from '../data/newsArticles'
 import { setPageSeo } from '../utils/seo'
 import { fetchPublishedPosts } from '../utils/contentApi'
@@ -56,7 +57,7 @@ export default function NewsPage() {
 
             <Link to={`/tin-tuc/${featuredArticle.slug}`} className="news-feature-card">
               <div className="news-feature-image">
-                <img
+                <SafeImage
                   src={featuredArticle.image}
                   alt={featuredArticle.imageAlt}
                   loading="eager"
@@ -81,7 +82,7 @@ export default function NewsPage() {
               {secondaryArticles.map((article) => (
                 <Link to={`/tin-tuc/${article.slug}`} key={article.id} className="news-insight-card">
                   <div className="news-insight-image">
-                    <img src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
+                    <SafeImage src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
                   </div>
                   <span>{article.focusName}</span>
                   <h3>{article.title}</h3>
@@ -117,7 +118,7 @@ export default function NewsPage() {
                 <Link to={`/tin-tuc/${article.slug}`} key={article.id} className="listing-card-link">
                   <article className="listing-card news-listing-card">
                     <div className="news-card-image">
-                      <img src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
+                      <SafeImage src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
                     </div>
                     <div>
                       <span className="news-card-badge">{article.category}</span>

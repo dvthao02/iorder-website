@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:4000'
+// Khi mở qua IP LAN (vd 192.168.x.x) thì gọi tương đối để đi qua proxy của vite,
+// chỉ trỏ thẳng :4000 khi chạy ở localhost/127.0.0.1.
+const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+const localApiHost = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
+const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
 function useAppearance() {
   useEffect(() => {
