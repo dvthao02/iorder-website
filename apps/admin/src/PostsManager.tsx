@@ -1,10 +1,10 @@
 import type { CategoryResponse, MediaAsset, PostInput, PostResponse } from '@iorder/contracts'
 import { Calendar, ChevronDown, ChevronRight, Eye, FileText, Image as ImageIcon, MoreVertical, Plus, Search, Send, SlidersHorizontal, Trash2, Upload } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { archivePost, createCategory, createPost, deleteCategory, listCategories, listMedia, listPosts, publishPost, updatePost } from './api'
 import { RichTextEditor } from './RichTextEditor'
-import { EditorFooter, ImagePicker, PageHeader, StatusDot } from './ui'
+import { ImagePicker, PageHeader, StatusDot } from './ui'
 
 const POST_STATUS: Record<string, { label: string; tone: 'on' | 'muted' | 'danger' }> = {
   published: { label: 'Đã đăng', tone: 'on' },
@@ -111,7 +111,6 @@ export function PostsManager() {
   const [menuId, setMenuId] = useState<string | null>(null)
   const [publishMenu, setPublishMenu] = useState(false)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
-  const didInit = useRef(false)
 
   const loadData = async () => {
     const [postResult, mediaResult, categoryResult] = await Promise.all([listPosts(), listMedia('image'), listCategories()])
@@ -167,15 +166,7 @@ export function PostsManager() {
   }
 
   useEffect(() => {
-    void loadData()
-      .then((items) => {
-        const first = items[0]
-        if (!didInit.current && first) {
-          didInit.current = true
-          selectPost(first)
-        }
-      })
-      .catch(() => setMessage('Không thể tải danh sách bài viết.'))
+    void loadData().catch(() => setMessage('Không thể tải danh sách bài viết.'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -197,6 +188,14 @@ export function PostsManager() {
     setForm(emptyPost)
     setMessage('')
     setShowCoverPicker(false)
+  }
+
+  const closeEditor = () => {
+    setSelectedId(null)
+    setCreating(false)
+    setMessage('')
+    setShowCoverPicker(false)
+    setPublishMenu(false)
   }
 
   const savePost = async () => {
@@ -300,8 +299,7 @@ export function PostsManager() {
         actions={<button className="btn-primary btn-icon" type="button" onClick={newPost}><Plus size={16} /> Bài viết mới</button>}
       />
 
-      <div className="post-layout">
-        <aside className="post-panel">
+      <aside className="post-panel post-panel--full">
           <div className="post-search-row">
             <span className="post-search">
               <Search size={16} aria-hidden="true" />
@@ -371,13 +369,16 @@ export function PostsManager() {
               <button type="button" className="post-page" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))} aria-label="Trang sau">›</button>
             </div>
           </div>
-        </aside>
+      </aside>
 
-        <div className="post-editor-pane">
-          {!hasEditor ? (
-            <div className="editor-placeholder">Chọn một bài viết bên trái hoặc bấm "Bài viết mới" để bắt đầu.</div>
-          ) : (
-            <>
+      {hasEditor ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
+          <div className="modal-card modal-card-lg" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <h2>{creating ? 'Bài viết mới' : 'Sửa bài viết'}</h2>
+              <button type="button" className="modal-close" onClick={closeEditor} aria-label="Đóng">✕</button>
+            </div>
+            <div className="modal-body">
               <h2 className="section-label">Thông tin cơ bản</h2>
               <div className="form-row">
                 <label>
@@ -517,30 +518,29 @@ export function PostsManager() {
                   </div>
                 </div>
               </details>
-            </>
-          )}
-        </div>
-      </div>
+            </div>
 
-      {hasEditor ? (
-        <EditorFooter>
-          {message ? <span className="editor-status">{message}</span> : null}
-          <button type="button" className="secondary-button btn-icon" disabled={isSaving} onClick={() => void savePost()}><FileText size={15} /> Lưu nháp</button>
-          <button type="button" className="secondary-button btn-icon" onClick={() => previewPost(form.slug)}><Eye size={15} /> Xem trước</button>
-          <div className="split-button">
-            <button type="button" className="btn-primary btn-icon split-main" disabled={isSaving || !form.title || !form.slug || !form.body} onClick={() => void publish()}><Send size={15} /> {isSaving ? 'Đang xử lý…' : 'Xuất bản'}</button>
-            <button type="button" className="btn-primary split-caret" aria-label="Thêm tùy chọn" onClick={() => setPublishMenu((v) => !v)}><ChevronDown size={15} /></button>
-            {publishMenu ? (
-              <>
-                <div className="menu-backdrop" onClick={() => setPublishMenu(false)} />
-                <div className="card-menu align-right align-up" role="menu">
-                  {editingStatus === 'published' && selectedId ? <button type="button" role="menuitem" onClick={() => { setPublishMenu(false); void archive(selectedId) }}>Ẩn bài</button> : null}
-                  <button type="button" role="menuitem" onClick={() => { setPublishMenu(false); previewPost(form.slug) }}>Mở trên web</button>
-                </div>
-              </>
-            ) : null}
+            <div className="modal-foot">
+              {message ? <span className="editor-status modal-foot-start">{message}</span> : null}
+              <button type="button" className="secondary-button" onClick={closeEditor}>Đóng</button>
+              <button type="button" className="secondary-button btn-icon" disabled={isSaving} onClick={() => void savePost()}><FileText size={15} /> Lưu nháp</button>
+              <button type="button" className="secondary-button btn-icon" onClick={() => previewPost(form.slug)}><Eye size={15} /> Xem trước</button>
+              <div className="split-button">
+                <button type="button" className="btn-primary btn-icon split-main" disabled={isSaving || !form.title || !form.slug || !form.body} onClick={() => void publish()}><Send size={15} /> {isSaving ? 'Đang xử lý…' : 'Xuất bản'}</button>
+                <button type="button" className="btn-primary split-caret" aria-label="Thêm tùy chọn" onClick={() => setPublishMenu((v) => !v)}><ChevronDown size={15} /></button>
+                {publishMenu ? (
+                  <>
+                    <div className="menu-backdrop" onClick={() => setPublishMenu(false)} />
+                    <div className="card-menu align-right align-up" role="menu">
+                      {editingStatus === 'published' && selectedId ? <button type="button" role="menuitem" onClick={() => { setPublishMenu(false); void archive(selectedId) }}>Ẩn bài</button> : null}
+                      <button type="button" role="menuitem" onClick={() => { setPublishMenu(false); previewPost(form.slug) }}>Mở trên web</button>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </div>
           </div>
-        </EditorFooter>
+        </div>
       ) : null}
     </section>
   )

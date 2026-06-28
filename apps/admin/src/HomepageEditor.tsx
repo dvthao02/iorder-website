@@ -112,7 +112,7 @@ export function HomepageEditor() {
   const [savedSignature, setSavedSignature] = useState('')
   const [draftVersion, setDraftVersion] = useState(0)
   const [images, setImages] = useState<MediaAsset[]>([])
-  const [selectedType, setSelectedType] = useState<HomepageBlock['type']>('home_hero')
+  const [selectedType, setSelectedType] = useState<HomepageBlock['type'] | null>(null)
   const [revisions, setRevisions] = useState<HomepageRevisionSummary[]>([])
   const [showRevisions, setShowRevisions] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
@@ -398,7 +398,14 @@ export function HomepageEditor() {
         <div className="fixed-section-nav-head"><strong>Cấu trúc cố định</strong><small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small></div>
         {form.blocks.map((block, index) => <button className={block.type === selectedType ? 'is-active' : ''} key={block.type} type="button" onClick={() => setSelectedType(block.type)}><span>{index + 1}</span><b>{labels[block.type]}</b><small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small></button>)}
       </aside>
-      <div className="block-list">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
+      {selectedType ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setSelectedType(null)}>
+          <div className="modal-card modal-card-lg" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <h2>Sửa khu vực trang chủ</h2>
+              <button type="button" className="modal-close" onClick={() => setSelectedType(null)} aria-label="Đóng">✕</button>
+            </div>
+            <div className="modal-body">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
       <div className="block-card-heading"><strong>{index + 1}. {labels[block.type]}</strong><span className="fixed-structure-badge">Section cố định</span></div>
       <ToggleSwitch checked={block.isEnabled} onChange={(next) => setForm({ ...form, blocks: form.blocks.map((item, i) => i === index ? { ...item, isEnabled: next } : item) })} label="Hiển thị block" hint="Tắt để ẩn khu vực này khỏi trang chủ" />
       {block.type === 'home_hero' ? <p className="editor-hint">🎞️ Banner dùng <strong>ảnh carousel</strong> bên dưới làm hình nền — thêm/sửa/xóa ảnh banner tại mục “Ảnh carousel”. Banner không dùng ảnh nền section riêng.</p> : <fieldset className="appearance-editor">
@@ -490,6 +497,10 @@ export function HomepageEditor() {
         </div>
       ) : null}
       </article>)}</div>
+            <div className="modal-foot"><button type="button" className="btn-primary" onClick={() => setSelectedType(null)}>Xong</button></div>
+          </div>
+        </div>
+      ) : null}
       {showPreview ? <aside className={`homepage-preview-panel ${previewFullscreen ? 'is-fullscreen' : 'is-floating'}`} style={floatingStyle}>
         <div className="preview-toolbar" onPointerDown={startPreviewDrag} onPointerMove={onPreviewDrag} onPointerUp={endPreviewDrag}>
           <strong>⠿ Live preview</strong>

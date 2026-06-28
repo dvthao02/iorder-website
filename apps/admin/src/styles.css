@@ -697,6 +697,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 /* ── Modal (thêm/sửa) ───────────────────────────────────────────────────────── */
 .modal-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; background: rgba(15, 35, 68, .42); backdrop-filter: blur(2px); overflow-y: auto; }
 .modal-card { width: min(620px, 100%); display: flex; flex-direction: column; background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 35, 68, .28); }
+.modal-card-lg { width: min(940px, 100%); }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .modal-head h2 { margin: 0; font-size: 17px; }
 .modal-close { width: 32px; height: 32px; border: none; border-radius: 8px; background: #f1f5f9; color: #475569; font-size: 15px; cursor: pointer; }
@@ -708,13 +709,10 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); }
 .modal-foot-start { margin-right: auto; }
 
-/* ── Post manager (master–detail) ───────────────────────────────────────────── */
+/* ── Post manager (danh sách + modal soạn thảo) ─────────────────────────────── */
 .editor-status { font-size: 13px; font-weight: 600; color: #15803d; }
-.post-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 0; margin-top: 14px; align-items: start; }
 
-/* Cột danh sách */
-.post-panel { display: grid; gap: 12px; padding-right: 20px; border-right: 0.5px solid var(--border); }
-.post-editor-pane { padding-left: 24px; }
+.post-panel { display: grid; gap: 12px; }
 .post-search-row { display: flex; gap: 8px; }
 .post-search { flex: 1; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #cddbe7; border-radius: 12px; background: #fff; color: #94a3b8; }
 .post-search input { flex: 1; min-height: 38px; border: none; background: transparent; font: inherit; color: #1e293b; }
@@ -761,14 +759,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .post-page.is-active { border-color: transparent; background: var(--brand); color: #fff; }
 .post-page:disabled { opacity: .4; cursor: default; }
 
-/* Cột soạn thảo */
-.post-editor-pane { display: grid; gap: 12px; align-content: start; }
-.editor-placeholder { padding: 60px 20px; text-align: center; color: #94a3b8; border: 1px dashed var(--border); border-radius: 14px; }
-.editor-actionbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-.editor-actionbar .editor-status { margin-right: auto; }
-.post-editor-pane label, .post-editor-pane .field-label { display: grid; gap: 6px; font-weight: 700; font-size: 14px; }
-.post-editor-pane input, .post-editor-pane textarea, .post-editor-pane select { min-height: 40px; padding: 8px 12px; border: 1px solid #cddbe7; border-radius: 10px; font: inherit; }
-.post-editor-pane input:focus, .post-editor-pane textarea:focus, .post-editor-pane select:focus { outline: none; border-color: var(--brand); }
+/* Khu soạn thảo (trong modal) */
 .section-label { margin: 8px 0 0; padding-bottom: 8px; font-size: 15px; border-bottom: 1px solid var(--border); }
 .full-field { position: relative; }
 .char-counter { justify-self: end; font-size: 12px; font-weight: 500; color: #94a3b8; }
@@ -818,12 +809,6 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .advanced-section > summary::-webkit-details-marker { display: none; }
 .advanced-section[open] > summary { border-bottom: 1px solid var(--border); }
 .advanced-body { display: grid; gap: 12px; padding: 14px; }
-
-@media (max-width: 1100px) {
-  .post-layout { grid-template-columns: 1fr; gap: 18px; }
-  .post-panel { padding-right: 0; border-right: 0; }
-  .post-editor-pane { padding-left: 0; }
-}
 
 /* ── Partner logo picker (lưới chọn logo trực quan) ─────────────────────────── */
 .form-field { display: grid; gap: 6px; }
@@ -881,7 +866,11 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 
 .fixed-editor-layout { display: grid; grid-template-columns: 210px minmax(440px, .9fr) minmax(420px, 1.1fr); gap: 14px; align-items: start; }
 /* Tắt xem trước → editor fill full, không chừa khoảng trống */
-.fixed-editor-layout.no-preview { grid-template-columns: 210px minmax(0, 1fr); }
+.fixed-editor-layout.no-preview { grid-template-columns: 1fr; }
+/* Không xem trước: danh sách khu vực trải full, sửa trong modal */
+.fixed-editor-layout.no-preview .fixed-section-nav { position: static; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.fixed-editor-layout.no-preview .fixed-section-nav-head { grid-column: 1 / -1; }
+.modal-body .block-card { border: 0; box-shadow: none; padding: 0; background: transparent; }
 .fixed-section-nav { position: sticky; top: 18px; display: grid; gap: 4px; padding: 10px; border: 1px solid #dce8f1; border-radius: 14px; background: #f7fbfe; }
 .fixed-section-nav-head { display: grid; gap: 3px; padding: 4px 6px 9px; border-bottom: 1px solid #dce8f1; }
 .fixed-section-nav-head small { color: #607084; line-height: 1.4; }
