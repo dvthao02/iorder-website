@@ -298,21 +298,6 @@ export function OfferingsManager() {
     await load()
   }
 
-  if (editing !== null) {
-    const initial = editing === 'new'
-      ? emptyInput(activeType)
-      : { ...editing, contentJson: editing.contentJson as OfferingContent }
-    return (
-      <div className="admin-module">
-        <div className="module-header">
-          <button type="button" onClick={() => setEditing(null)}>← Quay lại</button>
-          <h2>{editing === 'new' ? 'Thêm mới' : 'Chỉnh sửa'} — {TYPES.find((t) => t.key === activeType)?.label}</h2>
-        </div>
-        <OfferingForm initial={initial} onSave={handleSave} onCancel={() => setEditing(null)} />
-      </div>
-    )
-  }
-
   return (
     <div className="admin-module">
       <PageHeader
@@ -351,6 +336,24 @@ export function OfferingsManager() {
           onDelete={async () => handleDelete(item.id)}
         />
       ))}
+
+      {editing !== null ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setEditing(null)}>
+          <div className="modal-card modal-card-lg" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <h2>{editing === 'new' ? 'Thêm mới' : 'Chỉnh sửa'} — {TYPES.find((t) => t.key === activeType)?.label}</h2>
+              <button type="button" className="modal-close" onClick={() => setEditing(null)} aria-label="Đóng">✕</button>
+            </div>
+            <div className="modal-body">
+              <OfferingForm
+                initial={editing === 'new' ? emptyInput(activeType) : { ...editing, contentJson: editing.contentJson as OfferingContent }}
+                onSave={handleSave}
+                onCancel={() => setEditing(null)}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
