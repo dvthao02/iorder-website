@@ -30,6 +30,8 @@ export default defineConfig({
       // xfwd: chuyển tiếp X-Forwarded-For để API lấy IP thật (đếm lượt xem chính xác khi bật TRUST_PROXY).
       '/api': { target: 'http://127.0.0.1:4000', xfwd: true },
       '/media': { target: 'http://127.0.0.1:4000', xfwd: true },
+      '/sitemap.xml': 'http://127.0.0.1:4000',
+      '/robots.txt': 'http://127.0.0.1:4000',
       '/admin': {
         target: 'http://127.0.0.1:5174',
         changeOrigin: true,

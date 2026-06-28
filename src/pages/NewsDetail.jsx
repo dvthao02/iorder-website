@@ -72,7 +72,9 @@ export default function NewsDetail() {
   useEffect(() => {
     setPageSeo({
       title: article ? `${article.title} - iOrder` : 'Tin tức - iOrder',
-      description: article?.excerpt ?? 'Tin tức và hướng dẫn vận hành iOrder cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.'
+      description: article?.excerpt ?? 'Tin tức và hướng dẫn vận hành iOrder cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.',
+      image: article?.image ?? undefined,
+      type: 'article',
     })
   }, [article])
 

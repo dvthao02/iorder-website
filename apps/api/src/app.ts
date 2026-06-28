@@ -19,6 +19,7 @@ import { registerPartnerRoutes } from './partners/partner-routes.js'
 import { registerHomepageRoutes } from './pages/homepage-routes.js'
 import { registerCategoryRoutes } from './posts/category-routes.js'
 import { registerPostRoutes } from './posts/post-routes.js'
+import { registerSeoRoutes } from './seo/seo-routes.js'
 import { registerSettingsRoutes } from './settings/settings-routes.js'
 import { registerStatsRoutes } from './stats/stats-routes.js'
 import { registerTestimonialRoutes } from './testimonials/testimonial-routes.js'
@@ -137,6 +138,7 @@ export async function buildApp(env: ApiEnv) {
   })
   registerPostRoutes(app, { db: database.db })
   registerCategoryRoutes(app, { db: database.db })
+  registerSeoRoutes(app, { db: database.db, publicOrigin: env.PUBLIC_ORIGIN })
   registerHomepageRoutes(app, {
     db: database.db,
     slug: env.HOMEPAGE_SLUG,

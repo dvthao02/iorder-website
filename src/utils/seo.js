@@ -42,7 +42,7 @@ function setRobots(noindex) {
   meta.setAttribute('content', noindex ? 'noindex, nofollow' : 'index, follow')
 }
 
-export function setPageSeo({ title, description, image, noindex = false }) {
+export function setPageSeo({ title, description, image, type = 'website', noindex = false }) {
   if (typeof document === 'undefined') return
 
   const canonicalUrl = absoluteUrl(window.location.pathname)
@@ -57,7 +57,7 @@ export function setPageSeo({ title, description, image, noindex = false }) {
   setCanonical(canonicalUrl)
   setRobots(noindex)
   setMeta('property', 'og:url', canonicalUrl)
-  setMeta('property', 'og:type', 'website')
+  setMeta('property', 'og:type', type)
   setMeta('property', 'og:locale', 'vi_VN')
   setMeta('property', 'og:site_name', 'iOrder')
   setMeta('property', 'og:image', ogImage)
