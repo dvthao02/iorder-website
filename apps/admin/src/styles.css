@@ -716,16 +716,21 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .modal-foot-start { margin-right: auto; }
 
 /* ── Toast (thông báo nổi) ──────────────────────────────────────────────────── */
-.toast-host { position: fixed; top: 18px; right: 18px; z-index: 80; display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
-.toast { display: flex; align-items: center; gap: 10px; padding: 11px 12px 11px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--border); box-shadow: 0 12px 30px rgba(15, 35, 68, .16); font-size: 14px; color: #1e293b; animation: toast-in .2s ease; }
-.toast-icon { flex: 0 0 auto; }
-.toast-msg { flex: 1; line-height: 1.4; }
-.toast-close { flex: 0 0 auto; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: #94a3b8; cursor: pointer; }
-.toast-close:hover { background: #f1f5f9; color: #475569; }
-.toast-success { border-left: 4px solid #22c55e; } .toast-success .toast-icon { color: #16a34a; }
-.toast-error { border-left: 4px solid #ef4444; } .toast-error .toast-icon { color: #dc2626; }
-.toast-info { border-left: 4px solid var(--brand); } .toast-info .toast-icon { color: var(--brand-dark); }
-@keyframes toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+.toast-host { position: fixed; top: 18px; right: 18px; z-index: 80; display: flex; flex-direction: column; gap: 10px; max-width: 380px; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 13px 12px 13px 16px; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.22); font-size: 14px; font-weight: 500; animation: toast-in .22s cubic-bezier(.2,.8,.4,1); }
+.toast-icon { flex: 0 0 auto; opacity: .92; }
+.toast-msg { flex: 1; line-height: 1.45; }
+.toast-close { flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; cursor: pointer; opacity: .7; }
+.toast-close:hover { opacity: 1; background: rgba(255,255,255,.2); }
+.toast-success { background: #16a34a; color: #fff; }
+.toast-success .toast-close { color: #fff; }
+.toast-error { background: #dc2626; color: #fff; }
+.toast-error .toast-close { color: #fff; }
+.toast-info { background: #2563eb; color: #fff; }
+.toast-info .toast-close { color: #fff; }
+.toast-warning { background: #d97706; color: #fff; }
+.toast-warning .toast-close { color: #fff; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(20px) scale(.96); } to { opacity: 1; transform: none; } }
 
 /* ── Post manager (danh sách + modal soạn thảo) ─────────────────────────────── */
 .editor-status { font-size: 13px; font-weight: 600; color: #15803d; }
