@@ -7,6 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "create-admin": "tsx src/scripts/create-admin.ts",
+    "gen:sitemap": "tsx src/scripts/generate-sitemap.ts",
     "import:homepage": "tsx src/scripts/import-current-homepage.ts",
     "import:posts": "tsx src/scripts/import-current-posts.ts",
     "import:offerings": "tsx src/scripts/import-current-offerings.ts",
