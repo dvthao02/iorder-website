@@ -108,7 +108,7 @@ export function PartnersManager() {
     try {
       await updatePartner(partner.id, { ...toInput(partner), isEnabled: !partner.isEnabled })
       await loadData()
-      toast.success(partner.isEnabled ? 'Đã ẩn đối tác.' : 'Đã hiển thị đối tác.')
+      toast[partner.isEnabled ? 'warning' : 'success'](partner.isEnabled ? 'Đã ẩn đối tác.' : 'Đã hiển thị đối tác.')
     } catch {
       toast.error('Không thể đổi trạng thái.')
     }
@@ -119,7 +119,7 @@ export function PartnersManager() {
     try {
       await deletePartner(partner.id)
       await loadData()
-      toast.success('Đã xóa đối tác.')
+      toast.warning('Đã xóa đối tác.')
     } catch {
       toast.error('Không thể xóa.')
     }

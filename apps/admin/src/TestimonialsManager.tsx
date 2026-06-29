@@ -185,7 +185,7 @@ export function TestimonialsManager() {
     try {
       await deleteTestimonial(id)
       await loadData()
-      toast.success('Đã xóa đánh giá.')
+      toast.warning('Đã xóa đánh giá.')
     } catch {
       toast.error('Không thể xóa.')
     }
@@ -195,7 +195,7 @@ export function TestimonialsManager() {
     try {
       await updateTestimonial(item.id, { ...toInput(item), isEnabled: !item.isEnabled })
       await loadData()
-      toast.success(item.isEnabled ? 'Đã ẩn đánh giá.' : 'Đã hiện đánh giá.')
+      toast[item.isEnabled ? 'warning' : 'success'](item.isEnabled ? 'Đã ẩn đánh giá.' : 'Đã hiện đánh giá.')
     } catch {
       toast.error('Không thể đổi trạng thái.')
     }

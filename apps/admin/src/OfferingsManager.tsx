@@ -493,12 +493,12 @@ export function OfferingsManager() {
 
   const handleArchive = async (id: string) => {
     if (!confirm('Ẩn nội dung này khỏi website?')) return
-    await archiveOffering(id); await load(); toast.success('Đã ẩn nội dung.')
+    await archiveOffering(id); await load(); toast.warning('Đã ẩn nội dung.')
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Xóa vĩnh viễn? Hành động này không thể hoàn tác.')) return
-    await deleteOffering(id); await load(); toast.success('Đã xóa nội dung.')
+    await deleteOffering(id); await load(); toast.warning('Đã xóa nội dung.')
   }
 
   const coverMap = new Map(images.map((img) => [img.id, img.publicUrl]))

@@ -1,7 +1,7 @@
-import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-type ToastType = 'success' | 'error' | 'info'
+type ToastType = 'success' | 'error' | 'info' | 'warning'
 type ToastItem = { id: number; type: ToastType; message: string }
 
 let counter = 0
@@ -25,14 +25,15 @@ function show(type: ToastType, message: string) {
   window.setTimeout(() => dismiss(id), 3500)
 }
 
-/** Gọi từ bất kỳ đâu: toast.success('Đã lưu'), toast.error('Lỗi'). */
+/** Gọi từ bất kỳ đâu: toast.success('Đã lưu'), toast.error('Lỗi'), toast.warning('Đã xóa'). */
 export const toast = {
   success: (message: string) => show('success', message),
   error: (message: string) => show('error', message),
   info: (message: string) => show('info', message),
+  warning: (message: string) => show('warning', message),
 }
 
-const ICONS = { success: CheckCircle2, error: AlertCircle, info: Info }
+const ICONS = { success: CheckCircle2, error: AlertCircle, info: Info, warning: AlertTriangle }
 
 /** Đặt một lần ở gốc app để hiển thị toast. */
 export function ToastHost() {

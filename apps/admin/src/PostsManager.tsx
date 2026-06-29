@@ -246,7 +246,7 @@ export function PostsManager() {
       const result = await archivePost(id)
       if (id === selectedId) setForm(toInput(result.item))
       await loadData()
-      toast.success('Bài viết đã được ẩn.')
+      toast.warning('Bài viết đã được ẩn.')
     } catch {
       toast.error('Không thể ẩn bài viết.')
     }
@@ -289,6 +289,7 @@ export function PostsManager() {
 
   const editingStatus = posts.find((post) => post.id === selectedId)?.status
   const coverUrl = images.find((image) => image.id === form.coverMediaId)?.publicUrl ?? null
+  const mediaMap = new Map(images.map((img) => [img.id, img.publicUrl]))
   const hasEditor = creating || selectedId !== null
 
   const FILTERS: Array<{ key: PostFilter; label: string }> = [
@@ -328,11 +329,12 @@ export function PostsManager() {
             {pageItems.map((post) => {
               const status = POST_STATUS[post.status] ?? { label: post.status, tone: 'muted' as const }
               const active = post.id === selectedId
+              const thumb = post.coverUrl ?? (post.coverMediaId ? mediaMap.get(post.coverMediaId) : null) ?? null
               return (
-                <div className={`post-card${active ? ' is-active' : ''}`} key={post.id}>
-                  <button type="button" className="post-card-main" onClick={() => selectPost(post)}>
+                <div className={`post-card${active ? ' is-active' : ''}`} key={post.id} onClick={() => selectPost(post)} style={{ cursor: 'pointer' }}>
+                  <button type="button" className="post-card-main" tabIndex={-1}>
                     <span className="post-card-thumb">
-                      {post.coverUrl ? <img src={post.coverUrl} alt="" /> : <ImageIcon size={20} aria-hidden="true" />}
+                      {thumb ? <img src={thumb} alt="" loading="lazy" /> : <ImageIcon size={20} aria-hidden="true" />}
                     </span>
                     <span className="post-card-body">
                       <strong>{post.title}</strong>
@@ -346,7 +348,7 @@ export function PostsManager() {
                   {active ? (
                     <span className="post-card-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
                   ) : (
-                    <div className="post-card-menu-wrap">
+                    <div className="post-card-menu-wrap" onClick={(e) => e.stopPropagation()}>
                       <button type="button" className="post-card-kebab" aria-label="Thao tác" onClick={() => setMenuId(menuId === post.id ? null : post.id)}><MoreVertical size={16} /></button>
                       {menuId === post.id ? (
                         <>

@@ -117,7 +117,7 @@ export function MediaLibrary() {
       await deleteMedia(asset.id)
       if (editing?.id === asset.id) setEditing(null)
       await loadItems()
-      toast.success('Đã xóa file.')
+      toast.warning('Đã xóa file.')
     } catch (err) {
       const code = err instanceof Error ? err.message : ''
       const text = code === 'MEDIA_IN_USE'
