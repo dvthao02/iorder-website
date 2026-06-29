@@ -339,7 +339,8 @@ export default function Home() {
           : t.includes('in ') || t.includes('hóa đơn') ? Printer
           : t.includes('di động') || t.includes('điện thoại') || t.includes('app') ? Smartphone
           : [ReceiptText, Boxes, Users, BarChart3, Printer, Smartphone][idx] ?? CheckCircle
-        return { icon, title: item.title, desc: item.description, href: item.href }
+        const imgUrl = item.mediaId ? cmsMedia.get(item.mediaId)?.publicUrl : null
+        return { icon, imgUrl, title: item.title, desc: item.description, href: item.href }
       })
     : featureTabs[0].items
   const resolvedIndustryGroups = isCmsMode
@@ -687,10 +688,10 @@ export default function Home() {
                 const isEven = idx % 2 === 1
                 return (
                   <div className={`feature-split-row${isEven ? ' feature-split-row--reverse' : ''}`} key={idx}>
-                    <div className="feature-split-visual">
-                      <div className="feature-split-icon-wrap">
-                        <Icon size={52} />
-                      </div>
+                    <div className={`feature-split-visual${item.imgUrl ? ' feature-split-visual--img' : ''}`}>
+                      {item.imgUrl
+                        ? <img className="feature-split-img" src={item.imgUrl} alt={item.title} loading="lazy" decoding="async" />
+                        : <div className="feature-split-icon-wrap"><Icon size={52} /></div>}
                     </div>
                     <div className="feature-split-text">
                       <span className="feature-split-num">0{idx + 1}</span>

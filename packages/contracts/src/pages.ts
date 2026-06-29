@@ -114,6 +114,7 @@ const homeFeaturesBlockSchema = z.object({
       title: z.string().trim().min(1).max(180),
       description: z.string().trim().min(1).max(1000),
       href: contentUrlSchema.nullable().default(null),
+      mediaId: z.string().nullable().default(null),
     })).min(1).max(12),
   }),
 })
