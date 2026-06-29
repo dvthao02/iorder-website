@@ -618,8 +618,10 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 
 .offering-card-foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px 12px; border-top: 1px solid #f0f6fb; }
 .offering-card-actions { display: flex; gap: 4px; }
-.offering-card-actions button { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; color: #4a6480; transition: background .13s, color .13s, border-color .13s; }
-.offering-card-actions button:hover { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
+.offering-card-actions button,
+.offering-card-preview-link { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; color: #4a6480; text-decoration: none; transition: background .13s, color .13s, border-color .13s; }
+.offering-card-actions button:hover,
+.offering-card-preview-link:hover { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
 .offering-card-actions button.act-publish:hover { background: #dcfce7; border-color: #86efac; color: #16a34a; }
 .offering-card-actions button.act-danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
 
@@ -785,6 +787,8 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .modal-card-lg { width: min(940px, 100%); }
 .modal-back { display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px; border: 0; border-radius: 8px; background: transparent; color: #475569; font: inherit; font-weight: 500; cursor: pointer; transition: color .15s, background .15s; }
 .modal-back:hover { color: var(--brand-dark); background: #f1f5f9; }
+.btn-preview-page { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #2563eb; background: #eff6ff; text-decoration: none; border: 1px solid #bfdbfe; transition: background .13s; white-space: nowrap; }
+.btn-preview-page:hover { background: #dbeafe; }
 /* Modal lớn = full-screen vùng nội dung (chừa sidebar) */
 .modal-overlay:has(.modal-card-lg) { left: var(--sidebar-w, 244px); padding: 0; align-items: stretch; justify-content: stretch; background: rgba(15, 35, 68, .25); transition: left .18s ease; }
 .modal-overlay:has(.modal-card-lg) .modal-card-lg { width: 100%; max-width: none; height: 100%; border-radius: 0; }

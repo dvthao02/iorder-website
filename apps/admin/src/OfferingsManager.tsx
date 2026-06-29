@@ -1,5 +1,5 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
-import { Archive, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { Archive, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   archiveOffering,
@@ -29,6 +29,9 @@ type OfferingType = typeof TYPES[number]['key']
 
 const TYPE_COLORS: Record<string, string> = {
   software: '#2563eb', solution: '#7c3aed', service: '#0891b2', industry: '#16a34a',
+}
+const TYPE_PREFIX: Record<OfferingType, string> = {
+  software: '/phan-mem', solution: '/giai-phap', service: '/dich-vu', industry: '/nganh-hang',
 }
 
 const emptyContent = (): OfferingContent => ({
@@ -356,10 +359,11 @@ function OfferingForm({
 
 // ── Offering card ──────────────────────────────────────────────────────────────
 function OfferingCard({
-  offering, coverUrl, onEdit, onPublish, onArchive, onDelete,
+  offering, coverUrl, typePrefix, onEdit, onPublish, onArchive, onDelete,
 }: {
   offering: OfferingResponse
   coverUrl: string | undefined
+  typePrefix: string
   onEdit: () => void
   onPublish: () => Promise<void>
   onArchive: () => Promise<void>
@@ -393,6 +397,16 @@ function OfferingCard({
           <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}>
             <Pencil size={15} />
           </button>
+          <a
+            href={`${typePrefix}/${offering.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Xem trên website"
+            className="offering-card-preview-link"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink size={15} />
+          </a>
           {offering.status !== 'published' && (
             <button type="button" title="Xuất bản" className="act-publish" onClick={() => void act(onPublish)} disabled={busy}>
               <Eye size={15} />
@@ -492,6 +506,7 @@ export function OfferingsManager() {
               key={item.id}
               offering={item}
               coverUrl={item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined}
+              typePrefix={TYPE_PREFIX[activeType]}
               onEdit={() => setEditing(item)}
               onPublish={async () => handlePublish(item.id)}
               onArchive={async () => handleArchive(item.id)}
@@ -507,6 +522,16 @@ export function OfferingsManager() {
             <div className="modal-head">
               <button type="button" className="modal-back" onClick={() => setEditing(null)}>← Trở về</button>
               <h2>{editing === 'new' ? 'Thêm mới' : 'Chỉnh sửa'} — {TYPES.find((t) => t.key === activeType)?.label}</h2>
+              {editing !== 'new' && editing?.slug && (
+                <a
+                  className="btn-preview-page"
+                  href={`${TYPE_PREFIX[activeType]}/${editing.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink size={13} /> Xem trang
+                </a>
+              )}
             </div>
             <div className="modal-body">
               <OfferingForm

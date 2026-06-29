@@ -1,5 +1,5 @@
 import type { CategoryResponse, MediaAsset, PostInput, PostResponse } from '@iorder/contracts'
-import { Calendar, ChevronDown, ChevronRight, Eye, FileText, Image as ImageIcon, MoreVertical, Plus, Search, Send, SlidersHorizontal, Trash2, Upload } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronRight, ExternalLink, Eye, FileText, Image as ImageIcon, MoreVertical, Plus, Search, Send, SlidersHorizontal, Trash2, Upload } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { archivePost, createCategory, createPost, deleteCategory, listCategories, listMedia, listPosts, publishPost, updatePost } from './api'
@@ -384,6 +384,16 @@ export function PostsManager() {
             <div className="modal-head">
               <button type="button" className="modal-back" onClick={closeEditor}>← Trở về</button>
               <h2>{creating ? 'Bài viết mới' : 'Sửa bài viết'}</h2>
+              {!creating && form.slug && (
+                <a
+                  className="btn-preview-page"
+                  href={`/tin-tuc/${form.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink size={13} /> Xem trang
+                </a>
+              )}
             </div>
             <div className="modal-body">
               <h2 className="section-label">Thông tin cơ bản</h2>
