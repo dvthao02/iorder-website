@@ -187,14 +187,21 @@ function OfferingForm({
 
   return (
     <form className="offering-form" onSubmit={handleSubmit}>
-      <div className="form-tabs">
-        {TABS.map((t) => (
-          <button key={t.id} type="button" className={`form-tab${tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}
-            {t.badge !== null ? <span className="form-tab-badge">{t.badge}</span> : null}
-          </button>
-        ))}
+      {/* Sticky tab bar */}
+      <div className="form-tabs-wrap">
+        <div className="form-tabs">
+          {TABS.map((t) => (
+            <button key={t.id} type="button" className={`form-tab${tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)}>
+              {t.label}
+              {t.badge !== null ? <span className="form-tab-badge">{t.badge}</span> : null}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Scrollable content area */}
+      <div className="form-content-wrap">
+        <div className="form-content-inner">
 
       {/* ── Tab: Cơ bản ── */}
       {tab === 'basic' && (
@@ -333,6 +340,9 @@ function OfferingForm({
           </div>
         </div>
       )}
+
+        </div>{/* /form-content-inner */}
+      </div>{/* /form-content-wrap */}
 
       <div className="modal-foot">
         <button type="button" onClick={onCancel} disabled={saving}>Hủy</button>
