@@ -149,8 +149,8 @@ function TagInput({ tags, onChange }: { tags: string[]; onChange: (next: string[
   )
 }
 
-// ── Offering form (3 tabs) ─────────────────────────────────────────────────────
-type Tab = 'basic' | 'content' | 'seo'
+// ── Offering form (4 tabs) ─────────────────────────────────────────────────────
+type Tab = 'basic' | 'content' | 'seo' | 'preview'
 
 function OfferingForm({
   initial, images, onSave, onCancel,
@@ -164,6 +164,7 @@ function OfferingForm({
   const [tab, setTab] = useState<Tab>('basic')
   const [saving, setSaving] = useState(false)
   const [showCover, setShowCover] = useState(false)
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
 
   const set = (patch: Partial<OfferingInput>) => setForm((f) => ({ ...f, ...patch }))
   const setContent = (patch: Partial<OfferingContent>) =>
@@ -182,10 +183,12 @@ function OfferingForm({
   const coverImg = images.find((img) => img.id === form.coverMediaId)
 
   const contentCount = form.contentJson.features.length + form.contentJson.benefits.length + form.contentJson.metrics.length
+  const publicUrl = form.slug ? `${TYPE_PREFIX[form.type]}/${form.slug}` : ''
   const TABS: { id: Tab; label: string; badge: number | null }[] = [
     { id: 'basic', label: 'Cơ bản', badge: null },
     { id: 'content', label: 'Nội dung', badge: contentCount || null },
     { id: 'seo', label: 'SEO', badge: null },
+    { id: 'preview', label: 'Xem trước', badge: null },
   ]
 
   return (
@@ -202,7 +205,36 @@ function OfferingForm({
         </div>
       </div>
 
+      {/* ── Tab: Xem trước ── */}
+      {tab === 'preview' && (
+        <div className="form-preview-area">
+          <div className="form-preview-toolbar">
+            <div className="preview-mode-btns">
+              <button type="button" className={previewMode === 'desktop' ? 'is-active' : ''} onClick={() => setPreviewMode('desktop')}>Desktop</button>
+              <button type="button" className={previewMode === 'mobile' ? 'is-active' : ''} onClick={() => setPreviewMode('mobile')}>Mobile</button>
+            </div>
+            {publicUrl && (
+              <a className="btn-preview-page" href={publicUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink size={12} /> Mở tab mới
+              </a>
+            )}
+          </div>
+          {publicUrl
+            ? (
+              <div className={`form-preview-frame is-${previewMode}`}>
+                <iframe key={`${publicUrl}-${previewMode}`} src={publicUrl} title="Xem trước trang" />
+              </div>
+            )
+            : (
+              <div className="form-preview-empty">
+                <p>Nhập Slug ở tab Cơ bản để xem trước trang.</p>
+              </div>
+            )}
+        </div>
+      )}
+
       {/* Scrollable content area */}
+      {tab !== 'preview' && (
       <div className="form-content-wrap">
         <div className="form-content-inner">
 
@@ -345,7 +377,8 @@ function OfferingForm({
       )}
 
         </div>{/* /form-content-inner */}
-      </div>{/* /form-content-wrap */}
+      </div>
+      )}{/* /form-content-wrap */}
 
       <div className="modal-foot">
         <button type="button" onClick={onCancel} disabled={saving}>Hủy</button>
