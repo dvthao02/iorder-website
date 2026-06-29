@@ -281,8 +281,8 @@ export function PartnersManager() {
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
           <form className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={save}>
             <div className="modal-head">
+              <button type="button" className="modal-back" onClick={closeEditor}>← Trở về</button>
               <h2>{editingId ? 'Sửa đối tác' : 'Thêm đối tác'}</h2>
-              <button type="button" className="modal-close" onClick={closeEditor} aria-label="Đóng">✕</button>
             </div>
 
             <div className="modal-body">

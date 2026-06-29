@@ -382,8 +382,8 @@ export function PostsManager() {
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
           <div className="modal-card modal-card-lg" onClick={(event) => event.stopPropagation()}>
             <div className="modal-head">
+              <button type="button" className="modal-back" onClick={closeEditor}>← Trở về</button>
               <h2>{creating ? 'Bài viết mới' : 'Sửa bài viết'}</h2>
-              <button type="button" className="modal-close" onClick={closeEditor} aria-label="Đóng">✕</button>
             </div>
             <div className="modal-body">
               <h2 className="section-label">Thông tin cơ bản</h2>
