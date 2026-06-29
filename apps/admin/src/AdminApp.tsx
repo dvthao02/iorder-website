@@ -16,7 +16,7 @@ import { PartnersManager } from './PartnersManager'
 import { PostsManager } from './PostsManager'
 import { SiteProfileEditor } from './SiteProfileEditor'
 import { TestimonialsManager } from './TestimonialsManager'
-import { ToastHost } from './toast'
+import { ToastHost, toast } from './toast'
 
 const navigation = [
   { key: 'dashboard', slug: '', label: 'Tổng quan', icon: LayoutDashboard, group: 'content' },
@@ -50,7 +50,6 @@ export function AdminApp() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('admin.sidebar.collapsed') === '1')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
   const navigate = useNavigate()
   const { section } = useParams()
   const isLoginRoute = section === 'login'
@@ -79,9 +78,9 @@ export function AdminApp() {
   }, [isLoading, user, isLoginRoute, navigate])
 
   const handleLogin = async (username: string, password: string) => {
-    setIsSubmitting(true); setError('')
+    setIsSubmitting(true)
     try { const session = await login(username, password); setUser(session.user); navigate('/', { replace: true }) }
-    catch (loginError) { const code = loginError instanceof Error ? loginError.message : 'UNKNOWN'; setError(errorMessages[code] ?? 'Không thể đăng nhập. Vui lòng thử lại.') }
+    catch (loginError) { const code = loginError instanceof Error ? loginError.message : 'UNKNOWN'; toast.error(errorMessages[code] ?? 'Không thể đăng nhập. Vui lòng thử lại.') }
     finally { setIsSubmitting(false) }
   }
 
@@ -90,7 +89,7 @@ export function AdminApp() {
   if (isLoading) return <main className="admin-shell"><p>Đang kiểm tra phiên đăng nhập...</p></main>
   if (!user) {
     if (!isLoginRoute) return <main className="admin-shell"><p>Đang chuyển tới trang đăng nhập...</p></main>
-    return <main className="admin-shell"><section className="admin-card login-card"><img className="login-logo" src={logoIorder} alt="iOrder" /><p className="admin-kicker">Hệ thống quản trị nội dung</p><h1>Đăng nhập quản trị</h1><p>Quản lý nội dung website iOrder. Hệ thống này độc lập với tài khoản POS.</p><LoginForm error={error} isSubmitting={isSubmitting} onSubmit={handleLogin} /></section></main>
+    return <main className="admin-shell"><section className="admin-card login-card"><img className="login-logo" src={logoIorder} alt="iOrder" /><p className="admin-kicker">Hệ thống quản trị nội dung</p><h1>Đăng nhập quản trị</h1><p>Quản lý nội dung website iOrder. Hệ thống này độc lập với tài khoản POS.</p><LoginForm isSubmitting={isSubmitting} onSubmit={handleLogin} /></section><ToastHost /></main>
   }
 
   let content: React.ReactNode

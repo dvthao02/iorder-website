@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from 'react'
 
 interface LoginFormProps {
-  error: string
   isSubmitting: boolean
   onSubmit: (username: string, password: string) => Promise<void>
 }
 
-export function LoginForm({ error, isSubmitting, onSubmit }: LoginFormProps) {
+export function LoginForm({ isSubmitting, onSubmit }: LoginFormProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
@@ -36,8 +35,6 @@ export function LoginForm({ error, isSubmitting, onSubmit }: LoginFormProps) {
         onChange={(event) => setPassword(event.target.value)}
         required
       />
-
-      {error ? <p className="form-error" role="alert">{error}</p> : null}
 
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập CMS'}
