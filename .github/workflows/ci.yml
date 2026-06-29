@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: iorderCMS
+          POSTGRES_USER: admin_iorder
+          POSTGRES_PASSWORD: "123"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U admin_iorder -d iorderCMS"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      API_HOST: 127.0.0.1
+      API_PORT: 4000
+      ADMIN_ORIGIN: http://127.0.0.1:5174
+      PUBLIC_ORIGIN: http://127.0.0.1:5173
+      DATABASE_URL: postgresql://admin_iorder:123@127.0.0.1:5432/iorderCMS
+      SESSION_SECRET: ci-session-secret-minimum-32-characters
+      SESSION_TTL_DAYS: 7
+      MEDIA_STORAGE_PATH: ../../storage/media
+      MEDIA_PUBLIC_BASE_URL: http://127.0.0.1:4000/media
+      MEDIA_MAX_FILE_SIZE_MB: 20
+      HOMEPAGE_SLUG: home
+      TRUST_PROXY: "false"
+      CMS_ADMIN_USERNAME: admin
+      CMS_ADMIN_NAME: CMS Administrator
+      CMS_ADMIN_PASSWORD: ci-admin-password
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare database
+        run: |
+          pnpm db:migrate
+          pnpm db:seed
+
+      - name: Verify production build and smoke tests
+        run: pnpm verify

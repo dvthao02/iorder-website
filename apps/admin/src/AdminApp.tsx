@@ -16,6 +16,7 @@ import { PartnersManager } from './PartnersManager'
 import { PostsManager } from './PostsManager'
 import { SiteProfileEditor } from './SiteProfileEditor'
 import { TestimonialsManager } from './TestimonialsManager'
+import { ToastHost } from './toast'
 
 const navigation = [
   { key: 'dashboard', slug: '', label: 'Tổng quan', icon: LayoutDashboard, group: 'content' },
@@ -135,5 +136,6 @@ export function AdminApp() {
       </div>
     </aside>
     <main className="admin-main">{content}</main>
+    <ToastHost />
   </div>
 }

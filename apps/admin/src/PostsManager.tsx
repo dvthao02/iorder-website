@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { archivePost, createCategory, createPost, deleteCategory, listCategories, listMedia, listPosts, publishPost, updatePost } from './api'
 import { RichTextEditor } from './RichTextEditor'
+import { toast } from './toast'
 import { ImagePicker, PageHeader, StatusDot } from './ui'
 
 const POST_STATUS: Record<string, { label: string; tone: 'on' | 'muted' | 'danger' }> = {
@@ -129,7 +130,7 @@ export function PostsManager() {
       setForm((current) => ({ ...current, categoryIds: [...current.categoryIds, result.item.id] }))
       setNewCategory('')
     } catch {
-      setMessage('Không thể tạo chuyên mục.')
+      toast.error('Không thể tạo chuyên mục.')
     }
   }
 
@@ -140,7 +141,7 @@ export function PostsManager() {
       setCategories((prev) => prev.filter((category) => category.id !== id))
       setForm((current) => ({ ...current, categoryIds: current.categoryIds.filter((cid) => cid !== id) }))
     } catch {
-      setMessage('Không thể xóa chuyên mục.')
+      toast.error('Không thể xóa chuyên mục.')
     }
   }
 
@@ -207,10 +208,12 @@ export function PostsManager() {
       setCreating(false)
       setForm(toInput(result.item))
       await loadData()
-      setMessage('Đã lưu bản nháp.')
+      toast.success('Đã lưu bản nháp.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      setMessage(code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể lưu bài viết.')
+      const text = code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể lưu bài viết.'
+      setMessage(text)
+      toast.error(text)
     } finally {
       setIsSaving(false)
     }
@@ -226,10 +229,13 @@ export function PostsManager() {
       setCreating(false)
       setForm(toInput(result.item))
       await loadData()
-      setMessage('Đã xuất bản bài viết.')
+      closeEditor()
+      toast.success('Đã xuất bản bài viết.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      setMessage(code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể xuất bản.')
+      const text = code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể xuất bản.'
+      setMessage(text)
+      toast.error(text)
     } finally {
       setIsSaving(false)
     }
@@ -240,9 +246,9 @@ export function PostsManager() {
       const result = await archivePost(id)
       if (id === selectedId) setForm(toInput(result.item))
       await loadData()
-      setMessage('Bài viết đã được ẩn.')
+      toast.success('Bài viết đã được ẩn.')
     } catch {
-      setMessage('Không thể ẩn bài viết.')
+      toast.error('Không thể ẩn bài viết.')
     }
   }
 
@@ -251,8 +257,9 @@ export function PostsManager() {
       const result = await publishPost(id)
       if (id === selectedId) setForm(toInput(result.item))
       await loadData()
+      toast.success('Đã xuất bản bài viết.')
     } catch {
-      setMessage('Không thể xuất bản bài viết.')
+      toast.error('Không thể xuất bản bài viết.')
     }
   }
 

@@ -19,6 +19,15 @@ services:
       # Build context là gốc repo (file compose nằm trong deploy/)
       context: ..
       dockerfile: deploy/Dockerfile
+      args:
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-production}
+        VITE_SENTRY_RELEASE: ${VITE_SENTRY_RELEASE:-}
+        VITE_SENTRY_TRACES_SAMPLE_RATE: ${VITE_SENTRY_TRACES_SAMPLE_RATE:-0.05}
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -31,11 +40,17 @@ services:
       API_PORT: 8080
       DATABASE_URL: postgresql://admin_iorder:${POSTGRES_PASSWORD}@postgres:5432/iorderCMS
       SESSION_SECRET: ${SESSION_SECRET}
+      CMS_PREVIEW_SECRET: ${CMS_PREVIEW_SECRET}
       ADMIN_ORIGIN: ${SITE_URL}
       PUBLIC_ORIGIN: ${SITE_URL}
       MEDIA_STORAGE_PATH: /app/storage/media
       MEDIA_PUBLIC_BASE_URL: ${SITE_URL}/media
       HOMEPAGE_SLUG: home
+      TRUST_PROXY: "true"
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.05}
       CMS_ADMIN_USERNAME: ${CMS_ADMIN_USERNAME:-admin}
       CMS_ADMIN_PASSWORD: ${CMS_ADMIN_PASSWORD}
       CMS_ADMIN_NAME: ${CMS_ADMIN_NAME:-Administrator}

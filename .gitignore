@@ -1,7 +1,8 @@
 node_modules/
 packages/*/dist/
 apps/api/dist/
-# dist/ của frontend và admin được commit để deploy lên Railway
+apps/web/dist/
+apps/admin/dist/
 *.tsbuildinfo
 .codex-qa/
 .env
@@ -15,4 +16,5 @@ pnpm-debug.log*
 Thumbs.db
 storage/media/*
 !storage/media/.gitkeep
+backups/
 test-results/

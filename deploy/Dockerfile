@@ -8,15 +8,25 @@ WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile
 
-# Build backend packages
-RUN pnpm --filter @iorder/contracts build && \
-    pnpm --filter @iorder/database build && \
-    pnpm --filter @iorder/api build
+ARG VITE_SENTRY_DSN=""
+ARG VITE_SENTRY_ENVIRONMENT="production"
+ARG VITE_SENTRY_RELEASE=""
+ARG VITE_SENTRY_TRACES_SAMPLE_RATE="0.05"
+ARG SENTRY_AUTH_TOKEN=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ARG SENTRY_RELEASE=""
 
-# Frontend dist/ và apps/admin/dist/ đã được pre-built và commit vào git
-# (Vite 8 dùng rolldown native binding không chạy được trên linux build)
-# Khi upgrade Vite hoặc dùng esbuild thì có thể bỏ comment dòng dưới:
-# RUN pnpm build && pnpm --filter @iorder/admin build
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+ENV VITE_SENTRY_ENVIRONMENT=$VITE_SENTRY_ENVIRONMENT
+ENV VITE_SENTRY_RELEASE=$VITE_SENTRY_RELEASE
+ENV VITE_SENTRY_TRACES_SAMPLE_RATE=$VITE_SENTRY_TRACES_SAMPLE_RATE
+ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+ENV SENTRY_ORG=$SENTRY_ORG
+ENV SENTRY_PROJECT=$SENTRY_PROJECT
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
+
+RUN pnpm build:production
 
 EXPOSE 8080
 CMD ["node", "apps/api/dist/server.js"]

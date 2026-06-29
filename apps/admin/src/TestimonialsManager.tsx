@@ -2,6 +2,7 @@ import type { MediaAsset, TestimonialInput, TestimonialResponse } from '@iorder/
 import { useEffect, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
+import { toast } from './toast'
 import { PageHeader, StatusDot, ToggleSwitch } from './ui'
 
 const emptyTestimonial: TestimonialInput = {
@@ -71,9 +72,9 @@ export function TestimonialsManager() {
       setSelectedId(result.item.id)
       setForm(toInput(result.item))
       await loadData()
-      setMessage('Đã lưu đánh giá.')
+      toast.success('Đã lưu đánh giá.')
     } catch {
-      setMessage('Không thể lưu đánh giá.')
+      toast.error('Không thể lưu đánh giá.')
     } finally {
       setIsSaving(false)
     }
@@ -88,9 +89,9 @@ export function TestimonialsManager() {
       setSelectedId(null)
       setForm(emptyTestimonial)
       await loadData()
-      setMessage('Đã xóa đánh giá.')
+      toast.success('Đã xóa đánh giá.')
     } catch {
-      setMessage('Không thể xóa đánh giá.')
+      toast.error('Không thể xóa đánh giá.')
     } finally {
       setIsSaving(false)
     }

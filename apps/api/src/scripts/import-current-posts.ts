@@ -29,19 +29,19 @@ const storageRoot = resolve(repositoryRoot, 'apps/api', env.MEDIA_STORAGE_PATH)
 
 function readStaticArticles(source: string): StaticArticle[] {
   const match = source.match(/export const newsArticles = (\[[\s\S]*?\n\])\n\nexport function/)
-  if (!match?.[1]) throw new Error('Could not parse src/data/newsArticles.js')
+  if (!match?.[1]) throw new Error('Could not parse apps/web/src/data/newsArticles.js')
 
   // The migration source is a repository-owned literal array; image imports are outside this captured expression.
   return Function('newsImage1', 'newsImage2', 'newsImage3', `"use strict"; return (${match[1]})`)(null, null, null) as StaticArticle[]
 }
 
 try {
-  const source = await readFile(resolve(repositoryRoot, 'src/data/newsArticles.js'), 'utf8')
+  const source = await readFile(resolve(repositoryRoot, 'apps/web/src/data/newsArticles.js'), 'utf8')
   const articles = readStaticArticles(source)
   const imageIds: string[] = []
 
   for (let index = 1; index <= 3; index += 1) {
-    const sourcePath = resolve(repositoryRoot, `src/assets/news/news${index}.jpg`)
+    const sourcePath = resolve(repositoryRoot, `apps/web/src/assets/news/news${index}.jpg`)
     const storageKey = `seed/posts/news${index}.jpg`
     const destination = resolve(storageRoot, storageKey)
     const buffer = await readFile(sourcePath)

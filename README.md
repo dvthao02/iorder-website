@@ -5,7 +5,7 @@ Monorepo gồm **website công khai** (React + Vite), **CMS quản trị nội d
 ## Cấu trúc
 
 ```text
-./                Website công khai (trang người dùng)
+apps/web          Website công khai (trang người dùng)
 apps/admin        CMS quản trị nội dung
 apps/api          API (Fastify)
 packages/database Schema + migration (Drizzle ORM)
@@ -71,16 +71,16 @@ pnpm dev:admin    # chỉ admin       → http://127.0.0.1:5174/admin
 ## 5. Build production
 
 ```powershell
-pnpm build        # build website  → dist/
+pnpm build        # build website  → apps/web/dist/
 pnpm build:cms    # build contracts + database + api + admin
-# hoặc gộp:
-pnpm build:all
+pnpm build:all    # build full production artifacts
+pnpm verify       # lint + typecheck + production build + API smoke tests
 ```
 
 ## Lệnh hữu ích
 
 ```powershell
-pnpm lint                 # kiểm tra code website (src/)
+pnpm lint                 # kiểm tra code website (apps/web/src/)
 pnpm cms:create-admin     # tạo / đổi mật khẩu admin (theo .env)
 pnpm cms:import-homepage  # nhập nội dung trang chủ vào CMS
 pnpm cms:import-posts     # nhập bài viết
@@ -88,19 +88,22 @@ pnpm cms:import-offerings # nhập phần mềm/giải pháp/dịch vụ
 pnpm db:generate          # sinh migration từ thay đổi schema
 pnpm db:migrate           # áp dụng migration
 pnpm typecheck:cms        # type-check toàn bộ package CMS
+pnpm verify               # production gate chạy giống CI
 ```
 
 ## Deploy
 
-- **Railway** (đang dùng): cấu hình ở `railway.json` + `nixpacks.toml` tại gốc. Frontend `dist/` được build sẵn và commit; Railway chỉ build API.
+- **Railway** (đang dùng): cấu hình ở `railway.json` + `nixpacks.toml` tại gốc. Railway chạy `pnpm build:production` để build API, website và CMS từ source.
 - **Docker / VPS** (tùy chọn): các file trong `deploy/` (`Dockerfile`, `docker-compose.yml`, `.env.production.example`).
   ```bash
   cp deploy/.env.production.example deploy/.env.production   # điền giá trị thật
   docker compose -f deploy/docker-compose.yml --env-file deploy/.env.production up -d
   ```
+- Production runbook: `docs/PRODUCTION_RUNBOOK.md`.
+- Production baseline log: `docs/PRODUCTION_BASELINE_2026-06-29.md`.
 
 ## Tài khoản & ghi chú
 
 - Ảnh upload lưu ở `storage/media/` (không commit vào git).
-- Ảnh chia sẻ mạng xã hội: `public/og-image.png`; favicon: `public/favicon.png`.
-- Tạo lại ảnh OG: xem hướng dẫn trong `scripts/make-og-image.mjs`.
+- Ảnh chia sẻ mạng xã hội: `apps/web/public/og-image.png`; favicon: `apps/web/public/favicon.png`.
+- Tạo lại ảnh OG: `pnpm make-og-image`.

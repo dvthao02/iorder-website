@@ -18,9 +18,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
     "db:normalize-ownership": "psql -v ON_ERROR_STOP=1 -v app_owner=admin_iorder -d iorderCMS -f scripts/02-normalize-ownership.sql",
-    "db:seed": "tsx src/seed.ts"
+    "db:seed": "tsx src/seed.ts",
+    "db:backup": "tsx src/backup.ts",
+    "db:restore": "tsx src/restore.ts"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
     "postgres": "3.4.9"

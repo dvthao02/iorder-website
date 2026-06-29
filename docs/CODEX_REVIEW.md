@@ -16,7 +16,7 @@ This review is written to make structural problems obvious to a code-reading age
 
 ### 1. Public website is still mostly static and duplicated
 
-The public site is not yet fully driven by CMS data. Core pages still rely on hardcoded content in [src/data/siteContent.js](../src/data/siteContent.js), [src/data/newsArticles.js](../src/data/newsArticles.js), and route-driven fallback content in [src/pages/StaticPage.jsx](../src/pages/StaticPage.jsx). Even though [src/pages/Home.jsx](../src/pages/Home.jsx) and [src/utils/contentApi.js](../src/utils/contentApi.js) already consume the CMS for part of the homepage and posts, the product still has two sources of truth.
+The public site is not yet fully driven by CMS data. Core pages still rely on hardcoded content in [apps/web/src/data/siteContent.js](../apps/web/src/data/siteContent.js), [apps/web/src/data/newsArticles.js](../apps/web/src/data/newsArticles.js), and route-driven fallback content in [apps/web/src/pages/StaticPage.jsx](../apps/web/src/pages/StaticPage.jsx). Even though [apps/web/src/pages/Home.jsx](../apps/web/src/pages/Home.jsx) and [apps/web/src/utils/contentApi.js](../apps/web/src/utils/contentApi.js) already consume the CMS for part of the homepage and posts, the product still has two sources of truth.
 
 Why this matters:
 - Content can drift between admin and public rendering.

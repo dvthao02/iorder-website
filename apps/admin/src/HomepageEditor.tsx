@@ -9,7 +9,7 @@ import {
   type MediaAsset,
   type SectionAppearance,
 } from '@iorder/contracts'
-import { Eye, History, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Eye, History, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -23,6 +23,7 @@ import {
   publishHomepage,
   restoreHomepageRevision,
 } from './api'
+import { toast } from './toast'
 import { EditorFooter, PageHeader, ToggleSwitch } from './ui'
 
 const defaultInput: HomepageInput = {
@@ -260,9 +261,12 @@ export function HomepageEditor() {
       await checkpointHomepage(version, 'Mốc lưu thủ công')
       setRevisions((await listHomepageRevisions()).items)
       setMessage('Đã lưu một phiên bản để có thể khôi phục về sau.')
+      toast.success('Đã lưu phiên bản trang chủ.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      setMessage(code === 'CONTENT_CONFLICT' ? 'Có thay đổi từ tab khác. Hãy tải lại trang.' : 'Không thể lưu phiên bản lúc này.')
+      const text = code === 'CONTENT_CONFLICT' ? 'Có thay đổi từ tab khác. Hãy tải lại trang.' : 'Không thể lưu phiên bản lúc này.'
+      setMessage(text)
+      toast.error(text)
     } finally { setBusy(false) }
   }
 
@@ -278,6 +282,7 @@ export function HomepageEditor() {
       setDraftVersion(result.item.draftVersion)
       setRevisions((await listHomepageRevisions()).items)
       setMessage('Đã lưu và xuất bản trang chủ. Mở lại website để kiểm tra nội dung mới.')
+      toast.success('Đã xuất bản trang chủ.')
     }
     catch (error) {
       const code = error instanceof Error ? error.message : ''
@@ -287,6 +292,7 @@ export function HomepageEditor() {
         : code === 'MEDIA_REFERENCE_NOT_FOUND'
         ? 'Một ảnh hoặc tài liệu đã bị xóa khỏi thư viện. Hãy chọn lại tệp trong block liên quan.'
         : `Không thể xuất bản trang chủ${code ? ` (${code})` : ''}.`)
+      toast.error('Không thể xuất bản trang chủ.')
     }
     finally { setBusy(false) }
   }
@@ -402,8 +408,7 @@ export function HomepageEditor() {
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setSelectedType(null)}>
           <div className="modal-card modal-card-lg" onClick={(event) => event.stopPropagation()}>
             <div className="modal-head">
-              <h2>Sửa khu vực trang chủ</h2>
-              <button type="button" className="modal-close" onClick={() => setSelectedType(null)} aria-label="Đóng">✕</button>
+              <button type="button" className="modal-back" onClick={() => setSelectedType(null)}><ArrowLeft size={16} /> Trở về</button>
             </div>
             <div className="modal-body">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
       <div className="block-card-heading"><strong>{index + 1}. {labels[block.type]}</strong><span className="fixed-structure-badge">Section cố định</span></div>
@@ -497,7 +502,7 @@ export function HomepageEditor() {
         </div>
       ) : null}
       </article>)}</div>
-            <div className="modal-foot"><button type="button" className="btn-primary" onClick={() => setSelectedType(null)}>Xong</button></div>
+            <div className="modal-foot"><button type="button" className="btn-primary btn-icon" disabled={busy || autosaveState === 'conflict'} onClick={() => void save().then(() => setSelectedType(null))}><Save size={15} /> Lưu</button></div>
           </div>
         </div>
       ) : null}

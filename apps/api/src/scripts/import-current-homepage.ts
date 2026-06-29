@@ -18,13 +18,13 @@ const database = createDatabase(env.DATABASE_URL)
 const storageRoot = resolve(repositoryRoot, 'apps/api', env.MEDIA_STORAGE_PATH)
 
 const assets = [
-  ['hero-1', 'src/assets/products/hero-img.png'], ['hero-2', 'src/assets/products/hero-img2.png'], ['hero-3', 'src/assets/products/hero-img3.jpg'],
-  ['deployment-phone', 'src/assets/products/mh-phone-iot.png'], ['deployment-computer', 'src/assets/products/mh-mt-iot.png'], ['deployment-pos', 'src/assets/products/mh-pos-iot.png'],
-  ['ttc', 'src/assets/partners/ttc.png'], ['shopeefood', 'src/assets/partners/shopeefood.png'], ['grabfood', 'src/assets/partners/grabfood.png'],
-  ['taxnet', 'src/assets/partners/taxnet.png'], ['crm-online', 'src/assets/partners/crm_online.png'], ['huit', 'src/assets/partners/huit.png'],
-  ['tan-an-phat', 'src/assets/partners/tan_an_phat.png'], ['cmc', 'src/assets/partners/cmc.png'], ['etelecom', 'src/assets/partners/etelecom.png'],
-  ['lac-viet', 'src/assets/partners/lac_viet.png'], ['base', 'src/assets/partners/base.png'], ['incard', 'src/assets/partners/in_card.png'],
-  ['mobifone', 'src/assets/partners/mobifone.png'], ['bni', 'src/assets/partners/bni.png'], ['vietnix', 'src/assets/partners/vietnix.png'], ['vietsunco', 'src/assets/partners/vietsunco.png'],
+  ['hero-1', 'apps/web/src/assets/products/hero-img.png'], ['hero-2', 'apps/web/src/assets/products/hero-img2.png'], ['hero-3', 'apps/web/src/assets/products/hero-img3.jpg'],
+  ['deployment-phone', 'apps/web/src/assets/products/mh-phone-iot.png'], ['deployment-computer', 'apps/web/src/assets/products/mh-mt-iot.png'], ['deployment-pos', 'apps/web/src/assets/products/mh-pos-iot.png'],
+  ['ttc', 'apps/web/src/assets/partners/ttc.png'], ['shopeefood', 'apps/web/src/assets/partners/shopeefood.png'], ['grabfood', 'apps/web/src/assets/partners/grabfood.png'],
+  ['taxnet', 'apps/web/src/assets/partners/taxnet.png'], ['crm-online', 'apps/web/src/assets/partners/crm_online.png'], ['huit', 'apps/web/src/assets/partners/huit.png'],
+  ['tan-an-phat', 'apps/web/src/assets/partners/tan_an_phat.png'], ['cmc', 'apps/web/src/assets/partners/cmc.png'], ['etelecom', 'apps/web/src/assets/partners/etelecom.png'],
+  ['lac-viet', 'apps/web/src/assets/partners/lac_viet.png'], ['base', 'apps/web/src/assets/partners/base.png'], ['incard', 'apps/web/src/assets/partners/in_card.png'],
+  ['mobifone', 'apps/web/src/assets/partners/mobifone.png'], ['bni', 'apps/web/src/assets/partners/bni.png'], ['vietnix', 'apps/web/src/assets/partners/vietnix.png'], ['vietsunco', 'apps/web/src/assets/partners/vietsunco.png'],
 ] as const
 
 const partnerNames = ['TTC', 'ShopeeFood', 'GrabFood', 'TaxNet', 'CRM Online', 'HUIT', 'Tân An Phát', 'CMC Telecom', 'eTelecom', 'Lạc Việt', 'Base.vn', 'InCard', 'Mobifone', 'BNI', 'Vietnix', 'Vietsunco']

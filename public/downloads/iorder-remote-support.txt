@@ -1,4 +1,0 @@
-iOrder Remote Support
-
-File tam thoi cho lien ket tai cong cu ho tro tu xa cua iOrder.
-Khi co bo cai that, thay file nay bang file moi va giu nguyen duong dan neu muon website khong can sua code.

@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
@@ -14,6 +16,7 @@ import type { ApiEnv } from './env.js'
 import { registerMediaRoutes } from './media/media-routes.js'
 import { LocalMediaStorage } from './media/media-storage.js'
 import { registerNavigationRoutes } from './navigation/navigation-routes.js'
+import { initApiObservability, registerApiErrorReporting } from './observability/sentry.js'
 import { registerOfferingRoutes } from './offerings/offering-routes.js'
 import { registerPartnerRoutes } from './partners/partner-routes.js'
 import { registerHomepageRoutes } from './pages/homepage-routes.js'
@@ -23,6 +26,9 @@ import { registerSeoRoutes } from './seo/seo-routes.js'
 import { registerSettingsRoutes } from './settings/settings-routes.js'
 import { registerStatsRoutes } from './stats/stats-routes.js'
 import { registerTestimonialRoutes } from './testimonials/testimonial-routes.js'
+
+const moduleDir = dirname(fileURLToPath(import.meta.url))
+const repositoryRoot = resolve(moduleDir, '../../..')
 
 // Chuyển TRUST_PROXY (chuỗi env) sang giá trị Fastify chấp nhận:
 // 'true'/'false' → boolean, số → số hop, còn lại → danh sách IP/subnet.
@@ -35,10 +41,13 @@ function parseTrustProxy(value: string): boolean | number | string {
 }
 
 export async function buildApp(env: ApiEnv) {
+  initApiObservability(env)
   const database = createDatabase(env.DATABASE_URL)
   const mediaRoot = resolve(env.MEDIA_STORAGE_PATH)
   const mediaStorage = new LocalMediaStorage(mediaRoot, env.MEDIA_PUBLIC_BASE_URL)
   const app = Fastify({
+    genReqId: () => randomUUID(),
+    requestIdHeader: 'x-request-id',
     // Sau nginx/reverse proxy: lấy IP thật từ X-Forwarded-For để đếm lượt xem chính xác.
     trustProxy: parseTrustProxy(env.TRUST_PROXY),
     logger: {
@@ -63,7 +72,7 @@ export async function buildApp(env: ApiEnv) {
   })
 
   // Serve admin CMS at /admin
-  const adminDist = resolve(process.cwd(), 'apps/admin/dist')
+  const adminDist = resolve(repositoryRoot, 'apps/admin/dist')
   await app.register(staticFiles, {
     root: adminDist,
     prefix: '/admin',
@@ -73,7 +82,7 @@ export async function buildApp(env: ApiEnv) {
   app.get('/admin/', async (_req, reply) => reply.sendFile('index.html', adminDist))
 
   // Serve compiled React frontend (SPA)
-  const frontendDist = resolve(process.cwd(), 'dist')
+  const frontendDist = resolve(repositoryRoot, 'apps/web/dist')
   await app.register(staticFiles, {
     root: frontendDist,
     prefix: '/',
@@ -93,6 +102,7 @@ export async function buildApp(env: ApiEnv) {
   // từ public site (port 5173) load media từ API (port 4000).
   // Override cho tất cả /media/* routes để cho phép cross-origin resource load.
   app.addHook('onSend', async (request, reply) => {
+    void reply.header('x-request-id', request.id)
     if (request.url.startsWith('/media/')) {
       void reply.header('Cross-Origin-Resource-Policy', 'cross-origin')
     }
@@ -151,6 +161,7 @@ export async function buildApp(env: ApiEnv) {
   registerNavigationRoutes(app, { db: database.db })
   registerSettingsRoutes(app, { db: database.db })
   registerStatsRoutes(app, { appDbUrls: env.IORDER_APP_DB_URLS })
+  registerApiErrorReporting(app)
 
   app.addHook('onClose', async () => {
     await database.close()

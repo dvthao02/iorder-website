@@ -3,6 +3,7 @@ import { Copy, ExternalLink, MapPin, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
+import { toast } from './toast'
 import { PageHeader } from './ui'
 
 function formatFileSize(bytes: number) {
@@ -69,6 +70,7 @@ export function MediaLibrary() {
       setUploadCaption('')
       setUploadOpen(false)
       await loadItems()
+      toast.success('Đã tải file lên.')
     } catch (uploadErr) {
       const code = uploadErr instanceof Error ? uploadErr.message : ''
       setUploadError(code === 'FILE_TOO_LARGE' ? 'File vượt quá giới hạn dung lượng (20 MB).' : 'File không hợp lệ hoặc tải lên thất bại.')
@@ -94,9 +96,9 @@ export function MediaLibrary() {
       const response = await updateMedia(editing.id, { altText: editAlt.trim() || null, caption: editCaption.trim() || null })
       setItems((current) => current.map((item) => item.id === response.item.id ? response.item : item))
       setEditing(response.item)
-      setEditMessage('Đã lưu mô tả.')
+      toast.success('Đã lưu mô tả.')
     } catch {
-      setEditMessage('Không thể lưu mô tả.')
+      toast.error('Không thể lưu mô tả.')
     } finally {
       setIsSaving(false)
     }
@@ -115,11 +117,14 @@ export function MediaLibrary() {
       await deleteMedia(asset.id)
       if (editing?.id === asset.id) setEditing(null)
       await loadItems()
+      toast.success('Đã xóa file.')
     } catch (err) {
       const code = err instanceof Error ? err.message : ''
-      setError(code === 'MEDIA_IN_USE'
+      const text = code === 'MEDIA_IN_USE'
         ? 'Không thể xóa: file đang được sử dụng. Hãy gỡ khỏi các nơi sử dụng trước (xem "Nơi sử dụng").'
-        : 'Không thể xóa file.')
+        : 'Không thể xóa file.'
+      setError(text)
+      toast.error(text)
     }
   }
 

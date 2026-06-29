@@ -3,13 +3,13 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 
-// Lint cho frontend chính (src/). Các package TS (apps/*, packages/*) đã có tsc kiểm tra riêng.
+// Lint cho website công khai (apps/web/src). Các package TS khác đã có tsc kiểm tra riêng.
 export default [
   {
-    ignores: ['dist/**', 'apps/**', 'packages/**', 'node_modules/**', 'scripts/**', '*.config.*'],
+    ignores: ['**/dist/**', 'apps/admin/**', 'apps/api/**', 'packages/**', 'node_modules/**', '*.config.*'],
   },
   {
-    files: ['src/**/*.{js,jsx}'],
+    files: ['apps/web/src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

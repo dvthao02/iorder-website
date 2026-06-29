@@ -13,10 +13,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "pnpm --filter @iorder/contracts build",
-  "pnpm --filter @iorder/database build",
-  "pnpm --filter @iorder/api build",
-  "pnpm build"
+  "pnpm build:production"
 ]
 
 [start]

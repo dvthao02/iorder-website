@@ -14,6 +14,10 @@ const envSchema = z.object({
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://127.0.0.1:4000/media'),
   MEDIA_MAX_FILE_SIZE_MB: z.coerce.number().int().min(1).max(100).default(20),
   HOMEPAGE_SLUG: z.string().regex(/^[a-z0-9-]+$/).default('home'),
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_ENVIRONMENT: z.string().min(1).optional(),
+  SENTRY_RELEASE: z.string().min(1).optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
   // Tin cậy proxy phía trước (nginx) để lấy IP thật từ X-Forwarded-For.
   // Giá trị: 'true' | 'false' | số hop | danh sách IP/subnet cách nhau dấu phẩy.
   TRUST_PROXY: z.string().default('false'),

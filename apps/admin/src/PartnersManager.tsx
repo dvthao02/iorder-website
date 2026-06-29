@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { createPartner, deletePartner, listMedia, listPartners, updatePartner } from './api'
+import { toast } from './toast'
 import { ImagePicker, PageHeader, StatusDot, ToggleSwitch } from './ui'
 
 const emptyPartner: PartnerInput = {
@@ -92,9 +93,12 @@ export function PartnersManager() {
       else await createPartner(form)
       await loadData()
       setEditorOpen(false)
+      toast.success(editingId ? 'Đã cập nhật đối tác.' : 'Đã thêm đối tác.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      setMessage(code === 'NAME_EXISTS' ? 'Tên đã tồn tại.' : 'Không thể lưu.')
+      const text = code === 'NAME_EXISTS' ? 'Tên đã tồn tại.' : 'Không thể lưu.'
+      setMessage(text)
+      toast.error(text)
     } finally {
       setIsSaving(false)
     }
@@ -104,8 +108,9 @@ export function PartnersManager() {
     try {
       await updatePartner(partner.id, { ...toInput(partner), isEnabled: !partner.isEnabled })
       await loadData()
+      toast.success(partner.isEnabled ? 'Đã ẩn đối tác.' : 'Đã hiển thị đối tác.')
     } catch {
-      setMessage('Không thể đổi trạng thái.')
+      toast.error('Không thể đổi trạng thái.')
     }
   }
 
@@ -114,8 +119,9 @@ export function PartnersManager() {
     try {
       await deletePartner(partner.id)
       await loadData()
+      toast.success('Đã xóa đối tác.')
     } catch {
-      setMessage('Không thể xóa.')
+      toast.error('Không thể xóa.')
     }
   }
 

@@ -9,6 +9,7 @@ import {
   publishOffering,
   updateOffering,
 } from './api'
+import { toast } from './toast'
 import { PageHeader, StatusDot, ToggleSwitch } from './ui'
 
 const STATUS_TONE: Record<string, 'on' | 'muted' | 'danger'> = {
@@ -272,30 +273,47 @@ export function OfferingsManager() {
   useEffect(() => { void load() }, [activeType])
 
   const handleSave = async (input: OfferingInput) => {
-    if (editing === 'new') {
-      await createOffering(input)
-    } else if (editing) {
-      await updateOffering(editing.id, input)
+    try {
+      if (editing === 'new') await createOffering(input)
+      else if (editing) await updateOffering(editing.id, input)
+      setEditing(null)
+      await load()
+      toast.success('Đã lưu nội dung.')
+    } catch {
+      toast.error('Không thể lưu nội dung.')
     }
-    setEditing(null)
-    await load()
   }
 
   const handlePublish = async (id: string) => {
-    await publishOffering(id)
-    await load()
+    try {
+      await publishOffering(id)
+      await load()
+      toast.success('Đã xuất bản.')
+    } catch {
+      toast.error('Không thể xuất bản.')
+    }
   }
 
   const handleArchive = async (id: string) => {
     if (!confirm('Ẩn nội dung này khỏi website?')) return
-    await archiveOffering(id)
-    await load()
+    try {
+      await archiveOffering(id)
+      await load()
+      toast.success('Đã ẩn nội dung.')
+    } catch {
+      toast.error('Không thể ẩn.')
+    }
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Xóa vĩnh viễn? Hành động này không thể hoàn tác.')) return
-    await deleteOffering(id)
-    await load()
+    try {
+      await deleteOffering(id)
+      await load()
+      toast.success('Đã xóa nội dung.')
+    } catch {
+      toast.error('Không thể xóa.')
+    }
   }
 
   return (
