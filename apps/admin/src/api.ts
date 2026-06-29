@@ -86,7 +86,8 @@ export function getSession() {
 }
 
 export async function checkApiHealth() {
-  const response = await fetch(`${API_URL}/health`, { cache: 'no-store' })
+  // Dùng endpoint dưới /api (được vite proxy forward) để hoạt động cả khi mở qua IP LAN.
+  const response = await fetch(`${API_URL}/api/public/health`, { cache: 'no-store' })
   if (!response.ok) throw new Error('API_UNAVAILABLE')
   return response.json() as Promise<{ status: string }>
 }
