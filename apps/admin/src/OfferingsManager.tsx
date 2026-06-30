@@ -418,9 +418,16 @@ function OfferingCard({
   onToggleFeatured: () => Promise<void>
 }) {
   const [busy, setBusy] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const act = async (fn: () => Promise<void>) => { setBusy(true); setMenuOpen(false); try { await fn() } finally { setBusy(false) } }
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
+  const kebabRef = useRef<HTMLButtonElement>(null)
+  const act = async (fn: () => Promise<void>) => { setBusy(true); setMenuPos(null); try { await fn() } finally { setBusy(false) } }
   const color = TYPE_COLORS[offering.type] ?? '#64748b'
+
+  const openMenu = () => {
+    if (!kebabRef.current) return
+    const r = kebabRef.current.getBoundingClientRect()
+    setMenuPos({ top: r.top, right: window.innerWidth - r.right })
+  }
 
   return (
     <div className="offering-card">
@@ -449,30 +456,28 @@ function OfferingCard({
           <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}>
             <Pencil size={15} />
           </button>
-          <div className="offering-menu-wrap">
-            <button type="button" className="offering-kebab" aria-label="Thao tác" disabled={busy} onClick={() => setMenuOpen((v) => !v)}>
-              <MoreVertical size={15} />
-            </button>
-            {menuOpen && (
-              <>
-                <div className="menu-backdrop" onClick={() => setMenuOpen(false)} />
-                <div className="card-menu offering-card-menu" role="menu">
-                  {onMoveUp && <button type="button" role="menuitem" onClick={() => void act(onMoveUp)}>↑ Lên</button>}
-                  {onMoveDown && <button type="button" role="menuitem" onClick={() => void act(onMoveDown)}>↓ Xuống</button>}
-                  <button type="button" role="menuitem" onClick={() => void act(onToggleFeatured)}>
-                    {offering.isFeatured ? '★ Bỏ nổi bật' : '☆ Đánh dấu nổi bật'}
-                  </button>
-                  <a href={`${typePrefix}/${offering.slug}`} target="_blank" rel="noopener noreferrer" role="menuitem" className="card-menu-link" onClick={() => setMenuOpen(false)}>
-                    <ExternalLink size={13} /> Xem trên website
-                  </a>
-                  {offering.status !== 'published'
-                    ? <button type="button" role="menuitem" onClick={() => void act(onPublish)}><Eye size={13} /> Xuất bản</button>
-                    : <button type="button" role="menuitem" onClick={() => void act(onArchive)}><EyeOff size={13} /> Ẩn nội dung</button>}
-                  <button type="button" role="menuitem" className="card-menu-danger" onClick={() => void act(onDelete)}><Trash2 size={13} /> Xóa</button>
-                </div>
-              </>
-            )}
-          </div>
+          <button ref={kebabRef} type="button" className="offering-kebab" aria-label="Thao tác" disabled={busy} onClick={openMenu}>
+            <MoreVertical size={15} />
+          </button>
+          {menuPos && (
+            <>
+              <div className="menu-backdrop" onClick={() => setMenuPos(null)} />
+              <div className="card-menu offering-card-menu" role="menu" style={{ position: 'fixed', right: menuPos.right, top: menuPos.top, bottom: 'auto', transform: 'translateY(-100%) translateY(-4px)' }}>
+                {onMoveUp && <button type="button" role="menuitem" onClick={() => void act(onMoveUp)}>↑ Lên</button>}
+                {onMoveDown && <button type="button" role="menuitem" onClick={() => void act(onMoveDown)}>↓ Xuống</button>}
+                <button type="button" role="menuitem" onClick={() => void act(onToggleFeatured)}>
+                  {offering.isFeatured ? '★ Bỏ nổi bật' : '☆ Đánh dấu nổi bật'}
+                </button>
+                <a href={`${typePrefix}/${offering.slug}`} target="_blank" rel="noopener noreferrer" role="menuitem" className="card-menu-link" onClick={() => setMenuPos(null)}>
+                  <ExternalLink size={13} /> Xem trên website
+                </a>
+                {offering.status !== 'published'
+                  ? <button type="button" role="menuitem" onClick={() => void act(onPublish)}><Eye size={13} /> Xuất bản</button>
+                  : <button type="button" role="menuitem" onClick={() => void act(onArchive)}><EyeOff size={13} /> Ẩn nội dung</button>}
+                <button type="button" role="menuitem" className="card-menu-danger" onClick={() => void act(onDelete)}><Trash2 size={13} /> Xóa</button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
