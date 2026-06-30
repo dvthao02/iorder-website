@@ -135,11 +135,11 @@ export function PostsManager() {
   }
 
   const removeCategory = async (id: string) => {
-    if (!window.confirm('Xóa chuyên mục này? Bài viết sẽ bị gỡ khỏi chuyên mục.')) return
     try {
       await deleteCategory(id)
       setCategories((prev) => prev.filter((category) => category.id !== id))
       setForm((current) => ({ ...current, categoryIds: current.categoryIds.filter((cid) => cid !== id) }))
+      toast.warning('Đã xóa chuyên mục. Bài viết đã bị gỡ khỏi chuyên mục này.')
     } catch {
       toast.error('Không thể xóa chuyên mục.')
     }

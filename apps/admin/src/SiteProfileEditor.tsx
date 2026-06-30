@@ -1,6 +1,7 @@
 import type { ExternalLinks, MediaAsset, SiteProfileInput, SiteProfileResponse } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
 import { type AppearanceSettings, getAppearance, getExternalLinks, getSiteProfile, listMedia, updateAppearance, updateExternalLinks, updateSiteProfile } from './api'
+import { toast } from './toast'
 import { ImagePicker, PageHeader, ToggleSwitch } from './ui'
 
 const PROFILE_FIELDS: { key: keyof SiteProfileInput; label: string; type?: string }[] = [
@@ -60,8 +61,6 @@ export function SiteProfileEditor() {
   const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'appearance'>('profile')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
 
   useEffect(() => {
     Promise.all([getSiteProfile(), getExternalLinks(), getAppearance(), listMedia('image')])
@@ -83,20 +82,18 @@ export function SiteProfileEditor() {
         if (linksRes.item) setLinks(linksRes.item)
         if (appearanceRes.item) setAppearance(appearanceRes.item)
       })
-      .catch(() => setError('Không tải được cài đặt.'))
+      .catch(() => toast.error('Không tải được cài đặt.'))
       .finally(() => setLoading(false))
   }, [])
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setMessage('')
-    setError('')
     try {
       await updateSiteProfile(profile)
-      setMessage('Đã lưu thông tin công ty.')
+      toast.success('Đã lưu thông tin công ty.')
     } catch {
-      setError('Lưu thất bại. Kiểm tra lại dữ liệu.')
+      toast.error('Lưu thất bại. Kiểm tra lại dữ liệu.')
     } finally {
       setSaving(false)
     }
@@ -105,13 +102,11 @@ export function SiteProfileEditor() {
   const saveLinks = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setMessage('')
-    setError('')
     try {
       await updateExternalLinks(links)
-      setMessage('Đã lưu liên kết ngoài.')
+      toast.success('Đã lưu liên kết ngoài.')
     } catch {
-      setError('Lưu thất bại.')
+      toast.error('Lưu thất bại.')
     } finally {
       setSaving(false)
     }
@@ -120,15 +115,13 @@ export function SiteProfileEditor() {
   const saveAppearance = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setMessage('')
-    setError('')
     try {
       await updateAppearance(appearance)
       if (appearance.darkMode) document.documentElement.setAttribute('data-theme', 'dark')
       else document.documentElement.removeAttribute('data-theme')
-      setMessage('Đã lưu giao diện. Trang web sẽ áp dụng sau khi reload.')
+      toast.success('Đã lưu giao diện. Trang web áp dụng sau khi reload.')
     } catch {
-      setError('Lưu thất bại.')
+      toast.error('Lưu thất bại.')
     } finally {
       setSaving(false)
     }
@@ -148,9 +141,6 @@ export function SiteProfileEditor() {
         <button type="button" className={activeTab === 'links' ? 'is-active' : ''} onClick={() => setActiveTab('links')}>Liên kết ngoài</button>
         <button type="button" className={activeTab === 'appearance' ? 'is-active' : ''} onClick={() => setActiveTab('appearance')}>🎨 Giao diện</button>
       </div>
-
-      {message && <p className="form-success">{message}</p>}
-      {error && <p className="form-error">{error}</p>}
 
       {activeTab === 'profile' && (
         <form className="admin-form" onSubmit={(e) => void saveProfile(e)}>
@@ -267,7 +257,7 @@ export function SiteProfileEditor() {
 
           <div className="form-actions">
             <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu giao diện'}</button>
-            <button type="button" onClick={() => setAppearance(emptyAppearance())} style={{ marginLeft: 8 }}>Reset mặc định</button>
+            <button type="button" className="btn-secondary" onClick={() => setAppearance(emptyAppearance())}>Reset mặc định</button>
           </div>
         </form>
       )}

@@ -492,7 +492,6 @@ export function OfferingsManager() {
   }
 
   const handleArchive = async (id: string) => {
-    if (!confirm('Ẩn nội dung này khỏi website?')) return
     await archiveOffering(id); await load(); toast.warning('Đã ẩn nội dung.')
   }
 

@@ -181,7 +181,6 @@ export function TestimonialsManager() {
   }
 
   const remove = async (id: string) => {
-    if (!window.confirm('Xóa đánh giá này?')) return
     try {
       await deleteTestimonial(id)
       await loadData()

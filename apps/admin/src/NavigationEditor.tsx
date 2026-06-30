@@ -80,7 +80,6 @@ function MenuItemRow({
   }
 
   const remove = async () => {
-    if (!confirm(`Xóa mục "${item.label}"?`)) return
     setBusy(true)
     try {
       await deleteMenuItem(location, item.id)
@@ -223,7 +222,6 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
   }
 
   const removeLink = async (linkId: string) => {
-    if (!confirm('Xóa liên kết này?')) return
     try {
       await deleteContentLink(group.code, linkId)
       onRefresh()

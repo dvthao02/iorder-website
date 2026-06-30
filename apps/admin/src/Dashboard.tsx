@@ -1,8 +1,8 @@
 import type { PostResponse } from '@iorder/contracts'
-import { ArrowUpRight, ExternalLink, FileText, Image as ImageIcon, MessageSquareQuote, Plus, Star, Users } from 'lucide-react'
+import { ArrowUpRight, Boxes, ExternalLink, FileText, Image as ImageIcon, MessageSquareQuote, Plus, Star, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { getHomepage, listMedia, listPartners, listPosts, listTestimonials } from './api'
+import { getHomepage, listMedia, listOfferings, listPartners, listPosts, listTestimonials } from './api'
 import { PageHeader } from './ui'
 
 const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? 'http://127.0.0.1:5173/'
@@ -21,12 +21,12 @@ function formatDate(iso: string) {
 
 export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
   const [posts, setPosts] = useState<PostResponse[]>([])
-  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0, hiddenSections: 0, missingAlt: 0, missingSeo: 0, expiringPromotions: 0 })
+  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0, offerings: 0, publishedOfferings: 0, hiddenSections: 0, missingAlt: 0, missingSeo: 0, expiringPromotions: 0 })
   const [homepageStatus, setHomepageStatus] = useState('—')
 
   useEffect(() => {
-    Promise.all([listPosts(), listMedia(), listPartners(), listTestimonials(), getHomepage()])
-      .then(([postRes, media, partners, testimonials, homepage]) => {
+    Promise.all([listPosts(), listMedia(), listPartners(), listTestimonials(), getHomepage(), listOfferings()])
+      .then(([postRes, media, partners, testimonials, homepage, offerings]) => {
         const items = postRes.items
         const soon = Date.now() + 14 * 24 * 60 * 60 * 1000
         setPosts(items)
@@ -37,6 +37,8 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
           media: media.total,
           partners: partners.total,
           testimonials: testimonials.total,
+          offerings: offerings.total,
+          publishedOfferings: offerings.items.filter((o) => o.status === 'published').length,
           hiddenSections: homepage.item?.blocks.filter((block) => !block.isEnabled).length ?? 0,
           missingAlt: media.items.filter((asset) => asset.mimeType.startsWith('image/') && !asset.altText?.trim()).length,
           missingSeo: items.filter((post) => !post.seoTitle?.trim() || !post.seoDescription?.trim()).length,
@@ -49,8 +51,8 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
 
   const statCards = [
     { key: 'posts', icon: FileText, tone: 'blue', label: 'Bài viết', value: counts.posts, note: `${counts.published} bài đã xuất bản`, module: 'posts' },
-    { key: 'partners', icon: Users, tone: 'teal', label: 'Đối tác', value: counts.partners, note: 'Logo trên trang chủ', module: 'partners' },
-    { key: 'testimonials', icon: Star, tone: 'amber', label: 'Đánh giá', value: counts.testimonials, note: 'Khách hàng nói gì', module: 'testimonials' },
+    { key: 'offerings', icon: Boxes, tone: 'teal', label: 'Phần mềm & Giải pháp', value: counts.offerings, note: `${counts.publishedOfferings} đang hiển thị`, module: 'offerings' },
+    { key: 'partners', icon: Users, tone: 'amber', label: 'Đối tác', value: counts.partners, note: 'Logo trên trang chủ', module: 'partners' },
     { key: 'media', icon: ImageIcon, tone: 'violet', label: 'Thư viện', value: counts.media, note: 'Ảnh và tài liệu', module: 'media' },
   ] as const
 

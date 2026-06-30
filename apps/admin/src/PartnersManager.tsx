@@ -115,7 +115,6 @@ export function PartnersManager() {
   }
 
   const remove = async (partner: PartnerResponse) => {
-    if (!window.confirm(`Xóa "${partner.name}" khỏi danh sách?`)) return
     try {
       await deletePartner(partner.id)
       await loadData()
