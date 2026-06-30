@@ -674,7 +674,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .offering-menu-wrap { position: relative; }
 .offering-kebab { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; color: #4a6480; }
 .offering-kebab:hover { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
-.offering-card-menu { right: 0; left: auto; top: calc(100% + 4px); min-width: 160px; }
+.offering-card-menu { right: 0; left: auto; top: auto; bottom: calc(100% + 4px); min-width: 160px; }
 .card-menu-link { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13.5px; color: #1e293b; text-decoration: none; cursor: pointer; }
 .card-menu-link:hover { background: #f0f9ff; color: var(--brand); }
 .card-menu-danger { color: #dc2626 !important; }
