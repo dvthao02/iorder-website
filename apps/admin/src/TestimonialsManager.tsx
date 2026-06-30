@@ -323,7 +323,7 @@ export function TestimonialsManager() {
             </div>
 
             <div className="modal-foot">
-              <button type="button" onClick={close} disabled={isSaving}>Hủy</button>
+              <button type="button" className="btn-secondary" onClick={close} disabled={isSaving}>Hủy</button>
               <button type="submit" className="btn-primary" disabled={isSaving || !form.authorName || !form.quote}>
                 {isSaving ? 'Đang lưu...' : 'Lưu đánh giá'}
               </button>

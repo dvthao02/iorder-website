@@ -410,7 +410,7 @@ export function HomepageEditor() {
             <div className="modal-head">
               <button type="button" className="modal-back" onClick={() => setSelectedType(null)}><ArrowLeft size={16} /> Trở về</button>
             </div>
-            <div className="modal-body">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
+            <div className="modal-body"><div className="block-editor-scroll">{form.blocks.map((block, index) => block.type !== selectedType ? null : <article className="block-card" key={block.type}>
       <div className="block-card-heading"><strong>{index + 1}. {labels[block.type]}</strong><span className="fixed-structure-badge">Section cố định</span></div>
       <ToggleSwitch checked={block.isEnabled} onChange={(next) => setForm({ ...form, blocks: form.blocks.map((item, i) => i === index ? { ...item, isEnabled: next } : item) })} label="Hiển thị block" hint="Tắt để ẩn khu vực này khỏi trang chủ" />
       {block.type === 'home_hero' ? <p className="editor-hint">🎞️ Banner dùng <strong>ảnh carousel</strong> bên dưới làm hình nền — thêm/sửa/xóa ảnh banner tại mục “Ảnh carousel”. Banner không dùng ảnh nền section riêng.</p> : <fieldset className="appearance-editor">
@@ -501,7 +501,7 @@ export function HomepageEditor() {
           <label>Liên kết<input value={block.data.buttonUrl} onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })} /></label>
         </div>
       ) : null}
-      </article>)}</div>
+      </article>)}</div></div>
             <div className="modal-foot"><button type="button" className="btn-primary btn-icon" disabled={busy || autosaveState === 'conflict'} onClick={() => void save().then(() => setSelectedType(null))}><Save size={15} /> Lưu</button></div>
           </div>
         </div>

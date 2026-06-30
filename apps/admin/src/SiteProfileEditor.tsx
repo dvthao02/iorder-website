@@ -1,7 +1,7 @@
-import type { ExternalLinks, SiteProfileInput, SiteProfileResponse } from '@iorder/contracts'
+import type { ExternalLinks, MediaAsset, SiteProfileInput, SiteProfileResponse } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
-import { type AppearanceSettings, getAppearance, getExternalLinks, getSiteProfile, updateAppearance, updateExternalLinks, updateSiteProfile } from './api'
-import { PageHeader, ToggleSwitch } from './ui'
+import { type AppearanceSettings, getAppearance, getExternalLinks, getSiteProfile, listMedia, updateAppearance, updateExternalLinks, updateSiteProfile } from './api'
+import { ImagePicker, PageHeader, ToggleSwitch } from './ui'
 
 const PROFILE_FIELDS: { key: keyof SiteProfileInput; label: string; type?: string }[] = [
   { key: 'companyName', label: 'Tên công ty *' },
@@ -54,6 +54,7 @@ const emptyAppearance = (): AppearanceSettings => ({
 
 export function SiteProfileEditor() {
   const [profile, setProfile] = useState<SiteProfileInput>(emptyProfile())
+  const [images, setImages] = useState<MediaAsset[]>([])
   const [links, setLinks] = useState<ExternalLinks>(emptyLinks())
   const [appearance, setAppearance] = useState<AppearanceSettings>(emptyAppearance())
   const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'appearance'>('profile')
@@ -63,8 +64,9 @@ export function SiteProfileEditor() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    Promise.all([getSiteProfile(), getExternalLinks(), getAppearance()])
-      .then(([profileRes, linksRes, appearanceRes]) => {
+    Promise.all([getSiteProfile(), getExternalLinks(), getAppearance(), listMedia('image')])
+      .then(([profileRes, linksRes, appearanceRes, mediaRes]) => {
+        setImages(mediaRes.items as MediaAsset[])
         if (profileRes.item) {
           const p = profileRes.item as SiteProfileResponse
           setProfile({
@@ -163,6 +165,17 @@ export function SiteProfileEditor() {
               />
             </div>
           ))}
+          <div className="form-row">
+            <label>Logo công ty</label>
+            <ImagePicker
+              label="Logo công ty"
+              ariaLabel="Chọn logo công ty"
+              images={images}
+              value={profile.logoMediaId}
+              onChange={(id) => setProfile((p) => ({ ...p, logoMediaId: id }))}
+              onUploaded={(asset) => setImages((prev) => [asset, ...prev])}
+            />
+          </div>
           <div className="form-actions">
             <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu thông tin'}</button>
           </div>

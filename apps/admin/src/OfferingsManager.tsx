@@ -381,7 +381,7 @@ function OfferingForm({
       )}{/* /form-content-wrap */}
 
       <div className="modal-foot">
-        <button type="button" onClick={onCancel} disabled={saving}>Hủy</button>
+        <button type="button" className="btn-secondary" onClick={onCancel} disabled={saving}>Hủy</button>
         <button type="submit" className="btn-primary" disabled={saving}>
           {saving ? 'Đang lưu...' : 'Lưu nháp'}
         </button>

@@ -286,7 +286,7 @@ export function PartnersManager() {
             </div>
 
             <div className="modal-body">
-              <div className="form-row">
+              <div className="form-row-2col">
                 <label>
                   Tên đối tác
                   <input required maxLength={180} value={form.name} onChange={(event) => patchForm('name', event.target.value)} />
@@ -309,7 +309,7 @@ export function PartnersManager() {
                 onUploaded={(asset) => setImages((prev) => [asset, ...prev])}
               />
 
-              <div className="form-row">
+              <div className="form-row-2col">
                 <label>
                   Website
                   <input type="url" placeholder="https://..." value={form.websiteUrl ?? ''} onChange={(event) => patchForm('websiteUrl', event.target.value || null)} />

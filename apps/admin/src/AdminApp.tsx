@@ -115,7 +115,6 @@ export function AdminApp() {
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </button>
       </div>
-      <p className="sidebar-brand-sub">Quản trị nội dung</p>
       <nav aria-label="Chức năng quản trị">
         {groups.map((group) => (
           <div className="nav-group" key={group.id}>

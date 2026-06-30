@@ -399,7 +399,7 @@ export function PostsManager() {
             </div>
             <div className="modal-body">
               <h2 className="section-label">Thông tin cơ bản</h2>
-              <div className="form-row">
+              <div className="form-row-2col">
                 <label>
                   Loại bài
                   <select value={form.type} onChange={(event) => patchForm('type', event.target.value as PostInput['type'])}>
@@ -438,7 +438,7 @@ export function PostsManager() {
                 }} />
               </label>
 
-              <div className="form-row">
+              <div className="form-row-2col">
                 <label>
                   Đường dẫn
                   <input required maxLength={180} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value={form.slug} onChange={(event) => patchForm('slug', slugify(event.target.value))} />
@@ -488,7 +488,7 @@ export function PostsManager() {
               {form.type === 'promotion' ? (
                 <>
                   <h2 className="section-label">Khuyến mãi</h2>
-                  <div className="form-row">
+                  <div className="form-row-2col">
                     <label>
                       Nhãn nổi bật (badge)
                       <input maxLength={60} placeholder="VD: Giảm 20%" value={form.badgeText ?? ''} onChange={(event) => patchForm('badgeText', event.target.value || null)} />
@@ -502,7 +502,7 @@ export function PostsManager() {
                     Link nút CTA
                     <input type="url" placeholder="https://..." value={form.ctaUrl ?? ''} onChange={(event) => patchForm('ctaUrl', event.target.value || null)} />
                   </label>
-                  <div className="form-row">
+                  <div className="form-row-2col">
                     <label>
                       Bắt đầu khuyến mãi
                       <input type="datetime-local" value={toLocalInput(form.promotionStartAt)} onChange={(event) => patchForm('promotionStartAt', fromLocalInput(event.target.value))} />
@@ -525,7 +525,7 @@ export function PostsManager() {
                     Checklist / điểm nổi bật (mỗi dòng một mục)
                     <textarea rows={4} value={form.checklist.join('\n')} onChange={(event) => patchForm('checklist', event.target.value.split('\n').map((item) => item.trim()).filter(Boolean))} />
                   </label>
-                  <div className="form-row">
+                  <div className="form-row-2col">
                     <label>
                       SEO title
                       <input maxLength={70} value={form.seoTitle ?? ''} onChange={(event) => patchForm('seoTitle', event.target.value || null)} />
