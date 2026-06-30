@@ -24,6 +24,7 @@ export function MediaLibrary() {
   const [isLoading, setIsLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => localStorage.getItem('admin.media.view') === 'grid' ? 'grid' : 'table')
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date')
+  const [missingAltOnly, setMissingAltOnly] = useState(false)
 
   const [uploadOpen, setUploadOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -138,11 +139,14 @@ export function MediaLibrary() {
     document: items.filter((item) => !isImage(item)).length,
   }), [items])
 
-  const sortedItems = useMemo(() => [...items].sort((a, b) => {
-    if (sortBy === 'name') return a.originalName.localeCompare(b.originalName, 'vi')
-    if (sortBy === 'size') return b.fileSize - a.fileSize
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  }), [items, sortBy])
+  const sortedItems = useMemo(() => {
+    const filtered = missingAltOnly ? items.filter((a) => a.mimeType.startsWith('image/') && !a.altText?.trim()) : items
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'name') return a.originalName.localeCompare(b.originalName, 'vi')
+      if (sortBy === 'size') return b.fileSize - a.fileSize
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+  }, [items, sortBy, missingAltOnly])
 
   return (
     <section className="admin-card content-manager">
@@ -164,6 +168,10 @@ export function MediaLibrary() {
           <option value="name">Tên A→Z</option>
           <option value="size">Dung lượng ↓</option>
         </select>
+        <label className="toolbar-check">
+          <input type="checkbox" checked={missingAltOnly} onChange={(e) => setMissingAltOnly(e.target.checked)} />
+          Thiếu alt
+        </label>
         <button
           type="button"
           className="view-toggle-btn"

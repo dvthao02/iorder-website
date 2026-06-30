@@ -792,6 +792,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .toolbar-search-wrap { position: relative; flex: 1 1 260px; display: flex; align-items: center; }
 .toolbar-search-wrap .toolbar-search-icon { position: absolute; left: 12px; color: #94a3b8; pointer-events: none; }
 .toolbar-search-wrap .toolbar-search { padding-left: 36px; width: 100%; }
+.toolbar-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; white-space: nowrap; min-height: 40px; }
 
 /* ── Upload drop zone ──────────────────────────────────────────────────────── */
 .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px 24px; border: 2px dashed #cddbe7; border-radius: 12px; background: #f8fafc; text-align: center; transition: border-color .15s, background .15s; cursor: default; margin-bottom: 12px; }
@@ -839,6 +840,9 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .kind-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .kind-partner { background: #e0f2fe; color: #075985; }
 .kind-customer { background: #fae8ff; color: #86198f; }
+.promo-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.promo-badge--expired { background: #fee2e2; color: #991b1b; }
+.promo-badge--expiring { background: #fef3c7; color: #92400e; }
 
 .status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: #fff; font: inherit; font-size: 13px; color: #475569; cursor: pointer; transition: border-color .15s, background .15s; }
 .status-pill:hover { border-color: #bae6fd; background: #f0f9ff; }

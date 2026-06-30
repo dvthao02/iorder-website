@@ -374,6 +374,13 @@ export function PostsManager() {
                       <span className="post-card-badges">
                         <span className={`kind-badge ${post.type === 'promotion' ? 'kind-customer' : 'kind-partner'}`}>{post.type === 'promotion' ? 'Khuyến mãi' : 'Tin tức'}</span>
                         <span className="post-card-status"><StatusDot tone={status.tone} />{status.label}</span>
+                        {post.type === 'promotion' && post.promotionEndAt ? (() => {
+                          const end = new Date(post.promotionEndAt).getTime()
+                          const now = Date.now()
+                          if (end < now) return <span className="promo-badge promo-badge--expired">Hết hạn</span>
+                          if (end - now < 14 * 24 * 60 * 60 * 1000) return <span className="promo-badge promo-badge--expiring">Sắp hết hạn</span>
+                          return null
+                        })() : null}
                       </span>
                       <span className="post-card-meta"><Calendar size={13} aria-hidden="true" />{formatDate(post.publishedAt ?? post.updatedAt)}<span className="post-card-views"><Eye size={13} aria-hidden="true" />{formatViews(post.viewCount)} lượt xem</span></span>
                     </span>
