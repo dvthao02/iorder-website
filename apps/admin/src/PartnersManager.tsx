@@ -47,6 +47,7 @@ export function PartnersManager() {
   const [isSaving, setIsSaving] = useState(false)
 
   const [dragId, setDragId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
     const [partnerResult, mediaResult] = await Promise.all([listPartners(), listMedia('image')])
@@ -55,7 +56,7 @@ export function PartnersManager() {
   }
 
   useEffect(() => {
-    void loadData().catch(() => toast.error('Không thể tải danh sách đối tác.'))
+    void loadData().catch(() => toast.error('Không thể tải danh sách đối tác.')).finally(() => setLoading(false))
   }, [])
 
   const logoUrl = (id: string | null) => images.find((image) => image.id === id)?.publicUrl ?? null
@@ -185,7 +186,9 @@ export function PartnersManager() {
         </select>
       </div>
 
-      {items.length === 0 && (
+      {loading && <p className="admin-info">Đang tải...</p>}
+
+      {!loading && items.length === 0 && (
         <div className="admin-empty">
           <Plus size={36} />
           <p>Chưa có đối tác nào.</p>
@@ -193,7 +196,7 @@ export function PartnersManager() {
         </div>
       )}
 
-      {items.length > 0 && <div className="data-table-wrap">
+      {!loading && items.length > 0 && <div className="data-table-wrap">
         <table className="data-table partner-table">
           <thead>
             <tr>
@@ -252,7 +255,7 @@ export function PartnersManager() {
           </tbody>
         </table>
       </div>}
-      {items.length > 0 && <p className="table-hint">{isReorderable ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.' : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}</p>}
+      {!loading && items.length > 0 && <p className="table-hint">{isReorderable ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.' : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}</p>}
 
       <div className="preview-panel">
         <div className="preview-head">
