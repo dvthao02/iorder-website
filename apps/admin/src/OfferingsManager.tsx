@@ -1,6 +1,6 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
 import { Archive, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Star, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   archiveOffering,
   createOffering,
@@ -466,6 +466,7 @@ export function OfferingsManager() {
   const [images, setImages] = useState<MediaAsset[]>([])
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState<OfferingResponse | null | 'new'>(null)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
 
   const load = async () => {
     setLoading(true)
@@ -478,6 +479,7 @@ export function OfferingsManager() {
   }
 
   useEffect(() => { void load() }, [activeType])
+  useEffect(() => { setStatusFilter('all') }, [activeType])
 
   const handleSave = async (input: OfferingInput) => {
     if (editing === 'new') await createOffering(input)
@@ -501,6 +503,18 @@ export function OfferingsManager() {
   }
 
   const coverMap = new Map(images.map((img) => [img.id, img.publicUrl]))
+
+  const statusCounts = useMemo(() => ({
+    all: items.length,
+    draft: items.filter((i) => i.status === 'draft').length,
+    published: items.filter((i) => i.status === 'published').length,
+    archived: items.filter((i) => i.status === 'archived').length,
+  }), [items])
+
+  const filtered = useMemo(() =>
+    statusFilter === 'all' ? items : items.filter((i) => i.status === statusFilter),
+    [items, statusFilter]
+  )
 
   return (
     <div className="admin-module">
@@ -532,20 +546,43 @@ export function OfferingsManager() {
       )}
 
       {!loading && items.length > 0 && (
-        <div className="offering-grid">
-          {items.map((item) => (
-            <OfferingCard
-              key={item.id}
-              offering={item}
-              coverUrl={item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined}
-              typePrefix={TYPE_PREFIX[activeType]}
-              onEdit={() => setEditing(item)}
-              onPublish={async () => handlePublish(item.id)}
-              onArchive={async () => handleArchive(item.id)}
-              onDelete={async () => handleDelete(item.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="status-pills">
+            {(['all', 'draft', 'published', 'archived'] as const).map((key) => {
+              const LABELS = { all: 'Tất cả', draft: 'Nháp', published: 'Đã đăng', archived: 'Đã ẩn' }
+              const count = statusCounts[key]
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`status-pill${statusFilter === key ? ' is-active' : ''}${count === 0 && key !== 'all' ? ' is-empty' : ''}`}
+                  onClick={() => setStatusFilter(key)}
+                >
+                  {LABELS[key]}{count > 0 ? ` (${count})` : ''}
+                </button>
+              )
+            })}
+          </div>
+
+          {filtered.length === 0 ? (
+            <p className="admin-info">Không có mục nào với trạng thái đã chọn.</p>
+          ) : (
+            <div className="offering-grid">
+              {filtered.map((item) => (
+                <OfferingCard
+                  key={item.id}
+                  offering={item}
+                  coverUrl={item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined}
+                  typePrefix={TYPE_PREFIX[activeType]}
+                  onEdit={() => setEditing(item)}
+                  onPublish={async () => handlePublish(item.id)}
+                  onArchive={async () => handleArchive(item.id)}
+                  onDelete={async () => handleDelete(item.id)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {editing !== null ? (

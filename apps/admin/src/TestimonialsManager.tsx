@@ -1,6 +1,6 @@
 import type { MediaAsset, TestimonialInput, TestimonialResponse } from '@iorder/contracts'
-import { MessageSquareQuote, Pencil, Plus, Star, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ChevronDown, ChevronUp, MessageSquareQuote, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
 import { toast } from './toast'
@@ -69,13 +69,15 @@ function StarDisplay({ value }: { value: number | null }) {
 
 // ── Testimonial card ───────────────────────────────────────────────────────────
 function TestimonialCard({
-  item, avatarUrl, onEdit, onDelete, onToggle,
+  item, avatarUrl, onEdit, onDelete, onToggle, onMoveUp, onMoveDown,
 }: {
   item: TestimonialResponse
   avatarUrl: string | null
   onEdit: () => void
   onDelete: () => Promise<void>
   onToggle: () => Promise<void>
+  onMoveUp: (() => Promise<void>) | null
+  onMoveDown: (() => Promise<void>) | null
 }) {
   const [busy, setBusy] = useState(false)
   const act = async (fn: () => Promise<void>) => { setBusy(true); try { await fn() } finally { setBusy(false) } }
@@ -115,6 +117,8 @@ function TestimonialCard({
           {item.isEnabled ? 'Hiển thị' : 'Đã ẩn'}
         </button>
         <div className="testimonial-actions">
+          <button type="button" title="Lên" onClick={() => onMoveUp && void act(onMoveUp)} disabled={busy || !onMoveUp}><ChevronUp size={15} /></button>
+          <button type="button" title="Xuống" onClick={() => onMoveDown && void act(onMoveDown)} disabled={busy || !onMoveDown}><ChevronDown size={15} /></button>
           <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}><Pencil size={15} /></button>
           <button type="button" title="Xóa" className="act-danger" onClick={() => void act(onDelete)} disabled={busy}><Trash2 size={15} /></button>
         </div>
@@ -143,6 +147,26 @@ export function TestimonialsManager() {
   }, [])
 
   const avatarMap = new Map(images.map((img) => [img.id, img.publicUrl]))
+
+  const sorted = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items])
+
+  const moveItem = async (id: string, direction: 'up' | 'down') => {
+    const s = [...items].sort((a, b) => a.sortOrder - b.sortOrder)
+    const idx = s.findIndex((i) => i.id === id)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    const a = s[idx]
+    const b = s[swapIdx]
+    if (!a || !b) return
+    try {
+      await Promise.all([
+        updateTestimonial(a.id, { ...toInput(a), sortOrder: b.sortOrder }),
+        updateTestimonial(b.id, { ...toInput(b), sortOrder: a.sortOrder }),
+      ])
+      await loadData()
+    } catch {
+      toast.error('Không thể đổi thứ tự.')
+    }
+  }
 
   const openNew = () => {
     setForm({ ...emptyTestimonial, sortOrder: items.length })
@@ -224,7 +248,7 @@ export function TestimonialsManager() {
 
       {items.length > 0 && (
         <div className="testimonial-grid">
-          {items.map((item) => (
+          {sorted.map((item, idx) => (
             <TestimonialCard
               key={item.id}
               item={item}
@@ -232,6 +256,8 @@ export function TestimonialsManager() {
               onEdit={() => openEdit(item)}
               onDelete={async () => remove(item.id)}
               onToggle={async () => toggleEnabled(item)}
+              onMoveUp={idx > 0 ? async () => moveItem(item.id, 'up') : null}
+              onMoveDown={idx < sorted.length - 1 ? async () => moveItem(item.id, 'down') : null}
             />
           ))}
         </div>

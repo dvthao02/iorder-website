@@ -623,6 +623,12 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .btn-danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 9px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
 .btn-danger:hover { background: #fee2e2; }
 
+/* ── Offering status filter pills ──────────────────────────────────────────── */
+.status-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.status-pills .status-pill { padding: 6px 14px; font-size: 13px; font-weight: 700; }
+.status-pills .status-pill.is-active { border-color: transparent; background: var(--brand); color: #fff; }
+.status-pills .status-pill.is-empty { opacity: .4; }
+
 /* ── Offering card grid ─────────────────────────────────────────────────────── */
 .offering-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .offering-card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 14px; background: #fff; box-shadow: var(--card-shadow); overflow: hidden; transition: border-color .15s, box-shadow .15s, transform .13s; }
@@ -1117,8 +1123,9 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .testimonial-card-foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid #f0f6fb; }
 .testimonial-actions { display: flex; gap: 4px; }
 .testimonial-actions button { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; color: #4a6480; transition: background .13s, color .13s, border-color .13s; }
-.testimonial-actions button:hover { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
-.testimonial-actions button.act-danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.testimonial-actions button:hover:not(:disabled) { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
+.testimonial-actions button.act-danger:hover:not(:disabled) { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.testimonial-actions button:disabled { opacity: .35; cursor: default; }
 
 /* Status pill (shared, reused in testimonials + offerings) */
 .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: #fff; font: inherit; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; transition: border-color .13s, background .13s; }

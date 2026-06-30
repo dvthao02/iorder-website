@@ -22,7 +22,6 @@ export function MediaLibrary() {
   const [kind, setKind] = useState<KindFilter>('all')
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
 
   const [uploadOpen, setUploadOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -35,18 +34,16 @@ export function MediaLibrary() {
   const [editAlt, setEditAlt] = useState('')
   const [editCaption, setEditCaption] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [editMessage, setEditMessage] = useState('')
   const [usage, setUsage] = useState<MediaUsage[] | null>(null)
   const [copied, setCopied] = useState(false)
 
   const loadItems = async (selectedKind = kind, query = search) => {
     setIsLoading(true)
-    setError('')
     try {
       const response = await listMedia(selectedKind === 'all' ? undefined : selectedKind, query)
       setItems(response.items)
     } catch {
-      setError('Không thể tải thư viện.')
+      toast.error('Không thể tải thư viện.')
     } finally {
       setIsLoading(false)
     }
@@ -83,7 +80,6 @@ export function MediaLibrary() {
     setEditing(asset)
     setEditAlt(asset.altText ?? '')
     setEditCaption(asset.caption ?? '')
-    setEditMessage('')
     setUsage(null)
     setCopied(false)
   }
@@ -91,7 +87,6 @@ export function MediaLibrary() {
   const saveEdit = async () => {
     if (!editing) return
     setIsSaving(true)
-    setEditMessage('')
     try {
       const response = await updateMedia(editing.id, { altText: editAlt.trim() || null, caption: editCaption.trim() || null })
       setItems((current) => current.map((item) => item.id === response.item.id ? response.item : item))
@@ -107,12 +102,11 @@ export function MediaLibrary() {
   const loadUsage = async (id: string) => {
     if (usage) { setUsage(null); return }
     try { setUsage((await getMediaUsage(id)).items) }
-    catch { setEditMessage('Không thể kiểm tra nơi đang sử dụng.') }
+    catch { toast.error('Không thể kiểm tra nơi đang sử dụng.') }
   }
 
   const handleDelete = async (asset: MediaAsset) => {
     if (!window.confirm(`Xóa "${asset.originalName}" khỏi thư viện? Hành động không thể hoàn tác.`)) return
-    setError('')
     try {
       await deleteMedia(asset.id)
       if (editing?.id === asset.id) setEditing(null)
@@ -120,11 +114,9 @@ export function MediaLibrary() {
       toast.warning('Đã xóa file.')
     } catch (err) {
       const code = err instanceof Error ? err.message : ''
-      const text = code === 'MEDIA_IN_USE'
+      toast.error(code === 'MEDIA_IN_USE'
         ? 'Không thể xóa: file đang được sử dụng. Hãy gỡ khỏi các nơi sử dụng trước (xem "Nơi sử dụng").'
-        : 'Không thể xóa file.'
-      setError(text)
-      toast.error(text)
+        : 'Không thể xóa file.')
     }
   }
 
@@ -160,7 +152,6 @@ export function MediaLibrary() {
         </select>
       </div>
 
-      {error ? <p className="form-error" role="alert">{error}</p> : null}
 
       <div className="data-table-wrap">
         <table className="data-table media-table">
@@ -273,7 +264,6 @@ export function MediaLibrary() {
                   {usage.length > 0 ? <ul>{usage.map((item) => <li key={`${item.entityType}-${item.entityId}`}>{item.location}: {item.label}</li>)}</ul> : null}
                 </div>
               ) : null}
-              {editMessage ? <p className="editor-status" role="status">{editMessage}</p> : null}
             </div>
             <div className="modal-foot">
               <button type="button" className="btn-danger btn-icon modal-foot-start" onClick={() => void handleDelete(editing)}><Trash2 size={15} /> Xóa</button>

@@ -102,7 +102,6 @@ export function PostsManager() {
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState<PostInput>(emptyPost)
   const [isSaving, setIsSaving] = useState(false)
-  const [message, setMessage] = useState('')
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PostFilter>('all')
@@ -167,7 +166,7 @@ export function PostsManager() {
   }
 
   useEffect(() => {
-    void loadData().catch(() => setMessage('Không thể tải danh sách bài viết.'))
+    void loadData().catch(() => toast.error('Không thể tải danh sách bài viết.'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -179,7 +178,6 @@ export function PostsManager() {
     setSelectedId(post.id)
     setCreating(false)
     setForm(toInput(post))
-    setMessage('')
     setShowCoverPicker(false)
   }
 
@@ -187,21 +185,18 @@ export function PostsManager() {
     setSelectedId(null)
     setCreating(true)
     setForm(emptyPost)
-    setMessage('')
     setShowCoverPicker(false)
   }
 
   const closeEditor = () => {
     setSelectedId(null)
     setCreating(false)
-    setMessage('')
     setShowCoverPicker(false)
     setPublishMenu(false)
   }
 
   const savePost = async () => {
     setIsSaving(true)
-    setMessage('')
     try {
       const result = selectedId ? await updatePost(selectedId, form) : await createPost(form)
       setSelectedId(result.item.id)
@@ -211,9 +206,7 @@ export function PostsManager() {
       toast.success('Đã lưu bản nháp.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      const text = code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể lưu bài viết.'
-      setMessage(text)
-      toast.error(text)
+      toast.error(code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể lưu bài viết.')
     } finally {
       setIsSaving(false)
     }
@@ -221,7 +214,6 @@ export function PostsManager() {
 
   const publish = async () => {
     setIsSaving(true)
-    setMessage('')
     try {
       const saved = selectedId ? await updatePost(selectedId, form) : await createPost(form)
       setSelectedId(saved.item.id)
@@ -233,9 +225,7 @@ export function PostsManager() {
       toast.success('Đã xuất bản bài viết.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      const text = code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể xuất bản.'
-      setMessage(text)
-      toast.error(text)
+      toast.error(code === 'SLUG_EXISTS' ? 'Đường dẫn đã tồn tại.' : 'Không thể xuất bản.')
     } finally {
       setIsSaving(false)
     }
@@ -540,7 +530,6 @@ export function PostsManager() {
             </div>
 
             <div className="modal-foot">
-              {message ? <span className="editor-status modal-foot-start">{message}</span> : null}
               <button type="button" className="secondary-button" onClick={closeEditor}>Đóng</button>
               <button type="button" className="secondary-button btn-icon" disabled={isSaving} onClick={() => void savePost()}><FileText size={15} /> Lưu nháp</button>
               <button type="button" className="secondary-button btn-icon" onClick={() => previewPost(form.slug)}><Eye size={15} /> Xem trước</button>

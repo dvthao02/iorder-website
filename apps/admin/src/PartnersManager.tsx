@@ -45,7 +45,6 @@ export function PartnersManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerInput>(emptyPartner)
   const [isSaving, setIsSaving] = useState(false)
-  const [message, setMessage] = useState('')
 
   const [dragId, setDragId] = useState<string | null>(null)
 
@@ -56,7 +55,7 @@ export function PartnersManager() {
   }
 
   useEffect(() => {
-    void loadData().catch(() => setMessage('Không thể tải danh sách đối tác.'))
+    void loadData().catch(() => toast.error('Không thể tải danh sách đối tác.'))
   }, [])
 
   const logoUrl = (id: string | null) => images.find((image) => image.id === id)?.publicUrl ?? null
@@ -68,26 +67,22 @@ export function PartnersManager() {
   const openCreate = () => {
     setEditingId(null)
     setForm({ ...emptyPartner, sortOrder: items.length })
-    setMessage('')
     setEditorOpen(true)
   }
 
   const openEdit = (partner: PartnerResponse) => {
     setEditingId(partner.id)
     setForm(toInput(partner))
-    setMessage('')
     setEditorOpen(true)
   }
 
   const closeEditor = () => {
     setEditorOpen(false)
-    setMessage('')
   }
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsSaving(true)
-    setMessage('')
     try {
       if (editingId) await updatePartner(editingId, form)
       else await createPartner(form)
@@ -96,9 +91,7 @@ export function PartnersManager() {
       toast.success(editingId ? 'Đã cập nhật đối tác.' : 'Đã thêm đối tác.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
-      const text = code === 'NAME_EXISTS' ? 'Tên đã tồn tại.' : 'Không thể lưu.'
-      setMessage(text)
-      toast.error(text)
+      toast.error(code === 'NAME_EXISTS' ? 'Tên đã tồn tại.' : 'Không thể lưu.')
     } finally {
       setIsSaving(false)
     }
@@ -147,7 +140,7 @@ export function PartnersManager() {
       await Promise.all(changed.map(({ partner, index }) => updatePartner(partner.id, { ...toInput(partner), sortOrder: index })))
       await loadData()
     } catch {
-      setMessage('Không thể lưu thứ tự.')
+      toast.error('Không thể lưu thứ tự.')
       await loadData()
     }
   }
@@ -191,8 +184,6 @@ export function PartnersManager() {
           <option value="customer">Khách hàng</option>
         </select>
       </div>
-
-      {message ? <p className="form-error" role="status">{message}</p> : null}
 
       <div className="data-table-wrap">
         <table className="data-table partner-table">
@@ -331,7 +322,6 @@ export function PartnersManager() {
                 hint="Tắt để ẩn khỏi trang công khai"
               />
 
-              {message ? <p className="form-error" role="status">{message}</p> : null}
             </div>
 
             <div className="modal-foot">

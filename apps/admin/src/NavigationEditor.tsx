@@ -288,18 +288,15 @@ export function NavigationEditor() {
   const [activeTab, setActiveTab] = useState<'menus' | 'links'>('menus')
   const [loading, setLoading] = useState(false)
   const [seeding, setSeeding] = useState(false)
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
 
   const load = async () => {
     setLoading(true)
-    setError('')
     try {
       const [menusRes, groupsRes] = await Promise.all([listMenus(), listLinkGroups()])
       setMenus(menusRes.items as Menu[])
       setLinkGroups(groupsRes.items as LinkGroup[])
     } catch {
-      setError('Không tải được dữ liệu menu.')
+      toast.error('Không tải được dữ liệu menu.')
     } finally {
       setLoading(false)
     }
@@ -307,14 +304,12 @@ export function NavigationEditor() {
 
   const handleSeedDefaults = async () => {
     setSeeding(true)
-    setError('')
-    setMessage('')
     try {
       const res = await seedDefaultMenus()
-      setMessage(`Đã tạo: ${res.created.join(', ')}`)
       await load()
+      toast.success(`Đã tạo: ${res.created.join(', ')}`)
     } catch {
-      setError('Tạo menu mặc định thất bại.')
+      toast.error('Tạo menu mặc định thất bại.')
     } finally {
       setSeeding(false)
     }
@@ -335,8 +330,6 @@ export function NavigationEditor() {
       </div>
 
       {loading && <p className="admin-info">Đang tải...</p>}
-      {error && <p className="form-error">{error}</p>}
-      {message && <p className="form-success">{message}</p>}
 
       {activeTab === 'menus' && !loading && (
         <div>
