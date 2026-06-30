@@ -1,5 +1,5 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
-import { AlertCircle, Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, Minus, MoreVertical, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
+import { AlertCircle, Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, LayoutGrid, List, Minus, MoreVertical, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   archiveOffering,
@@ -503,6 +503,7 @@ export function OfferingsManager() {
   const [editing, setEditing] = useState<OfferingResponse | null | 'new'>(null)
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
   const [search, setSearch] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => localStorage.getItem('admin.offerings.view') === 'list' ? 'list' : 'grid')
 
   const load = async () => {
     setLoading(true)
@@ -638,6 +639,14 @@ export function OfferingsManager() {
               <Search size={15} className="toolbar-search-icon" aria-hidden="true" />
               <input className="toolbar-search" type="search" placeholder="Tìm theo tên, slug…" value={search} onChange={(e) => setSearch(e.target.value)} />
             </span>
+            <button
+              type="button"
+              className="view-toggle-btn"
+              title={viewMode === 'grid' ? 'Xem dạng danh sách' : 'Xem dạng lưới'}
+              onClick={() => setViewMode((v) => { const next = v === 'grid' ? 'list' : 'grid'; localStorage.setItem('admin.offerings.view', next); return next })}
+            >
+              {viewMode === 'grid' ? <List size={15} /> : <LayoutGrid size={15} />}
+            </button>
           </div>
 
           <div className="status-pills">
@@ -664,6 +673,52 @@ export function OfferingsManager() {
                 <button type="button" className="btn-secondary" onClick={() => { setSearch(''); setStatusFilter('all') }}>Xóa bộ lọc</button>
               )}
             </div>
+          ) : viewMode === 'list' ? (
+            <div className="data-table-wrap">
+              <table className="data-table offering-table">
+                <thead>
+                  <tr>
+                    <th className="col-stt">STT</th>
+                    <th>Ảnh bìa</th>
+                    <th>Tên</th>
+                    <th>Trạng thái</th>
+                    <th className="col-actions">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((item, idx) => {
+                    const cover = item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined
+                    return (
+                      <tr key={item.id}>
+                        <td className="col-stt">{idx + 1}</td>
+                        <td>
+                          <span className="cell-cover">
+                            {cover
+                              ? <img src={cover} alt={item.title} />
+                              : <span className="cell-cover-fallback" style={{ background: TYPE_COLORS[item.type] ?? '#64748b' }}>{item.title[0]?.toUpperCase()}</span>}
+                          </span>
+                        </td>
+                        <td>
+                          <strong className="offering-list-title">{item.title}</strong>
+                          <span className="cell-slug">/{item.slug}</span>
+                          {item.isFeatured && <span className="offering-list-star" title="Nổi bật"><Star size={11} fill="currentColor" /></span>}
+                          {item.status === 'published' && !item.coverMediaId && <span className="offering-no-cover" title="Thiếu ảnh bìa"><AlertCircle size={12} /></span>}
+                        </td>
+                        <td><span className={`status-badge status-${item.status}`}><StatusDot tone={STATUS_TONE[item.status] ?? 'muted'} />{STATUS_LABELS[item.status]}</span></td>
+                        <td className="col-actions">
+                          <button type="button" className="row-action icon-only" title="Sửa" onClick={() => setEditing(item)}><Pencil size={15} /></button>
+                          <a className="row-action icon-only" href={`${TYPE_PREFIX[activeType]}/${item.slug}`} target="_blank" rel="noreferrer" title="Xem website"><ExternalLink size={15} /></a>
+                          {item.status !== 'published'
+                            ? <button type="button" className="row-action icon-only" title="Xuất bản" onClick={() => void handlePublish(item.id)}><Eye size={15} /></button>
+                            : <button type="button" className="row-action icon-only" title="Ẩn" onClick={() => void handleArchive(item.id)}><EyeOff size={15} /></button>}
+                          <button type="button" className="row-action icon-only is-danger" title="Xóa" onClick={() => void handleDelete(item.id)}><Trash2 size={15} /></button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="offering-grid">
               {filtered.map((item, idx) => (
@@ -683,8 +738,8 @@ export function OfferingsManager() {
               ))}
             </div>
           )}
-          {isReorderable && filtered.length > 1 && (
-            <p className="table-hint">Dùng ↑↓ trên mỗi thẻ để sắp xếp thứ tự hiển thị.</p>
+          {viewMode === 'grid' && isReorderable && filtered.length > 1 && (
+            <p className="table-hint">Dùng menu ⋯ trên mỗi thẻ để sắp xếp thứ tự hiển thị.</p>
           )}
         </>
       )}
