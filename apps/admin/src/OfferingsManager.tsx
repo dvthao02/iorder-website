@@ -1,5 +1,5 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
-import { Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
+import { AlertCircle, Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   archiveOffering,
@@ -441,6 +441,9 @@ function OfferingCard({
           <StatusDot tone={STATUS_TONE[offering.status] ?? 'muted'} />
           {STATUS_LABELS[offering.status]}
         </span>
+        {offering.status === 'published' && !offering.coverMediaId && (
+          <span className="offering-no-cover" title="Thiếu ảnh bìa — cần bổ sung"><AlertCircle size={13} /></span>
+        )}
         <div className="offering-card-actions">
           {(onMoveUp || onMoveDown) && (
             <>
