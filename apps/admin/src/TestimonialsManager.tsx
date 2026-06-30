@@ -1,6 +1,6 @@
 import type { MediaAsset, TestimonialInput, TestimonialResponse } from '@iorder/contracts'
 import { ChevronDown, ChevronUp, MessageSquareQuote, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
 import { toast } from './toast'
@@ -138,6 +138,7 @@ export function TestimonialsManager() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled'>('all')
+  const formRef = useRef<HTMLFormElement>(null)
 
   const loadData = async () => {
     const [result, mediaResult] = await Promise.all([listTestimonials(), listMedia('image')])
@@ -151,7 +152,10 @@ export function TestimonialsManager() {
 
   useEffect(() => {
     if (editing === null) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); formRef.current?.requestSubmit() }
+    }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [editing])
@@ -312,7 +316,7 @@ export function TestimonialsManager() {
 
       {editing !== null && (
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={close}>
-          <form className="modal-card" onClick={(e) => e.stopPropagation()} onSubmit={save}>
+          <form ref={formRef} className="modal-card" onClick={(e) => e.stopPropagation()} onSubmit={save}>
             <div className="modal-head">
               <button type="button" className="modal-back" onClick={close}>← Trở về</button>
               <h2>{editing === 'new' ? 'Thêm đánh giá' : 'Sửa đánh giá'}</h2>

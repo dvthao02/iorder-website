@@ -1,6 +1,6 @@
 import type { MediaAsset, PartnerInput, PartnerKind, PartnerResponse } from '@iorder/contracts'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createPartner, deletePartner, listMedia, listPartners, updatePartner } from './api'
 import { toast } from './toast'
@@ -45,6 +45,7 @@ export function PartnersManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerInput>(emptyPartner)
   const [isSaving, setIsSaving] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,7 +62,10 @@ export function PartnersManager() {
 
   useEffect(() => {
     if (!editorOpen) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeEditor() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeEditor()
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); formRef.current?.requestSubmit() }
+    }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [editorOpen])
@@ -287,7 +291,7 @@ export function PartnersManager() {
 
       {editorOpen ? (
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
-          <form className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={save}>
+          <form ref={formRef} className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={save}>
             <div className="modal-head">
               <button type="button" className="modal-back" onClick={closeEditor}>← Trở về</button>
               <h2>{editingId ? 'Sửa đối tác' : 'Thêm đối tác'}</h2>
