@@ -126,6 +126,7 @@ export function HomepageEditor() {
   const dragRef = useRef<{ dx: number; dy: number } | null>(null)
   const resizeRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null)
   const autosaveInFlight = useRef(false)
+  const saveRef = useRef<() => Promise<void>>(async () => undefined)
 
   useEffect(() => {
     Promise.all([getHomepage(), listMedia('image'), listHomepageRevisions()]).then(([{ item }, imageResult, revisionResult]) => {
@@ -269,6 +270,15 @@ export function HomepageEditor() {
       toast.error(text)
     } finally { setBusy(false) }
   }
+  saveRef.current = save
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); void saveRef.current() }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
 
   const publish = async () => {
     setApiStatus('checking')

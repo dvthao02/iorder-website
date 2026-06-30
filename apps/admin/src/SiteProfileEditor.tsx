@@ -1,5 +1,5 @@
 import type { ExternalLinks, MediaAsset, SiteProfileInput, SiteProfileResponse } from '@iorder/contracts'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { type AppearanceSettings, getAppearance, getExternalLinks, getSiteProfile, listMedia, updateAppearance, updateExternalLinks, updateSiteProfile } from './api'
 import { toast } from './toast'
 import { ImagePicker, PageHeader, ToggleSwitch } from './ui'
@@ -61,6 +61,18 @@ export function SiteProfileEditor() {
   const [activeTab, setActiveTab] = useState<'profile' | 'links' | 'appearance'>('profile')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        formRef.current?.requestSubmit()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
 
   useEffect(() => {
     Promise.all([getSiteProfile(), getExternalLinks(), getAppearance(), listMedia('image')])
@@ -143,7 +155,7 @@ export function SiteProfileEditor() {
       </div>
 
       {activeTab === 'profile' && (
-        <form className="admin-form" onSubmit={(e) => void saveProfile(e)}>
+        <form ref={formRef} className="admin-form" onSubmit={(e) => void saveProfile(e)}>
           {PROFILE_FIELDS.map(({ key, label, type }) => (
             <div key={key} className="form-row">
               <label>{label}</label>
@@ -173,7 +185,7 @@ export function SiteProfileEditor() {
       )}
 
       {activeTab === 'links' && (
-        <form className="admin-form" onSubmit={(e) => void saveLinks(e)}>
+        <form ref={formRef} className="admin-form" onSubmit={(e) => void saveLinks(e)}>
           <p className="admin-info">Các URL này dùng để tạo nút CTA, link mạng xã hội và nút tải ứng dụng trên website.</p>
           {LINK_FIELDS.map(({ key, label }) => (
             <div key={key} className="form-row">
@@ -193,7 +205,7 @@ export function SiteProfileEditor() {
       )}
 
       {activeTab === 'appearance' && (
-        <form className="admin-form" onSubmit={(e) => void saveAppearance(e)}>
+        <form ref={formRef} className="admin-form" onSubmit={(e) => void saveAppearance(e)}>
           <p className="admin-info">Tuỳ chỉnh màu sắc chủ đạo và chế độ hiển thị của website.</p>
 
           <div className="form-row" style={{ alignItems: 'center' }}>
