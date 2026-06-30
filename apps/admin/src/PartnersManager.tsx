@@ -59,6 +59,13 @@ export function PartnersManager() {
     void loadData().catch(() => toast.error('Không thể tải danh sách đối tác.')).finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    if (!editorOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeEditor() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [editorOpen])
+
   const logoUrl = (id: string | null) => images.find((image) => image.id === id)?.publicUrl ?? null
 
   const patchForm = <Key extends keyof PartnerInput>(key: Key, value: PartnerInput[Key]) => {

@@ -149,6 +149,13 @@ export function TestimonialsManager() {
     void loadData().catch(() => toast.error('Không thể tải danh sách đánh giá.')).finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    if (editing === null) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [editing])
+
   const avatarMap = new Map(images.map((img) => [img.id, img.publicUrl]))
 
   const isReorderable = !search.trim() && filter === 'all'
