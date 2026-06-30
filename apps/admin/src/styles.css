@@ -333,6 +333,7 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .cell-filename { display: block; color: var(--brand-dark); font-weight: 700; overflow-wrap: anywhere; max-width: 320px; }
 .cell-filename:hover { text-decoration: underline; }
 .cell-desc { display: block; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #475569; }
+.alt-missing { display: inline-flex; vertical-align: middle; margin-left: 5px; color: #f59e0b; opacity: .8; }
 a.row-action { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 
 .view-toggle-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid #cddbe7; border-radius: 8px; background: #fff; color: #607084; cursor: pointer; flex-shrink: 0; transition: border-color .15s, color .15s; }

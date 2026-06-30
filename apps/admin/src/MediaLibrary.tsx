@@ -1,5 +1,5 @@
 import type { MediaAsset, MediaKind, MediaUsage } from '@iorder/contracts'
-import { Copy, ExternalLink, File as FileIcon, LayoutGrid, List, MapPin, Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { AlertCircle, Copy, ExternalLink, File as FileIcon, LayoutGrid, List, MapPin, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
@@ -232,7 +232,10 @@ export function MediaLibrary() {
                   </td>
                   <td><span className={`kind-badge ${isImage(asset) ? 'kind-partner' : 'kind-customer'}`}>{isImage(asset) ? 'Hình ảnh' : 'Tài liệu'}</span></td>
                   <td className="cell-date">{formatFileSize(asset.fileSize)}</td>
-                  <td><span className="cell-desc">{asset.altText || asset.caption || <span className="muted">—</span>}</span></td>
+                  <td>
+                    <span className="cell-desc">{asset.altText || asset.caption || <span className="muted">—</span>}</span>
+                    {isImage(asset) && !asset.altText?.trim() && <span className="alt-missing" title="Chưa có alt text — cần bổ sung cho SEO"><AlertCircle size={13} /></span>}
+                  </td>
                   <td className="cell-date">{formatDate(asset.createdAt)}</td>
                   <td className="col-actions">
                     <button type="button" className="row-action icon-only" title="Sửa mô tả" aria-label={`Sửa ${asset.originalName}`} onClick={() => openEdit(asset)}><Pencil size={16} /></button>

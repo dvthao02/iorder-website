@@ -366,9 +366,9 @@ function OfferingForm({
             <small className="form-hint">{(form.seoTitle ?? '').length}/70 ký tự</small>
           </div>
           <div className="form-row">
-            <label>SEO Description <span className="form-hint-inline">(tối đa 180 ký tự)</span></label>
-            <textarea rows={3} value={form.seoDescription ?? ''} onChange={(e) => set({ seoDescription: e.target.value || null })} maxLength={180} placeholder={form.summary ?? ''} />
-            <small className="form-hint">{(form.seoDescription ?? '').length}/180 ký tự</small>
+            <label>SEO Description <span className="form-hint-inline">(tối đa 160 ký tự)</span></label>
+            <textarea rows={3} value={form.seoDescription ?? ''} onChange={(e) => set({ seoDescription: e.target.value || null })} maxLength={160} placeholder={form.summary ?? ''} />
+            <small className="form-hint">{(form.seoDescription ?? '').length}/160 ký tự</small>
           </div>
           <div className="form-row">
             <label>Canonical URL <span className="form-hint-inline">(để trống nếu không cần)</span></label>
