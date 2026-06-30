@@ -21,7 +21,7 @@ function formatDate(iso: string) {
 
 export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
   const [posts, setPosts] = useState<PostResponse[]>([])
-  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0, offerings: 0, publishedOfferings: 0, hiddenSections: 0, missingAlt: 0, missingSeo: 0, expiringPromotions: 0 })
+  const [counts, setCounts] = useState({ posts: 0, published: 0, drafts: 0, media: 0, partners: 0, testimonials: 0, offerings: 0, publishedOfferings: 0, hiddenSections: 0, missingAlt: 0, missingSeo: 0, expiringPromotions: 0, missingCover: 0 })
   const [homepageStatus, setHomepageStatus] = useState('—')
 
   useEffect(() => {
@@ -39,6 +39,7 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
           testimonials: testimonials.total,
           offerings: offerings.total,
           publishedOfferings: offerings.items.filter((o) => o.status === 'published').length,
+          missingCover: offerings.items.filter((o) => o.status === 'published' && !o.coverMediaId).length,
           hiddenSections: homepage.item?.blocks.filter((block) => !block.isEnabled).length ?? 0,
           missingAlt: media.items.filter((asset) => asset.mimeType.startsWith('image/') && !asset.altText?.trim()).length,
           missingSeo: items.filter((post) => !post.seoTitle?.trim() || !post.seoDescription?.trim()).length,
@@ -66,6 +67,7 @@ export function Dashboard({ onOpen }: { onOpen: (module: string) => void }) {
   if (counts.hiddenSections > 0) todos.push({ icon: Star, text: `${counts.hiddenSections} section trang chủ đang ẩn`, module: 'homepage' })
   if (counts.missingAlt > 0) todos.push({ icon: ImageIcon, text: `${counts.missingAlt} ảnh chưa có alt text`, module: 'media' })
   if (counts.missingSeo > 0) todos.push({ icon: FileText, text: `${counts.missingSeo} bài viết thiếu thông tin SEO`, module: 'posts' })
+  if (counts.missingCover > 0) todos.push({ icon: Boxes, text: `${counts.missingCover} sản phẩm đã xuất bản chưa có ảnh bìa`, module: 'offerings' })
   if (counts.expiringPromotions > 0) todos.push({ icon: FileText, text: `${counts.expiringPromotions} khuyến mãi sắp hết hạn`, module: 'posts' })
   if (todos.length === 0) todos.push({ icon: Star, text: 'Mọi thứ đã sẵn sàng 🎉', module: 'dashboard' })
 

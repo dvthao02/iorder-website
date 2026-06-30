@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { deleteContentLink, deleteMenuItem, listLinkGroups, listMenus, seedDefaultMenus, upsertContentLink, upsertMenuItem } from './api'
 import { toast } from './toast'
-import { PageHeader, StatusDot, ToggleSwitch } from './ui'
+import { PageHeader, ToggleSwitch } from './ui'
 
 type MenuItem = {
   id: string
@@ -79,6 +79,18 @@ function MenuItemRow({
     }
   }
 
+  const quickToggle = async (enabled: boolean) => {
+    setBusy(true)
+    try {
+      await upsertMenuItem(location, item.id, { label: item.label, url: item.url, target: item.target as '_self' | '_blank', icon: item.icon, sortOrder: item.sortOrder, isEnabled: enabled, parentId: item.parentId })
+      onRefresh()
+    } catch {
+      toast.error('Không thể đổi trạng thái.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const remove = async () => {
     setBusy(true)
     try {
@@ -110,7 +122,7 @@ function MenuItemRow({
         </div>
       ) : (
         <div className="nav-item-row">
-          <StatusDot tone={item.isEnabled ? 'on' : 'muted'} />
+          <ToggleSwitch checked={item.isEnabled} onChange={(next) => void quickToggle(next)} label="" hint="" disabled={busy} />
           <span className={item.isEnabled ? '' : 'nav-disabled'}>
             <strong>{item.label}</strong> <small>→ {item.url}</small>
             {item.target === '_blank' && <small> ↗</small>}
@@ -231,6 +243,18 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
     }
   }
 
+  const quickToggleLink = async (link: ContentLink, enabled: boolean) => {
+    setBusy(true)
+    try {
+      await upsertContentLink(group.code, link.id, { label: link.label, url: link.url, type: link.type, target: link.target, sortOrder: link.sortOrder, isEnabled: enabled, icon: link.icon })
+      onRefresh()
+    } catch {
+      toast.error('Không thể đổi trạng thái.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="link-group-section">
       <h4>{group.name} <small>({group.code})</small></h4>
@@ -251,7 +275,7 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
           </div>
         ) : (
           <div key={link.id} className="nav-item-row">
-            <StatusDot tone={link.isEnabled ? 'on' : 'muted'} />
+            <ToggleSwitch checked={link.isEnabled} onChange={(next) => void quickToggleLink(link, next)} label="" hint="" disabled={busy} />
             <span className={link.isEnabled ? '' : 'nav-disabled'}>
               <strong>{link.label}</strong> <small>→ {link.url}</small>
             </span>

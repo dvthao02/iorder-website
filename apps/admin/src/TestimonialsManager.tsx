@@ -256,7 +256,8 @@ export function TestimonialsManager() {
       {items.length === 0 && (
         <div className="admin-empty">
           <MessageSquareQuote size={36} />
-          <p>Chưa có đánh giá nào. Nhấn "+ Thêm đánh giá" để bắt đầu.</p>
+          <p>Chưa có đánh giá nào.</p>
+          <button type="button" className="btn-primary btn-icon" onClick={openNew}><Plus size={15} /> Thêm đánh giá đầu tiên</button>
         </div>
       )}
 
