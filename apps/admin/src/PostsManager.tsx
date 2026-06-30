@@ -304,6 +304,12 @@ export function PostsManager() {
   const editingStatus = posts.find((post) => post.id === selectedId)?.status
   const coverUrl = images.find((image) => image.id === form.coverMediaId)?.publicUrl ?? null
   const mediaMap = new Map(images.map((img) => [img.id, img.publicUrl]))
+
+  const wordCount = useMemo(() => {
+    if (!form.body) return 0
+    const text = form.body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    return text ? text.split(' ').length : 0
+  }, [form.body])
   const hasEditor = creating || selectedId !== null
 
   const savePostRef = useRef(savePost)
@@ -574,6 +580,7 @@ export function PostsManager() {
             </div>
 
             <div className="modal-foot">
+              {wordCount > 0 && <span className="modal-foot-start word-count">{wordCount} từ · ~{Math.ceil(wordCount / 200)} phút đọc</span>}
               <button type="button" className="secondary-button" onClick={closeEditor}>Đóng</button>
               <button type="button" className="secondary-button btn-icon" disabled={isSaving} onClick={() => void savePost()}><FileText size={15} /> Lưu nháp</button>
               <button type="button" className="secondary-button btn-icon" onClick={() => previewPost(form.slug)}><Eye size={15} /> Xem trước</button>

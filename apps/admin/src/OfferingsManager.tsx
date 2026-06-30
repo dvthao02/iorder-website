@@ -153,12 +153,13 @@ function TagInput({ tags, onChange }: { tags: string[]; onChange: (next: string[
 type Tab = 'basic' | 'content' | 'seo' | 'preview'
 
 function OfferingForm({
-  initial, images, onSave, onCancel,
+  initial, images, onSave, onCancel, onDuplicate,
 }: {
   initial: OfferingInput
   images: MediaAsset[]
   onSave: (input: OfferingInput) => Promise<void>
   onCancel: () => void
+  onDuplicate?: () => Promise<void>
 }) {
   const [form, setForm] = useState<OfferingInput>(initial)
   const [tab, setTab] = useState<Tab>('basic')
@@ -390,6 +391,7 @@ function OfferingForm({
       )}{/* /form-content-wrap */}
 
       <div className="modal-foot">
+        {onDuplicate && <button type="button" className="btn-secondary modal-foot-start" onClick={() => void onDuplicate()} disabled={saving}>Nhân bản</button>}
         <button type="button" className="btn-secondary" onClick={onCancel} disabled={saving}>Hủy</button>
         <button type="submit" className="btn-primary" disabled={saving}>
           {saving ? 'Đang lưu...' : 'Lưu nháp'}
@@ -525,6 +527,20 @@ export function OfferingsManager() {
     setEditing(null)
     await load()
     toast.success('Đã lưu nội dung.')
+  }
+
+  const handleDuplicate = async (item: OfferingResponse) => {
+    try {
+      const input = toOfferingInput(item)
+      input.title = `Bản sao: ${item.title}`
+      input.slug = `${item.slug}-copy-${Date.now().toString(36)}`
+      const result = await createOffering(input)
+      await load()
+      setEditing(result.item)
+      toast.success('Đã tạo bản sao.')
+    } catch {
+      toast.error('Không thể nhân bản.')
+    }
   }
 
   const handleToggleFeatured = async (id: string) => {
@@ -700,6 +716,7 @@ export function OfferingsManager() {
                 initial={editing === 'new' ? emptyInput(activeType) : { ...editing, contentJson: editing.contentJson as OfferingContent }}
                 onSave={handleSave}
                 onCancel={() => setEditing(null)}
+                {...(editing !== 'new' ? { onDuplicate: async () => handleDuplicate(editing as OfferingResponse) } : {})}
               />
             </div>
           </div>

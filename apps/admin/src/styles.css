@@ -887,6 +887,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .modal-foot .btn-primary, .modal-foot .secondary-button, .modal-foot .btn-secondary, .modal-foot .btn-danger, .modal-foot .split-main, .modal-foot .split-caret { min-height: 34px; height: 34px; padding: 0 14px; font-size: 13px; }
 .modal-foot .split-caret { padding: 0 6px; }
 .modal-foot-start { margin-right: auto; }
+.word-count { font-size: 12px; color: #94a3b8; font-weight: 500; white-space: nowrap; }
 
 /* ── Toast (thông báo nổi) ──────────────────────────────────────────────────── */
 .toast-host { position: fixed; top: 18px; right: 18px; z-index: 80; display: flex; flex-direction: column; gap: 10px; max-width: 380px; }
