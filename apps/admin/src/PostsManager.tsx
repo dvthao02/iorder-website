@@ -102,6 +102,7 @@ export function PostsManager() {
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState<PostInput>(emptyPost)
   const [isSaving, setIsSaving] = useState(false)
+  const initialFormRef = useRef<PostInput | null>(null)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<PostFilter>('all')
@@ -175,9 +176,11 @@ export function PostsManager() {
   }
 
   function selectPost(post: PostResponse) {
+    const f = toInput(post)
     setSelectedId(post.id)
     setCreating(false)
-    setForm(toInput(post))
+    setForm(f)
+    initialFormRef.current = f
     setShowCoverPicker(false)
   }
 
@@ -185,14 +188,18 @@ export function PostsManager() {
     setSelectedId(null)
     setCreating(true)
     setForm(emptyPost)
+    initialFormRef.current = emptyPost
     setShowCoverPicker(false)
   }
 
   const closeEditor = () => {
+    const isDirty = initialFormRef.current !== null && JSON.stringify(form) !== JSON.stringify(initialFormRef.current)
+    if (isDirty && !confirm('Bài viết có thay đổi chưa lưu. Đóng mà không lưu?')) return
     setSelectedId(null)
     setCreating(false)
     setShowCoverPicker(false)
     setPublishMenu(false)
+    initialFormRef.current = null
   }
 
   const savePost = async () => {
@@ -201,7 +208,9 @@ export function PostsManager() {
       const result = selectedId ? await updatePost(selectedId, form) : await createPost(form)
       setSelectedId(result.item.id)
       setCreating(false)
-      setForm(toInput(result.item))
+      const savedForm = toInput(result.item)
+      setForm(savedForm)
+      initialFormRef.current = savedForm
       await loadData()
       toast.success('Đã lưu bản nháp.')
     } catch (error) {
@@ -220,6 +229,7 @@ export function PostsManager() {
       const result = await publishPost(saved.item.id)
       setCreating(false)
       setForm(toInput(result.item))
+      initialFormRef.current = null
       await loadData()
       closeEditor()
       toast.success('Đã xuất bản bài viết.')
@@ -382,7 +392,7 @@ export function PostsManager() {
       </aside>
 
       {hasEditor ? (
-        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
+        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (initialFormRef.current === null || JSON.stringify(form) === JSON.stringify(initialFormRef.current)) closeEditor() }}>
           <div className="modal-card modal-card-lg" onClick={(event) => event.stopPropagation()}>
             <div className="modal-head">
               <button type="button" className="modal-back" onClick={closeEditor}>← Trở về</button>

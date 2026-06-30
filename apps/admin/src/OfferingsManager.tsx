@@ -392,7 +392,7 @@ function OfferingForm({
 
 // ── Offering card ──────────────────────────────────────────────────────────────
 function OfferingCard({
-  offering, coverUrl, typePrefix, onEdit, onPublish, onArchive, onDelete, onMoveUp, onMoveDown,
+  offering, coverUrl, typePrefix, onEdit, onPublish, onArchive, onDelete, onMoveUp, onMoveDown, onToggleFeatured,
 }: {
   offering: OfferingResponse
   coverUrl: string | undefined
@@ -403,6 +403,7 @@ function OfferingCard({
   onDelete: () => Promise<void>
   onMoveUp: (() => Promise<void>) | null
   onMoveDown: (() => Promise<void>) | null
+  onToggleFeatured: () => Promise<void>
 }) {
   const [busy, setBusy] = useState(false)
   const act = async (fn: () => Promise<void>) => { setBusy(true); try { await fn() } finally { setBusy(false) } }
@@ -435,6 +436,15 @@ function OfferingCard({
               <button type="button" title="Xuống" onClick={() => onMoveDown && void act(onMoveDown)} disabled={busy || !onMoveDown}><ChevronDown size={14} /></button>
             </>
           )}
+          <button
+            type="button"
+            title={offering.isFeatured ? 'Đang nổi bật — bấm để bỏ' : 'Đánh dấu nổi bật'}
+            className={offering.isFeatured ? 'act-featured' : ''}
+            onClick={() => void act(onToggleFeatured)}
+            disabled={busy}
+          >
+            <Star size={14} fill={offering.isFeatured ? 'currentColor' : 'none'} />
+          </button>
           <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}>
             <Pencil size={15} />
           </button>
@@ -506,6 +516,18 @@ export function OfferingsManager() {
     setEditing(null)
     await load()
     toast.success('Đã lưu nội dung.')
+  }
+
+  const handleToggleFeatured = async (id: string) => {
+    const item = items.find((i) => i.id === id)
+    if (!item) return
+    try {
+      await updateOffering(id, { ...toOfferingInput(item), isFeatured: !item.isFeatured })
+      await load()
+      toast.success(item.isFeatured ? 'Đã bỏ đánh dấu nổi bật.' : 'Đã đánh dấu nổi bật.')
+    } catch {
+      toast.error('Không thể cập nhật.')
+    }
   }
 
   const handlePublish = async (id: string) => {
@@ -634,6 +656,7 @@ export function OfferingsManager() {
                   onDelete={async () => handleDelete(item.id)}
                   onMoveUp={isReorderable && idx > 0 ? async () => moveItem(item.id, 'up') : null}
                   onMoveDown={isReorderable && idx < filtered.length - 1 ? async () => moveItem(item.id, 'down') : null}
+                  onToggleFeatured={async () => handleToggleFeatured(item.id)}
                 />
               ))}
             </div>

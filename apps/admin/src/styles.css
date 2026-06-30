@@ -654,6 +654,8 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .offering-card-preview-link:hover { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
 .offering-card-actions button.act-publish:hover { background: #dcfce7; border-color: #86efac; color: #16a34a; }
 .offering-card-actions button.act-danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.offering-card-actions button.act-featured { color: #f59e0b; }
+.offering-card-actions button.act-featured:hover { background: #fef9c3; border-color: #fde68a; color: #d97706; }
 .offering-card-actions button:disabled { opacity: .35; cursor: default; }
 
 .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }

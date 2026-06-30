@@ -77,7 +77,7 @@ export function AdminApp() {
       listPosts().then((res) => res.items.filter((p) => p.status === 'draft').length),
       listOfferings(undefined, 'draft').then((res) => res.total),
     ]).then(([posts, offerings]) => setBadges({ posts, offerings })).catch(() => undefined)
-  }, [user])
+  }, [user, activeModule])
 
   // Điều hướng theo trạng thái đăng nhập: chưa đăng nhập → /login; đã đăng nhập mà ở /login → /
   useEffect(() => {
