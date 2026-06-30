@@ -1,6 +1,6 @@
 import type { MediaAsset, MediaKind, MediaUsage } from '@iorder/contracts'
 import { AlertCircle, Copy, ExternalLink, File as FileIcon, LayoutGrid, List, MapPin, Pencil, Plus, Trash2, Upload } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
 import { toast } from './toast'
@@ -102,6 +102,18 @@ export function MediaLibrary() {
       setIsSaving(false)
     }
   }
+
+  const saveEditRef = useRef(saveEdit)
+  useEffect(() => { saveEditRef.current = saveEdit })
+  useEffect(() => {
+    if (!editing) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEditing(null)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); void saveEditRef.current() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [editing])
 
   const loadUsage = async (id: string) => {
     if (usage) { setUsage(null); return }
