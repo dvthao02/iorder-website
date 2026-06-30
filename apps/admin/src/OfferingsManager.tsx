@@ -614,7 +614,8 @@ export function OfferingsManager() {
       {!loading && items.length === 0 && (
         <div className="admin-empty">
           <Archive size={36} />
-          <p>Chưa có nội dung nào. Nhấn "+ Thêm mới" để bắt đầu.</p>
+          <p>Chưa có nội dung nào trong mục này.</p>
+          <button type="button" className="btn-primary btn-icon" onClick={() => setEditing('new')}><Plus size={15} /> Thêm mới</button>
         </div>
       )}
 

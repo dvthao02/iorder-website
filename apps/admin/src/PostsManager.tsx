@@ -267,6 +267,20 @@ export function PostsManager() {
     if (slug) window.open(`/tin-tuc/${slug}`, '_blank', 'noopener')
   }
 
+  const duplicatePost = async (post: PostResponse) => {
+    try {
+      const copy = toInput(post)
+      copy.title = `Bản sao: ${post.title}`
+      copy.slug = `${post.slug}-copy-${Date.now().toString(36)}`
+      const result = await createPost(copy)
+      await loadData()
+      selectPost(result.item)
+      toast.success('Đã tạo bản sao.')
+    } catch {
+      toast.error('Không thể nhân bản bài viết.')
+    }
+  }
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
     return posts.filter((post) => {
@@ -367,6 +381,7 @@ export function PostsManager() {
                           <div className="card-menu" role="menu">
                             <button type="button" role="menuitem" onClick={() => { setMenuId(null); selectPost(post) }}>Sửa</button>
                             <button type="button" role="menuitem" onClick={() => { setMenuId(null); previewPost(post.slug) }}>Xem trước</button>
+                            <button type="button" role="menuitem" onClick={() => { setMenuId(null); void duplicatePost(post) }}>Nhân bản</button>
                             {post.status === 'published'
                               ? <button type="button" role="menuitem" onClick={() => { setMenuId(null); void archive(post.id) }}>Ẩn bài</button>
                               : <button type="button" role="menuitem" onClick={() => { setMenuId(null); void quickPublish(post.id) }}>Xuất bản</button>}

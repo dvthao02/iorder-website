@@ -185,7 +185,15 @@ export function PartnersManager() {
         </select>
       </div>
 
-      <div className="data-table-wrap">
+      {items.length === 0 && (
+        <div className="admin-empty">
+          <Plus size={36} />
+          <p>Chưa có đối tác nào.</p>
+          <button type="button" className="btn-primary btn-icon" onClick={openCreate}><Plus size={15} /> Thêm đối tác đầu tiên</button>
+        </div>
+      )}
+
+      {items.length > 0 && <div className="data-table-wrap">
         <table className="data-table partner-table">
           <thead>
             <tr>
@@ -243,8 +251,8 @@ export function PartnersManager() {
             })}
           </tbody>
         </table>
-      </div>
-      <p className="table-hint">{isReorderable ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.' : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}</p>
+      </div>}
+      {items.length > 0 && <p className="table-hint">{isReorderable ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.' : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}</p>}
 
       <div className="preview-panel">
         <div className="preview-head">
