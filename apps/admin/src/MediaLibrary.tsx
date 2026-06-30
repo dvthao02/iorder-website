@@ -257,7 +257,7 @@ export function MediaLibrary() {
           </table>
         </div>
       )}
-      <p className="table-hint">{items.length} file</p>
+      <p className="table-hint">{sortedItems.length}{sortedItems.length !== items.length ? `/${items.length}` : ''} file · {formatFileSize(items.reduce((sum, a) => sum + a.fileSize, 0))} tổng dung lượng</p>
 
       {uploadOpen ? (
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setUploadOpen(false)}>
