@@ -418,7 +418,7 @@ function OfferingCard({
   onToggleFeatured: () => Promise<void>
 }) {
   const [busy, setBusy] = useState(false)
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
+  const [menuPos, setMenuPos] = useState<{ bottom: number; right: number } | null>(null)
   const kebabRef = useRef<HTMLButtonElement>(null)
   const act = async (fn: () => Promise<void>) => { setBusy(true); setMenuPos(null); try { await fn() } finally { setBusy(false) } }
   const color = TYPE_COLORS[offering.type] ?? '#64748b'
@@ -426,7 +426,7 @@ function OfferingCard({
   const openMenu = () => {
     if (!kebabRef.current) return
     const r = kebabRef.current.getBoundingClientRect()
-    setMenuPos({ top: r.top, right: window.innerWidth - r.right })
+    setMenuPos({ bottom: window.innerHeight - r.top + 4, right: window.innerWidth - r.right })
   }
 
   return (
@@ -462,7 +462,7 @@ function OfferingCard({
           {menuPos && (
             <>
               <div className="menu-backdrop" onClick={() => setMenuPos(null)} />
-              <div className="card-menu offering-card-menu" role="menu" style={{ position: 'fixed', right: menuPos.right, top: menuPos.top, bottom: 'auto', transform: 'translateY(-100%) translateY(-4px)' }}>
+              <div className="card-menu offering-card-menu" role="menu" style={{ position: 'fixed', right: menuPos.right, bottom: menuPos.bottom, top: 'auto' }}>
                 {onMoveUp && <button type="button" role="menuitem" onClick={() => void act(onMoveUp)}>↑ Lên</button>}
                 {onMoveDown && <button type="button" role="menuitem" onClick={() => void act(onMoveDown)}>↓ Xuống</button>}
                 <button type="button" role="menuitem" onClick={() => void act(onToggleFeatured)}>
