@@ -104,6 +104,13 @@ function MenuItemRow({
     }
   }
 
+  useEffect(() => {
+    if (!editing) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setEditing(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [editing])
+
   return (
     <div className="nav-item" style={{ marginLeft: depth * 20 }}>
       {editing ? (
