@@ -1,6 +1,6 @@
 import type { CategoryResponse, MediaAsset, PostInput, PostResponse } from '@iorder/contracts'
 import { Calendar, ChevronDown, ChevronRight, ExternalLink, Eye, FileText, Image as ImageIcon, MoreVertical, Plus, Search, Send, SlidersHorizontal, Trash2, Upload } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { archivePost, createCategory, createPost, deleteCategory, listCategories, listMedia, listPosts, publishPost, updatePost } from './api'
 import { RichTextEditor } from './RichTextEditor'
@@ -281,6 +281,17 @@ export function PostsManager() {
   const coverUrl = images.find((image) => image.id === form.coverMediaId)?.publicUrl ?? null
   const mediaMap = new Map(images.map((img) => [img.id, img.publicUrl]))
   const hasEditor = creating || selectedId !== null
+
+  const savePostRef = useRef(savePost)
+  useEffect(() => { savePostRef.current = savePost })
+  useEffect(() => {
+    if (!hasEditor) return
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); void savePostRef.current() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [hasEditor])
 
   const FILTERS: Array<{ key: PostFilter; label: string }> = [
     { key: 'all', label: 'Tất cả' },

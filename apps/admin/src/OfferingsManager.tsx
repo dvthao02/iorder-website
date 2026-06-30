@@ -1,5 +1,5 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
-import { Archive, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import {
   archiveOffering,
@@ -392,7 +392,7 @@ function OfferingForm({
 
 // ── Offering card ──────────────────────────────────────────────────────────────
 function OfferingCard({
-  offering, coverUrl, typePrefix, onEdit, onPublish, onArchive, onDelete,
+  offering, coverUrl, typePrefix, onEdit, onPublish, onArchive, onDelete, onMoveUp, onMoveDown,
 }: {
   offering: OfferingResponse
   coverUrl: string | undefined
@@ -401,6 +401,8 @@ function OfferingCard({
   onPublish: () => Promise<void>
   onArchive: () => Promise<void>
   onDelete: () => Promise<void>
+  onMoveUp: (() => Promise<void>) | null
+  onMoveDown: (() => Promise<void>) | null
 }) {
   const [busy, setBusy] = useState(false)
   const act = async (fn: () => Promise<void>) => { setBusy(true); try { await fn() } finally { setBusy(false) } }
@@ -427,6 +429,12 @@ function OfferingCard({
           {STATUS_LABELS[offering.status]}
         </span>
         <div className="offering-card-actions">
+          {(onMoveUp || onMoveDown) && (
+            <>
+              <button type="button" title="Lên" onClick={() => onMoveUp && void act(onMoveUp)} disabled={busy || !onMoveUp}><ChevronUp size={14} /></button>
+              <button type="button" title="Xuống" onClick={() => onMoveDown && void act(onMoveDown)} disabled={busy || !onMoveDown}><ChevronDown size={14} /></button>
+            </>
+          )}
           <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}>
             <Pencil size={15} />
           </button>
@@ -459,6 +467,16 @@ function OfferingCard({
   )
 }
 
+function toOfferingInput(item: OfferingResponse): OfferingInput {
+  return {
+    type: item.type, title: item.title, slug: item.slug,
+    summary: item.summary, icon: item.icon, coverMediaId: item.coverMediaId,
+    sortOrder: item.sortOrder, isFeatured: item.isFeatured,
+    seoTitle: item.seoTitle, seoDescription: item.seoDescription,
+    canonicalUrl: item.canonicalUrl, contentJson: item.contentJson,
+  }
+}
+
 // ── Main manager ───────────────────────────────────────────────────────────────
 export function OfferingsManager() {
   const [activeType, setActiveType] = useState<OfferingType>('software')
@@ -467,6 +485,7 @@ export function OfferingsManager() {
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState<OfferingResponse | null | 'new'>(null)
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
+  const [search, setSearch] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -479,7 +498,7 @@ export function OfferingsManager() {
   }
 
   useEffect(() => { void load() }, [activeType])
-  useEffect(() => { setStatusFilter('all') }, [activeType])
+  useEffect(() => { setStatusFilter('all'); setSearch('') }, [activeType])
 
   const handleSave = async (input: OfferingInput) => {
     if (editing === 'new') await createOffering(input)
@@ -502,6 +521,24 @@ export function OfferingsManager() {
     await deleteOffering(id); await load(); toast.warning('Đã xóa nội dung.')
   }
 
+  const moveItem = async (id: string, direction: 'up' | 'down') => {
+    const s = [...items].sort((a, b) => a.sortOrder - b.sortOrder)
+    const idx = s.findIndex((i) => i.id === id)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    const a = s[idx]
+    const b = s[swapIdx]
+    if (!a || !b) return
+    try {
+      await Promise.all([
+        updateOffering(a.id, { ...toOfferingInput(a), sortOrder: b.sortOrder }),
+        updateOffering(b.id, { ...toOfferingInput(b), sortOrder: a.sortOrder }),
+      ])
+      await load()
+    } catch {
+      toast.error('Không thể đổi thứ tự.')
+    }
+  }
+
   const coverMap = new Map(images.map((img) => [img.id, img.publicUrl]))
 
   const statusCounts = useMemo(() => ({
@@ -511,10 +548,15 @@ export function OfferingsManager() {
     archived: items.filter((i) => i.status === 'archived').length,
   }), [items])
 
-  const filtered = useMemo(() =>
-    statusFilter === 'all' ? items : items.filter((i) => i.status === statusFilter),
-    [items, statusFilter]
-  )
+  const isReorderable = !search.trim() && statusFilter === 'all'
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return items
+      .filter((i) => statusFilter === 'all' || i.status === statusFilter)
+      .filter((i) => !query || i.title.toLowerCase().includes(query) || i.slug.toLowerCase().includes(query))
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+  }, [items, statusFilter, search])
 
   return (
     <div className="admin-module">
@@ -547,6 +589,13 @@ export function OfferingsManager() {
 
       {!loading && items.length > 0 && (
         <>
+          <div className="toolbar">
+            <span className="toolbar-search-wrap">
+              <Search size={15} className="toolbar-search-icon" aria-hidden="true" />
+              <input className="toolbar-search" type="search" placeholder="Tìm theo tên, slug…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </span>
+          </div>
+
           <div className="status-pills">
             {(['all', 'draft', 'published', 'archived'] as const).map((key) => {
               const LABELS = { all: 'Tất cả', draft: 'Nháp', published: 'Đã đăng', archived: 'Đã ẩn' }
@@ -568,7 +617,7 @@ export function OfferingsManager() {
             <p className="admin-info">Không có mục nào với trạng thái đã chọn.</p>
           ) : (
             <div className="offering-grid">
-              {filtered.map((item) => (
+              {filtered.map((item, idx) => (
                 <OfferingCard
                   key={item.id}
                   offering={item}
@@ -578,6 +627,8 @@ export function OfferingsManager() {
                   onPublish={async () => handlePublish(item.id)}
                   onArchive={async () => handleArchive(item.id)}
                   onDelete={async () => handleDelete(item.id)}
+                  onMoveUp={isReorderable && idx > 0 ? async () => moveItem(item.id, 'up') : null}
+                  onMoveDown={isReorderable && idx < filtered.length - 1 ? async () => moveItem(item.id, 'down') : null}
                 />
               ))}
             </div>

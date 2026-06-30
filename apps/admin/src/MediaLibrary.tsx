@@ -1,5 +1,5 @@
 import type { MediaAsset, MediaKind, MediaUsage } from '@iorder/contracts'
-import { Copy, ExternalLink, MapPin, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Copy, ExternalLink, File as FileIcon, MapPin, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
@@ -29,6 +29,7 @@ export function MediaLibrary() {
   const [uploadCaption, setUploadCaption] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
 
   const [editing, setEditing] = useState<MediaAsset | null>(null)
   const [editAlt, setEditAlt] = useState('')
@@ -207,10 +208,30 @@ export function MediaLibrary() {
               <button type="button" className="modal-close" onClick={() => setUploadOpen(false)} aria-label="Đóng">✕</button>
             </div>
             <div className="modal-body">
-              <label>
-                Chọn file
-                <input required accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip" type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-              </label>
+              <div
+                className={`drop-zone${isDragging ? ' is-dragging' : ''}${file ? ' has-file' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false) }}
+                onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) { setFile(f); setUploadAlt(''); setUploadCaption('') } }}
+              >
+                {file ? (
+                  <div className="drop-zone-selected">
+                    <FileIcon size={20} className="drop-zone-file-icon" />
+                    <span className="drop-zone-filename">{file.name}</span>
+                    <button type="button" className="drop-zone-clear" title="Bỏ chọn" onClick={() => setFile(null)}>×</button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={28} className="drop-zone-icon" />
+                    <p>Kéo thả file vào đây</p>
+                    <span className="drop-zone-or">hoặc</span>
+                    <label className="btn-secondary drop-zone-browse">
+                      Chọn file
+                      <input hidden accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.zip" type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+                    </label>
+                  </>
+                )}
+              </div>
               <label>
                 Alt text cho hình ảnh
                 <input maxLength={500} value={uploadAlt} onChange={(event) => setUploadAlt(event.target.value)} />

@@ -652,6 +652,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .offering-card-preview-link:hover { background: #f0f9ff; border-color: #bae6fd; color: var(--brand); }
 .offering-card-actions button.act-publish:hover { background: #dcfce7; border-color: #86efac; color: #16a34a; }
 .offering-card-actions button.act-danger:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.offering-card-actions button:disabled { opacity: .35; cursor: default; }
 
 .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 .status-draft { background: #fef9c3; color: #92400e; }
@@ -765,6 +766,23 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .toolbar-search { flex: 1 1 260px; min-width: 200px; min-height: 40px; padding: 8px 12px; border: 1px solid #cddbe7; border-radius: 10px; font: inherit; }
 .toolbar select { min-height: 40px; padding: 8px 12px; border: 1px solid #cddbe7; border-radius: 10px; font: inherit; background: #fff; }
 .toolbar-search:focus, .toolbar select:focus { outline: none; border-color: var(--brand); }
+.toolbar-search-wrap { position: relative; flex: 1 1 260px; display: flex; align-items: center; }
+.toolbar-search-wrap .toolbar-search-icon { position: absolute; left: 12px; color: #94a3b8; pointer-events: none; }
+.toolbar-search-wrap .toolbar-search { padding-left: 36px; width: 100%; }
+
+/* ── Upload drop zone ──────────────────────────────────────────────────────── */
+.drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px 24px; border: 2px dashed #cddbe7; border-radius: 12px; background: #f8fafc; text-align: center; transition: border-color .15s, background .15s; cursor: default; margin-bottom: 12px; }
+.drop-zone.is-dragging { border-color: var(--brand); background: #e0f2fe; }
+.drop-zone.has-file { border-style: solid; border-color: #86efac; background: #f0fdf4; padding: 18px 24px; }
+.drop-zone-icon { color: #94a3b8; }
+.drop-zone p { margin: 0; font-size: 14px; color: #475569; font-weight: 600; }
+.drop-zone-or { font-size: 12px; color: #94a3b8; }
+.drop-zone-browse { cursor: pointer; }
+.drop-zone-selected { display: flex; align-items: center; gap: 10px; }
+.drop-zone-file-icon { color: #64748b; flex-shrink: 0; }
+.drop-zone-filename { font-size: 13px; font-weight: 600; color: #334155; word-break: break-all; }
+.drop-zone-clear { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: #e2e8f0; color: #64748b; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; flex-shrink: 0; }
+.drop-zone-clear:hover { background: #fecaca; color: #dc2626; }
 
 /* ── Data table (bảng danh sách) ────────────────────────────────────────────── */
 .data-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
