@@ -1,6 +1,7 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
 import { AlertCircle, Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, LayoutGrid, List, Minus, MoreVertical, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   archiveOffering,
   createOffering,
@@ -459,10 +460,10 @@ function OfferingCard({
           <button ref={kebabRef} type="button" className="offering-kebab" aria-label="Thao tác" disabled={busy} onClick={openMenu}>
             <MoreVertical size={15} />
           </button>
-          {menuPos && (
+          {menuPos && createPortal(
             <>
               <div className="menu-backdrop" onClick={() => setMenuPos(null)} />
-              <div className="card-menu offering-card-menu" role="menu" style={{ position: 'fixed', right: menuPos.right, bottom: menuPos.bottom, top: 'auto' }}>
+              <div className="card-menu offering-card-menu" role="menu" style={{ position: 'fixed', right: menuPos.right, bottom: menuPos.bottom, top: 'auto', zIndex: 9999 }}>
                 {onMoveUp && <button type="button" role="menuitem" onClick={() => void act(onMoveUp)}>↑ Lên</button>}
                 {onMoveDown && <button type="button" role="menuitem" onClick={() => void act(onMoveDown)}>↓ Xuống</button>}
                 <button type="button" role="menuitem" onClick={() => void act(onToggleFeatured)}>
@@ -476,7 +477,8 @@ function OfferingCard({
                   : <button type="button" role="menuitem" onClick={() => void act(onArchive)}><EyeOff size={13} /> Ẩn nội dung</button>}
                 <button type="button" role="menuitem" className="card-menu-danger" onClick={() => void act(onDelete)}><Trash2 size={13} /> Xóa</button>
               </div>
-            </>
+            </>,
+            document.body
           )}
         </div>
       </div>

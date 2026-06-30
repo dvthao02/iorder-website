@@ -959,7 +959,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .post-card-kebab { margin: 8px 6px 0 0; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 8px; background: transparent; color: #94a3b8; cursor: pointer; }
 .post-card-kebab:hover { background: #eef4f8; color: #475569; }
 
-.menu-backdrop { position: fixed; inset: 0; z-index: 30; }
+.menu-backdrop { position: fixed; inset: 0; z-index: 9998; }
 .card-menu { position: absolute; top: 36px; right: 6px; z-index: 31; min-width: 150px; display: grid; padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: #fff; box-shadow: 0 16px 36px rgba(15,35,68,.18); }
 .card-menu.align-right { right: 0; top: 44px; }
 .card-menu.align-up { top: auto; bottom: 46px; }
