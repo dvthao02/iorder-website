@@ -472,7 +472,7 @@ export function PostsManager() {
               ) : null}
 
               <label className="full-field">
-                Tiêu đề
+                Tiêu đề <span className="field-counter">{form.title.length}/220</span>
                 <input required maxLength={220} placeholder="Nhập tiêu đề bài viết" value={form.title} onChange={(event) => {
                   const title = event.target.value
                   setForm((currentForm) => ({ ...currentForm, title, ...(creating ? { slug: slugify(title) } : {}) }))
