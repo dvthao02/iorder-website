@@ -1,5 +1,5 @@
 import type { MediaAsset, MediaKind, MediaUsage } from '@iorder/contracts'
-import { Copy, ExternalLink, File as FileIcon, MapPin, Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { Copy, ExternalLink, File as FileIcon, LayoutGrid, List, MapPin, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
@@ -22,6 +22,7 @@ export function MediaLibrary() {
   const [kind, setKind] = useState<KindFilter>('all')
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => localStorage.getItem('admin.media.view') === 'grid' ? 'grid' : 'table')
 
   const [uploadOpen, setUploadOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -151,53 +152,88 @@ export function MediaLibrary() {
           <option value="image">Hình ảnh ({counts.image})</option>
           <option value="document">Tài liệu ({counts.document})</option>
         </select>
+        <button
+          type="button"
+          className="view-toggle-btn"
+          title={viewMode === 'table' ? 'Xem dạng lưới' : 'Xem dạng bảng'}
+          onClick={() => setViewMode((v) => { const next = v === 'table' ? 'grid' : 'table'; localStorage.setItem('admin.media.view', next); return next })}
+        >
+          {viewMode === 'table' ? <LayoutGrid size={15} /> : <List size={15} />}
+        </button>
       </div>
 
 
-      <div className="data-table-wrap">
-        <table className="data-table media-table">
-          <thead>
-            <tr>
-              <th className="col-stt">STT</th>
-              <th>Xem trước</th>
-              <th>Tên file</th>
-              <th>Loại</th>
-              <th>Dung lượng</th>
-              <th>Mô tả</th>
-              <th>Tải lên</th>
-              <th className="col-actions">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? <tr><td colSpan={8} className="table-empty">Đang tải thư viện…</td></tr> : null}
-            {!isLoading && items.length === 0 ? <tr><td colSpan={8} className="table-empty">Chưa có file nào.</td></tr> : null}
-            {items.map((asset, index) => (
-              <tr key={asset.id}>
-                <td className="col-stt">{index + 1}</td>
-                <td>
-                  <span className="cell-cover">
-                    {isImage(asset) ? <img src={asset.publicUrl} alt={asset.altText ?? asset.originalName} /> : <span className="cell-doc">TÀI LIỆU</span>}
-                  </span>
-                </td>
-                <td>
-                  <a className="cell-filename" href={asset.publicUrl} target="_blank" rel="noreferrer">{asset.originalName}</a>
-                  {asset.width && asset.height ? <span className="cell-slug">{asset.width}×{asset.height}px</span> : null}
-                </td>
-                <td><span className={`kind-badge ${isImage(asset) ? 'kind-partner' : 'kind-customer'}`}>{isImage(asset) ? 'Hình ảnh' : 'Tài liệu'}</span></td>
-                <td className="cell-date">{formatFileSize(asset.fileSize)}</td>
-                <td><span className="cell-desc">{asset.altText || asset.caption || <span className="muted">—</span>}</span></td>
-                <td className="cell-date">{formatDate(asset.createdAt)}</td>
-                <td className="col-actions">
-                  <button type="button" className="row-action icon-only" title="Sửa mô tả" aria-label={`Sửa ${asset.originalName}`} onClick={() => openEdit(asset)}><Pencil size={16} /></button>
-                  <button type="button" className="row-action icon-only" title="Copy link" aria-label={`Copy link ${asset.originalName}`} onClick={() => void copyLink(asset.publicUrl)}><Copy size={16} /></button>
-                  <a className="row-action icon-only" title="Mở" aria-label={`Mở ${asset.originalName}`} href={asset.publicUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} /></a>
-                  <button type="button" className="row-action icon-only is-danger" title="Xóa" aria-label={`Xóa ${asset.originalName}`} onClick={() => void handleDelete(asset)}><Trash2 size={16} /></button>
-                </td>
+      {viewMode === 'grid' ? (
+        <>
+          {isLoading && <p className="admin-info">Đang tải thư viện…</p>}
+          {!isLoading && items.length === 0 && <p className="admin-info">Chưa có file nào.</p>}
+          {!isLoading && items.length > 0 && (
+            <div className="media-grid">
+              {items.map((asset) => (
+                <div key={asset.id} className="media-grid-item" onClick={() => openEdit(asset)}>
+                  <div className="media-grid-thumb">
+                    {isImage(asset)
+                      ? <img src={asset.publicUrl} alt={asset.altText ?? asset.originalName} />
+                      : <div className="media-grid-doc"><FileIcon size={28} /></div>}
+                  </div>
+                  <p className="media-grid-name" title={asset.originalName}>{asset.originalName}</p>
+                  <div className="media-grid-overlay" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" title="Sửa mô tả" onClick={() => openEdit(asset)}><Pencil size={14} /></button>
+                    <button type="button" title="Copy link" onClick={() => void copyLink(asset.publicUrl)}><Copy size={14} /></button>
+                    <a href={asset.publicUrl} target="_blank" rel="noreferrer" title="Mở"><ExternalLink size={14} /></a>
+                    <button type="button" className="is-danger" title="Xóa" onClick={() => void handleDelete(asset)}><Trash2 size={14} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="data-table-wrap">
+          <table className="data-table media-table">
+            <thead>
+              <tr>
+                <th className="col-stt">STT</th>
+                <th>Xem trước</th>
+                <th>Tên file</th>
+                <th>Loại</th>
+                <th>Dung lượng</th>
+                <th>Mô tả</th>
+                <th>Tải lên</th>
+                <th className="col-actions">Thao tác</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {isLoading ? <tr><td colSpan={8} className="table-empty">Đang tải thư viện…</td></tr> : null}
+              {!isLoading && items.length === 0 ? <tr><td colSpan={8} className="table-empty">Chưa có file nào.</td></tr> : null}
+              {items.map((asset, index) => (
+                <tr key={asset.id}>
+                  <td className="col-stt">{index + 1}</td>
+                  <td>
+                    <span className="cell-cover">
+                      {isImage(asset) ? <img src={asset.publicUrl} alt={asset.altText ?? asset.originalName} /> : <span className="cell-doc">TÀI LIỆU</span>}
+                    </span>
+                  </td>
+                  <td>
+                    <a className="cell-filename" href={asset.publicUrl} target="_blank" rel="noreferrer">{asset.originalName}</a>
+                    {asset.width && asset.height ? <span className="cell-slug">{asset.width}×{asset.height}px</span> : null}
+                  </td>
+                  <td><span className={`kind-badge ${isImage(asset) ? 'kind-partner' : 'kind-customer'}`}>{isImage(asset) ? 'Hình ảnh' : 'Tài liệu'}</span></td>
+                  <td className="cell-date">{formatFileSize(asset.fileSize)}</td>
+                  <td><span className="cell-desc">{asset.altText || asset.caption || <span className="muted">—</span>}</span></td>
+                  <td className="cell-date">{formatDate(asset.createdAt)}</td>
+                  <td className="col-actions">
+                    <button type="button" className="row-action icon-only" title="Sửa mô tả" aria-label={`Sửa ${asset.originalName}`} onClick={() => openEdit(asset)}><Pencil size={16} /></button>
+                    <button type="button" className="row-action icon-only" title="Copy link" aria-label={`Copy link ${asset.originalName}`} onClick={() => void copyLink(asset.publicUrl)}><Copy size={16} /></button>
+                    <a className="row-action icon-only" title="Mở" aria-label={`Mở ${asset.originalName}`} href={asset.publicUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} /></a>
+                    <button type="button" className="row-action icon-only is-danger" title="Xóa" aria-label={`Xóa ${asset.originalName}`} onClick={() => void handleDelete(asset)}><Trash2 size={16} /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <p className="table-hint">{items.length} file</p>
 
       {uploadOpen ? (
