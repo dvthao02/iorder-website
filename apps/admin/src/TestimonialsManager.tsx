@@ -1,5 +1,5 @@
 import type { MediaAsset, TestimonialInput, TestimonialResponse } from '@iorder/contracts'
-import { ChevronDown, ChevronUp, MessageSquareQuote, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, MessageSquareQuote, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
@@ -135,6 +135,8 @@ export function TestimonialsManager() {
   const [form, setForm] = useState<TestimonialInput>(emptyTestimonial)
   const [isSaving, setIsSaving] = useState(false)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled'>('all')
 
   const loadData = async () => {
     const [result, mediaResult] = await Promise.all([listTestimonials(), listMedia('image')])
@@ -148,7 +150,19 @@ export function TestimonialsManager() {
 
   const avatarMap = new Map(images.map((img) => [img.id, img.publicUrl]))
 
-  const sorted = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder), [items])
+  const isReorderable = !search.trim() && filter === 'all'
+
+  const displayItems = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return [...items]
+      .filter((i) => {
+        if (filter === 'enabled' && !i.isEnabled) return false
+        if (filter === 'disabled' && i.isEnabled) return false
+        if (query && !i.authorName.toLowerCase().includes(query) && !(i.company ?? '').toLowerCase().includes(query)) return false
+        return true
+      })
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+  }, [items, filter, search])
 
   const moveItem = async (id: string, direction: 'up' | 'down') => {
     const s = [...items].sort((a, b) => a.sortOrder - b.sortOrder)
@@ -247,20 +261,42 @@ export function TestimonialsManager() {
       )}
 
       {items.length > 0 && (
-        <div className="testimonial-grid">
-          {sorted.map((item, idx) => (
-            <TestimonialCard
-              key={item.id}
-              item={item}
-              avatarUrl={item.avatarMediaId ? avatarMap.get(item.avatarMediaId) ?? null : null}
-              onEdit={() => openEdit(item)}
-              onDelete={async () => remove(item.id)}
-              onToggle={async () => toggleEnabled(item)}
-              onMoveUp={idx > 0 ? async () => moveItem(item.id, 'up') : null}
-              onMoveDown={idx < sorted.length - 1 ? async () => moveItem(item.id, 'down') : null}
-            />
-          ))}
-        </div>
+        <>
+          <div className="toolbar">
+            <span className="toolbar-search-wrap">
+              <Search size={15} className="toolbar-search-icon" aria-hidden="true" />
+              <input className="toolbar-search" type="search" placeholder="Tìm theo tên, công ty…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </span>
+          </div>
+          <div className="status-pills">
+            {(['all', 'enabled', 'disabled'] as const).map((key) => {
+              const LABELS = { all: 'Tất cả', enabled: 'Hiển thị', disabled: 'Đã ẩn' }
+              return (
+                <button key={key} type="button" className={`status-pill${filter === key ? ' is-active' : ''}`} onClick={() => setFilter(key)}>
+                  {LABELS[key]}
+                </button>
+              )
+            })}
+          </div>
+          {displayItems.length === 0 ? (
+            <p className="admin-info">Không có đánh giá nào khớp.</p>
+          ) : (
+            <div className="testimonial-grid">
+              {displayItems.map((item, idx) => (
+                <TestimonialCard
+                  key={item.id}
+                  item={item}
+                  avatarUrl={item.avatarMediaId ? avatarMap.get(item.avatarMediaId) ?? null : null}
+                  onEdit={() => openEdit(item)}
+                  onDelete={async () => remove(item.id)}
+                  onToggle={async () => toggleEnabled(item)}
+                  onMoveUp={isReorderable && idx > 0 ? async () => moveItem(item.id, 'up') : null}
+                  onMoveDown={isReorderable && idx < displayItems.length - 1 ? async () => moveItem(item.id, 'down') : null}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {editing !== null && (

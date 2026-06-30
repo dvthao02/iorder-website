@@ -614,7 +614,12 @@ export function OfferingsManager() {
           </div>
 
           {filtered.length === 0 ? (
-            <p className="admin-info">Không có mục nào với trạng thái đã chọn.</p>
+            <div className="admin-empty admin-empty--inline">
+              <p>Không có mục nào khớp với bộ lọc.</p>
+              {(search || statusFilter !== 'all') && (
+                <button type="button" className="btn-secondary" onClick={() => { setSearch(''); setStatusFilter('all') }}>Xóa bộ lọc</button>
+              )}
+            </div>
           ) : (
             <div className="offering-grid">
               {filtered.map((item, idx) => (
@@ -632,6 +637,9 @@ export function OfferingsManager() {
                 />
               ))}
             </div>
+          )}
+          {isReorderable && filtered.length > 1 && (
+            <p className="table-hint">Dùng ↑↓ trên mỗi thẻ để sắp xếp thứ tự hiển thị.</p>
           )}
         </>
       )}

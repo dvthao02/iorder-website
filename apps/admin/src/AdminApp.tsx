@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import logoIorder from './assets/logo.png'
 import logoIorderMark from './assets/logo-circle.jpg'
-import { getSession, login, logout } from './api'
+import { getSession, listOfferings, listPosts, login, logout } from './api'
 import { Dashboard } from './Dashboard'
 import { HomepageEditor } from './HomepageEditor'
 import { LoginForm } from './LoginForm'
@@ -50,6 +50,7 @@ export function AdminApp() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('admin.sidebar.collapsed') === '1')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [badges, setBadges] = useState<Record<string, number>>({})
   const navigate = useNavigate()
   const { section } = useParams()
   const isLoginRoute = section === 'login'
@@ -69,6 +70,14 @@ export function AdminApp() {
   useEffect(() => {
     getSession().then((session) => setUser(session.user)).catch(() => setUser(null)).finally(() => setIsLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!user) { setBadges({}); return }
+    Promise.all([
+      listPosts().then((res) => res.items.filter((p) => p.status === 'draft').length),
+      listOfferings(undefined, 'draft').then((res) => res.total),
+    ]).then(([posts, offerings]) => setBadges({ posts, offerings })).catch(() => undefined)
+  }, [user])
 
   // Điều hướng theo trạng thái đăng nhập: chưa đăng nhập → /login; đã đăng nhập mà ở /login → /
   useEffect(() => {
@@ -122,6 +131,7 @@ export function AdminApp() {
             {navigation.filter((item) => item.group === group.id).map((item) => (
               <button className={activeModule === item.key ? 'is-active' : ''} key={item.key} type="button" title={item.label} onClick={() => goTo(item.key)}>
                 <item.icon size={18} /> <span>{item.label}</span>
+                {(badges[item.key] ?? 0) > 0 && <span className="nav-badge">{badges[item.key]}</span>}
               </button>
             ))}
           </div>

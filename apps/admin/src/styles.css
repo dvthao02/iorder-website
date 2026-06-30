@@ -47,6 +47,8 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .admin-sidebar nav button:hover { color: #fff; background: rgba(255,255,255,.06); }
 .admin-sidebar nav button.is-active { color: #fff; font-weight: 700; background: var(--brand-gradient); box-shadow: 0 8px 22px rgba(14,165,233,.35); }
 .admin-sidebar nav button.is-active svg { opacity: 1; }
+.nav-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #f97316; color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.admin-workspace.is-collapsed .nav-badge { display: none; }
 .sidebar-account { display: grid; gap: 2px; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); }
 .sidebar-account span { font-weight: 700; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-account small { color: #aac3d6; overflow-wrap: anywhere; }
@@ -661,6 +663,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 
 .admin-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 60px 20px; color: #8096ae; }
 .admin-empty p { margin: 0; font-size: 15px; }
+.admin-empty--inline { padding: 32px 20px; }
 
 /* ── Form tabs ─────────────────────────────────────────────────────────────── */
 /* offering-form fills the flex modal-body and manages its own scroll */
