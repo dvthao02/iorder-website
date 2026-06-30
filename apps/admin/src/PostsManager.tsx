@@ -313,11 +313,13 @@ export function PostsManager() {
   const hasEditor = creating || selectedId !== null
 
   const savePostRef = useRef(savePost)
-  useEffect(() => { savePostRef.current = savePost })
+  const closeEditorRef = useRef(closeEditor)
+  useEffect(() => { savePostRef.current = savePost; closeEditorRef.current = closeEditor })
   useEffect(() => {
     if (!hasEditor) return
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); void savePostRef.current() }
+      if (e.key === 'Escape') closeEditorRef.current()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
