@@ -23,6 +23,7 @@ export function MediaLibrary() {
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => localStorage.getItem('admin.media.view') === 'grid' ? 'grid' : 'table')
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date')
 
   const [uploadOpen, setUploadOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -137,6 +138,12 @@ export function MediaLibrary() {
     document: items.filter((item) => !isImage(item)).length,
   }), [items])
 
+  const sortedItems = useMemo(() => [...items].sort((a, b) => {
+    if (sortBy === 'name') return a.originalName.localeCompare(b.originalName, 'vi')
+    if (sortBy === 'size') return b.fileSize - a.fileSize
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  }), [items, sortBy])
+
   return (
     <section className="admin-card content-manager">
       <PageHeader
@@ -151,6 +158,11 @@ export function MediaLibrary() {
           <option value="all">Tất cả ({items.length})</option>
           <option value="image">Hình ảnh ({counts.image})</option>
           <option value="document">Tài liệu ({counts.document})</option>
+        </select>
+        <select value={sortBy} onChange={(event) => setSortBy(event.target.value as 'date' | 'name' | 'size')}>
+          <option value="date">Mới nhất</option>
+          <option value="name">Tên A→Z</option>
+          <option value="size">Dung lượng ↓</option>
         </select>
         <button
           type="button"
@@ -167,9 +179,9 @@ export function MediaLibrary() {
         <>
           {isLoading && <p className="admin-info">Đang tải thư viện…</p>}
           {!isLoading && items.length === 0 && <p className="admin-info">Chưa có file nào.</p>}
-          {!isLoading && items.length > 0 && (
+          {!isLoading && sortedItems.length > 0 && (
             <div className="media-grid">
-              {items.map((asset) => (
+              {sortedItems.map((asset) => (
                 <div key={asset.id} className="media-grid-item" onClick={() => openEdit(asset)}>
                   <div className="media-grid-thumb">
                     {isImage(asset)
@@ -205,8 +217,8 @@ export function MediaLibrary() {
             </thead>
             <tbody>
               {isLoading ? <tr><td colSpan={8} className="table-empty">Đang tải thư viện…</td></tr> : null}
-              {!isLoading && items.length === 0 ? <tr><td colSpan={8} className="table-empty">Chưa có file nào.</td></tr> : null}
-              {items.map((asset, index) => (
+              {!isLoading && sortedItems.length === 0 ? <tr><td colSpan={8} className="table-empty">Chưa có file nào.</td></tr> : null}
+              {sortedItems.map((asset, index) => (
                 <tr key={asset.id}>
                   <td className="col-stt">{index + 1}</td>
                   <td>
