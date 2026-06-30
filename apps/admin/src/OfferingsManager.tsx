@@ -1,6 +1,6 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
 import { Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, Minus, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   archiveOffering,
   createOffering,
@@ -165,6 +165,7 @@ function OfferingForm({
   const [saving, setSaving] = useState(false)
   const [showCover, setShowCover] = useState(false)
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
+  const formRef = useRef<HTMLFormElement>(null)
 
   const set = (patch: Partial<OfferingInput>) => setForm((f) => ({ ...f, ...patch }))
   const setContent = (patch: Partial<OfferingContent>) =>
@@ -180,6 +181,14 @@ function OfferingForm({
     finally { setSaving(false) }
   }
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); formRef.current?.requestSubmit() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const coverImg = images.find((img) => img.id === form.coverMediaId)
 
   const contentCount = form.contentJson.features.length + form.contentJson.benefits.length + form.contentJson.metrics.length
@@ -192,7 +201,7 @@ function OfferingForm({
   ]
 
   return (
-    <form className="offering-form" onSubmit={handleSubmit}>
+    <form ref={formRef} className="offering-form" onSubmit={handleSubmit}>
       {/* Sticky tab bar */}
       <div className="form-tabs-wrap">
         <div className="form-tabs">

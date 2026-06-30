@@ -538,13 +538,21 @@ export function PostsManager() {
                   </label>
                   <div className="form-row-2col">
                     <label>
-                      SEO title
+                      SEO title <span className="field-counter">{(form.seoTitle ?? '').length}/70</span>
                       <input maxLength={70} value={form.seoTitle ?? ''} onChange={(event) => patchForm('seoTitle', event.target.value || null)} />
                     </label>
                     <label>
-                      SEO description
-                      <input maxLength={180} value={form.seoDescription ?? ''} onChange={(event) => patchForm('seoDescription', event.target.value || null)} />
+                      SEO description <span className="field-counter">{(form.seoDescription ?? '').length}/160</span>
+                      <input maxLength={160} value={form.seoDescription ?? ''} onChange={(event) => patchForm('seoDescription', event.target.value || null)} />
                     </label>
+                  </div>
+                  <div className="seo-preview">
+                    <p className="seo-preview-label">Xem trước trên Google</p>
+                    <div className="seo-preview-card">
+                      <p className="seo-preview-url">iorder.vn › tin-tuc › {form.slug || 'slug-bai-viet'}</p>
+                      <p className="seo-preview-title">{form.seoTitle || form.title || 'Tiêu đề bài viết'}</p>
+                      <p className="seo-preview-desc">{form.seoDescription || form.excerpt || 'Mô tả ngắn hiển thị trên kết quả tìm kiếm Google...'}</p>
+                    </div>
                   </div>
                 </div>
               </details>
