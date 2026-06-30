@@ -135,6 +135,7 @@ export function TestimonialsManager() {
   const [form, setForm] = useState<TestimonialInput>(emptyTestimonial)
   const [isSaving, setIsSaving] = useState(false)
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled'>('all')
 
@@ -145,7 +146,7 @@ export function TestimonialsManager() {
   }
 
   useEffect(() => {
-    void loadData().catch(() => toast.error('Không thể tải danh sách đánh giá.'))
+    void loadData().catch(() => toast.error('Không thể tải danh sách đánh giá.')).finally(() => setLoading(false))
   }, [])
 
   const avatarMap = new Map(images.map((img) => [img.id, img.publicUrl]))
@@ -253,7 +254,9 @@ export function TestimonialsManager() {
         }
       />
 
-      {items.length === 0 && (
+      {loading && <p className="admin-info">Đang tải...</p>}
+
+      {!loading && items.length === 0 && (
         <div className="admin-empty">
           <MessageSquareQuote size={36} />
           <p>Chưa có đánh giá nào.</p>
@@ -261,7 +264,7 @@ export function TestimonialsManager() {
         </div>
       )}
 
-      {items.length > 0 && (
+      {!loading && items.length > 0 && (
         <>
           <div className="toolbar">
             <span className="toolbar-search-wrap">
