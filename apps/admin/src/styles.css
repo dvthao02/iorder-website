@@ -1109,6 +1109,10 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .fixed-section-nav-head { display: grid; gap: 3px; padding: 4px 6px 9px; border-bottom: 1px solid #dce8f1; }
 .fixed-section-nav-head small { color: #607084; line-height: 1.4; }
 .fixed-section-nav > button { display: grid; grid-template-columns: 24px 1fr; gap: 1px 8px; align-items: center; width: 100%; padding: 7px 9px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: #344256; text-align: left; cursor: pointer; }
+.fixed-section-nav.is-list > button { grid-template-columns: 16px 24px 1fr; }
+.section-grip { opacity: 0; transition: opacity .12s; }
+.fixed-section-nav.is-list > button:hover .section-grip,
+.fixed-section-nav.is-list > button.is-dragging .section-grip { opacity: 1; }
 .fixed-section-nav > button > span { grid-row: 1 / 3; display: grid; width: 24px; height: 24px; place-items: center; border-radius: 7px; background: #e6f3fb; color: var(--brand); font-size: 12px; font-weight: 800; }
 .fixed-section-nav > button b { font-size: 13px; }
 .fixed-section-nav > button small { color: #718096; font-size: 11px; }

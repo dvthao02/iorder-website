@@ -9,7 +9,7 @@ import {
   type MediaAsset,
   type SectionAppearance,
 } from '@iorder/contracts'
-import { ArrowLeft, Eye, History, LayoutGrid, List, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Eye, GripVertical, History, LayoutGrid, List, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -24,7 +24,7 @@ import {
   restoreHomepageRevision,
 } from './api'
 import { toast } from './toast'
-import { EditorFooter, PageHeader, ToggleSwitch } from './ui'
+import { EditorFooter, PageHeader, ToggleSwitch, useDragReorder } from './ui'
 
 const defaultInput: HomepageInput = {
   title: 'Trang chủ', seoTitle: null, seoDescription: null, canonicalUrl: null, blocks: [],
@@ -122,6 +122,14 @@ export function HomepageEditor() {
   const [showPreview, setShowPreview] = useState(false)
   const [previewFullscreen, setPreviewFullscreen] = useState(false)
   const [sectionView, setSectionView] = useState<'grid' | 'list'>(() => localStorage.getItem('admin.homepage.sectionView') === 'list' ? 'list' : 'grid')
+
+  const { rowProps: sectionDragProps } = useDragReorder(async (from, to) => {
+    const next = [...form.blocks]
+    const [moved] = next.splice(from, 1)
+    if (!moved) return
+    next.splice(to, 0, moved)
+    setForm((f) => ({ ...f, blocks: next }))
+  })
   const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null)
   const [previewSize, setPreviewSize] = useState<{ w: number; h: number } | null>(null)
   const dragRef = useRef<{ dx: number; dy: number } | null>(null)
@@ -426,7 +434,23 @@ export function HomepageEditor() {
           </div>
           <small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small>
         </div>
-        {form.blocks.map((block, index) => <button className={block.type === selectedType ? 'is-active' : ''} key={block.type} type="button" onClick={() => setSelectedType(block.type)}><span>{index + 1}</span><b>{labels[block.type]}</b><small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small></button>)}
+        {form.blocks.map((block, index) => {
+          const { className: dragCls, ...dragAttrs } = sectionDragProps(index)
+          return (
+            <button
+              key={block.type}
+              type="button"
+              {...dragAttrs}
+              className={[block.type === selectedType ? 'is-active' : '', dragCls].filter(Boolean).join(' ')}
+              onClick={() => setSelectedType(block.type)}
+            >
+              {sectionView === 'list' && <GripVertical size={13} className="drag-handle-icon section-grip" />}
+              <span>{index + 1}</span>
+              <b>{labels[block.type]}</b>
+              <small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small>
+            </button>
+          )
+        })}
       </aside>
       {selectedType ? (
         <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setSelectedType(null)}>
