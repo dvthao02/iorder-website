@@ -680,7 +680,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .card-menu-danger:hover { background: #fef2f2 !important; }
 
 /* Offering list view */
-.offering-table .col-actions { width: 148px; }
+.offering-table .col-actions { width: 164px; white-space: nowrap; }
 .cell-cover { display: inline-block; width: 44px; height: 34px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
 .cell-cover img { width: 100%; height: 100%; object-fit: cover; }
 .cell-cover-fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 16px; font-weight: 800; color: rgba(255,255,255,.7); }
