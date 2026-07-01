@@ -1,5 +1,5 @@
 import type { MediaAsset } from '@iorder/contracts'
-import { useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type DragEvent, type ReactNode } from 'react'
 
 import { uploadMedia } from './api'
 
@@ -148,4 +148,32 @@ export function ImagePicker({
       {error ? <small className="field-hint is-error">{error}</small> : null}
     </div>
   )
+}
+
+/**
+ * Hook kéo-thả sắp xếp lại danh sách. Trả về props cho từng row và handler thả.
+ * onReorder(fromIdx, toIdx) nhận 2 chỉ số để tự xử lý cập nhật API.
+ */
+export function useDragReorder(onReorder: (from: number, to: number) => Promise<void>) {
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [overIdx, setOverIdx] = useState<number | null>(null)
+
+  const handleDrop = async (toIdx: number) => {
+    if (dragIdx === null || dragIdx === toIdx) { setDragIdx(null); setOverIdx(null); return }
+    const from = dragIdx
+    setDragIdx(null); setOverIdx(null)
+    await onReorder(from, toIdx)
+  }
+
+  const rowProps = (idx: number) => ({
+    draggable: true as const,
+    className: dragIdx === idx ? 'is-dragging' : overIdx === idx ? 'is-drag-over' : '',
+    onDragStart: (e: DragEvent) => { setDragIdx(idx); e.dataTransfer.effectAllowed = 'move' },
+    onDragOver: (e: DragEvent) => { e.preventDefault(); if (overIdx !== idx) setOverIdx(idx) },
+    onDragLeave: () => setOverIdx(null),
+    onDrop: (e: DragEvent) => { e.preventDefault(); void handleDrop(idx) },
+    onDragEnd: () => { setDragIdx(null); setOverIdx(null) },
+  })
+
+  return { dragIdx, rowProps }
 }

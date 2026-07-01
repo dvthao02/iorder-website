@@ -12,7 +12,7 @@ import {
   updateOffering,
 } from './api'
 import { toast } from './toast'
-import { ImagePicker, PageHeader, StatusDot, ToggleSwitch } from './ui'
+import { ImagePicker, PageHeader, StatusDot, ToggleSwitch, useDragReorder } from './ui'
 
 const STATUS_TONE: Record<string, 'on' | 'muted' | 'danger'> = {
   published: 'on', draft: 'muted', archived: 'danger',
@@ -509,8 +509,6 @@ export function OfferingsManager() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => localStorage.getItem('admin.offerings.view') === 'list' ? 'list' : 'grid')
-  const [dragIdx, setDragIdx] = useState<number | null>(null)
-  const [overIdx, setOverIdx] = useState<number | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -590,10 +588,7 @@ export function OfferingsManager() {
     }
   }
 
-  const handleListDrop = async (toIdx: number) => {
-    if (dragIdx === null || dragIdx === toIdx) { setDragIdx(null); setOverIdx(null); return }
-    const from = dragIdx
-    setDragIdx(null); setOverIdx(null)
+  const { dragIdx, rowProps: dragRowProps } = useDragReorder(async (from, toIdx) => {
     const arr = [...filtered]
     const [moved] = arr.splice(from, 1)
     if (!moved) return
@@ -610,7 +605,7 @@ export function OfferingsManager() {
     } catch {
       toast.error('Không thể đổi thứ tự.')
     }
-  }
+  })
 
   const coverMap = new Map(images.map((img) => [img.id, img.publicUrl]))
 
@@ -721,13 +716,7 @@ export function OfferingsManager() {
                     return (
                       <tr
                         key={item.id}
-                        draggable={isReorderable}
-                        className={dragIdx === idx ? 'is-dragging' : overIdx === idx ? 'is-drag-over' : ''}
-                        onDragStart={(e) => { setDragIdx(idx); e.dataTransfer.effectAllowed = 'move' }}
-                        onDragOver={(e) => { e.preventDefault(); if (overIdx !== idx) setOverIdx(idx) }}
-                        onDragLeave={() => setOverIdx(null)}
-                        onDrop={(e) => { e.preventDefault(); void handleListDrop(idx) }}
-                        onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                        {...(isReorderable ? dragRowProps(idx) : {})}
                       >
                         {isReorderable && (
                           <td className="col-grip"><GripVertical size={15} className="drag-handle-icon" /></td>
