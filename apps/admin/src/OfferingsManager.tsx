@@ -509,6 +509,8 @@ export function OfferingsManager() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => localStorage.getItem('admin.offerings.view') === 'list' ? 'list' : 'grid')
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [overIdx, setOverIdx] = useState<number | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -583,6 +585,28 @@ export function OfferingsManager() {
         updateOffering(b.id, { ...toOfferingInput(b), sortOrder: a.sortOrder }),
       ])
       await load()
+    } catch {
+      toast.error('Không thể đổi thứ tự.')
+    }
+  }
+
+  const handleListDrop = async (toIdx: number) => {
+    if (dragIdx === null || dragIdx === toIdx) { setDragIdx(null); setOverIdx(null); return }
+    const from = dragIdx
+    setDragIdx(null); setOverIdx(null)
+    const arr = [...filtered]
+    const [moved] = arr.splice(from, 1)
+    if (!moved) return
+    arr.splice(toIdx, 0, moved)
+    const lo = Math.min(from, toIdx), hi = Math.max(from, toIdx)
+    try {
+      await Promise.all(
+        arr.slice(lo, hi + 1).map((item, i) =>
+          updateOffering(item.id, { ...toOfferingInput(item), sortOrder: filtered[lo + i]?.sortOrder ?? item.sortOrder })
+        )
+      )
+      await load()
+      toast.success('Đã cập nhật thứ tự.')
     } catch {
       toast.error('Không thể đổi thứ tự.')
     }
@@ -683,6 +707,7 @@ export function OfferingsManager() {
               <table className="data-table offering-table">
                 <thead>
                   <tr>
+                    {isReorderable && <th className="col-grip" />}
                     <th className="col-stt">STT</th>
                     <th>Ảnh bìa</th>
                     <th>Tên</th>
@@ -694,7 +719,19 @@ export function OfferingsManager() {
                   {filtered.map((item, idx) => {
                     const cover = item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined
                     return (
-                      <tr key={item.id}>
+                      <tr
+                        key={item.id}
+                        draggable={isReorderable}
+                        className={dragIdx === idx ? 'is-dragging' : overIdx === idx ? 'is-drag-over' : ''}
+                        onDragStart={(e) => { setDragIdx(idx); e.dataTransfer.effectAllowed = 'move' }}
+                        onDragOver={(e) => { e.preventDefault(); if (overIdx !== idx) setOverIdx(idx) }}
+                        onDragLeave={() => setOverIdx(null)}
+                        onDrop={(e) => { e.preventDefault(); void handleListDrop(idx) }}
+                        onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                      >
+                        {isReorderable && (
+                          <td className="col-grip"><GripVertical size={15} className="drag-handle-icon" /></td>
+                        )}
                         <td className="col-stt">{idx + 1}</td>
                         <td>
                           <span className="cell-cover">
