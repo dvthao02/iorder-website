@@ -9,7 +9,7 @@ import {
   type MediaAsset,
   type SectionAppearance,
 } from '@iorder/contracts'
-import { ArrowLeft, Eye, GripVertical, History, LayoutGrid, List, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, GripVertical, History, LayoutGrid, List, Maximize2, Minimize2, Pencil, RefreshCw, Save, UploadCloud } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -436,6 +436,31 @@ export function HomepageEditor() {
         </div>
         {form.blocks.map((block, index) => {
           const { className: dragCls, ...dragAttrs } = sectionDragProps(index)
+          const toggleEnabled = () => setForm((f) => ({ ...f, blocks: f.blocks.map((b, i) => i === index ? { ...b, isEnabled: !b.isEnabled } : b) }))
+
+          if (sectionView === 'list') {
+            return (
+              <div
+                key={block.type}
+                {...dragAttrs}
+                className={['section-list-row', block.type === selectedType ? 'is-active' : '', dragCls].filter(Boolean).join(' ')}
+              >
+                <GripVertical size={14} className="drag-handle-icon section-grip" />
+                <span className="section-num">{index + 1}</span>
+                <button type="button" className="section-list-name" onClick={() => setSelectedType(block.type)}>
+                  <b>{labels[block.type]}</b>
+                  <small className={block.isEnabled ? '' : 'is-hidden'}>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small>
+                </button>
+                <div className="section-list-actions">
+                  <button type="button" title="Chỉnh sửa" className="section-act-btn" onClick={() => setSelectedType(block.type)}><Pencil size={13} /></button>
+                  <button type="button" title={block.isEnabled ? 'Ẩn section' : 'Hiện section'} className="section-act-btn" onClick={toggleEnabled}>
+                    {block.isEnabled ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
           return (
             <button
               key={block.type}
@@ -444,7 +469,6 @@ export function HomepageEditor() {
               className={[block.type === selectedType ? 'is-active' : '', dragCls].filter(Boolean).join(' ')}
               onClick={() => setSelectedType(block.type)}
             >
-              {sectionView === 'list' && <GripVertical size={13} className="drag-handle-icon section-grip" />}
               <span>{index + 1}</span>
               <b>{labels[block.type]}</b>
               <small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small>
