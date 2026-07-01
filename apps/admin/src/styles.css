@@ -1095,7 +1095,10 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .fixed-editor-layout.no-preview { grid-template-columns: 1fr; }
 /* Không xem trước: danh sách khu vực trải full, sửa trong modal */
 .fixed-editor-layout.no-preview .fixed-section-nav { position: static; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.fixed-editor-layout.no-preview .fixed-section-nav.is-list { grid-template-columns: 1fr; }
 .fixed-editor-layout.no-preview .fixed-section-nav-head { grid-column: 1 / -1; }
+.fixed-section-nav-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fixed-section-nav-title .view-toggle-btn { width: 28px; height: 28px; flex-shrink: 0; }
 .modal-body .block-card { border: 0; box-shadow: none; padding: 0; background: transparent; }
 /* Block editor: mỗi form-row chứa 2 label+input cạnh nhau (khác với admin forms) */
 .block-card .form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }

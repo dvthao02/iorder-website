@@ -9,7 +9,7 @@ import {
   type MediaAsset,
   type SectionAppearance,
 } from '@iorder/contracts'
-import { ArrowLeft, Eye, History, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Eye, History, LayoutGrid, List, Maximize2, Minimize2, RefreshCw, Save, UploadCloud } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -121,6 +121,7 @@ export function HomepageEditor() {
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light')
   const [showPreview, setShowPreview] = useState(false)
   const [previewFullscreen, setPreviewFullscreen] = useState(false)
+  const [sectionView, setSectionView] = useState<'grid' | 'list'>(() => localStorage.getItem('admin.homepage.sectionView') === 'list' ? 'list' : 'grid')
   const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null)
   const [previewSize, setPreviewSize] = useState<{ w: number; h: number } | null>(null)
   const dragRef = useRef<{ dx: number; dy: number } | null>(null)
@@ -410,8 +411,21 @@ export function HomepageEditor() {
       </div>
     </details>
     <div className="fixed-editor-layout no-preview">
-      <aside className="fixed-section-nav" aria-label="Các khu vực trang chủ">
-        <div className="fixed-section-nav-head"><strong>Cấu trúc cố định</strong><small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small></div>
+      <aside className={`fixed-section-nav${sectionView === 'list' ? ' is-list' : ''}`} aria-label="Các khu vực trang chủ">
+        <div className="fixed-section-nav-head">
+          <div className="fixed-section-nav-title">
+            <strong>Cấu trúc cố định</strong>
+            <button
+              type="button"
+              className="view-toggle-btn"
+              title={sectionView === 'grid' ? 'Xem dạng danh sách' : 'Xem dạng lưới'}
+              onClick={() => setSectionView((v) => { const next = v === 'grid' ? 'list' : 'grid'; localStorage.setItem('admin.homepage.sectionView', next); return next })}
+            >
+              {sectionView === 'grid' ? <List size={14} /> : <LayoutGrid size={14} />}
+            </button>
+          </div>
+          <small>Chọn khu vực để thay nội dung. Thứ tự website không thể thay đổi.</small>
+        </div>
         {form.blocks.map((block, index) => <button className={block.type === selectedType ? 'is-active' : ''} key={block.type} type="button" onClick={() => setSelectedType(block.type)}><span>{index + 1}</span><b>{labels[block.type]}</b><small>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small></button>)}
       </aside>
       {selectedType ? (
