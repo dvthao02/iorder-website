@@ -1115,8 +1115,8 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .section-num { display: grid; width: 24px; height: 24px; flex-shrink: 0; place-items: center; border-radius: 7px; background: #e6f3fb; color: var(--brand); font-size: 12px; font-weight: 800; }
 .section-list-name { flex: 1 1 0; min-width: 0; border: none; background: transparent; text-align: left; cursor: pointer; padding: 0; display: flex; flex-direction: column; gap: 1px; overflow: hidden; }
 .section-list-name b { font-size: 13px; color: #344256; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.section-list-name small { font-size: 11px; color: #718096; }
-.section-list-name small.is-hidden { color: #b4c0cd; }
+.section-list-name small { font-size: 11px; color: #718096; display: flex; align-items: center; gap: 4px; }
+.section-list-name small .status-dot { width: 6px; height: 6px; flex-shrink: 0; }
 .section-list-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: auto; }
 .section-act-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 7px; background: #fff; color: #64748b; cursor: pointer; padding: 0; transition: border-color .13s, color .13s; }
 .section-act-btn:hover { border-color: #bae6fd; color: var(--brand); }

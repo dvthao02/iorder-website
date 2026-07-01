@@ -24,7 +24,7 @@ import {
   restoreHomepageRevision,
 } from './api'
 import { toast } from './toast'
-import { EditorFooter, PageHeader, ToggleSwitch, useDragReorder } from './ui'
+import { EditorFooter, PageHeader, StatusDot, ToggleSwitch, useDragReorder } from './ui'
 
 const defaultInput: HomepageInput = {
   title: 'Trang chủ', seoTitle: null, seoDescription: null, canonicalUrl: null, blocks: [],
@@ -449,12 +449,12 @@ export function HomepageEditor() {
                 <span className="section-num">{index + 1}</span>
                 <button type="button" className="section-list-name" onClick={() => setSelectedType(block.type)}>
                   <b>{labels[block.type]}</b>
-                  <small className={block.isEnabled ? '' : 'is-hidden'}>{block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small>
+                  <small><StatusDot tone={block.isEnabled ? 'on' : 'muted'} /> {block.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'}</small>
                 </button>
                 <div className="section-list-actions">
                   <button type="button" title="Chỉnh sửa" className="section-act-btn" onClick={() => setSelectedType(block.type)}><Pencil size={13} /></button>
                   <button type="button" title={block.isEnabled ? 'Ẩn section' : 'Hiện section'} className="section-act-btn" onClick={toggleEnabled}>
-                    {block.isEnabled ? <EyeOff size={13} /> : <Eye size={13} />}
+                    {block.isEnabled ? <Eye size={13} /> : <EyeOff size={13} />}
                   </button>
                 </div>
               </div>
