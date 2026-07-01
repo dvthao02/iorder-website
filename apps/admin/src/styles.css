@@ -821,7 +821,7 @@ a.row-action { display: inline-flex; align-items: center; justify-content: cente
 .drop-zone-clear:hover { background: #fecaca; color: #dc2626; }
 
 /* ── Data table (bảng danh sách) ────────────────────────────────────────────── */
-.data-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+.data-table-wrap { overflow-x: auto; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: #fff; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .data-table thead th { text-align: left; padding: 11px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #64748b; background: #f7fafd; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .data-table tbody td { padding: 10px 14px; border-bottom: 1px solid #eef3f8; vertical-align: middle; }
