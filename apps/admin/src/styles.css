@@ -4371,23 +4371,31 @@ a.row-action {
 .media-picker-field {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 .media-picker-field-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px;
+  gap: 10px;
+  padding: 6px;
   border: 1px solid #dbe7f1;
-  border-radius: 12px;
-  background: #f7fafd;
+  border-radius: 10px;
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.media-picker-field-row:hover {
+  border-color: #94c4ea;
+  box-shadow: 0 1px 4px rgba(15, 90, 150, 0.08);
 }
 .media-picker-field-thumb {
   flex: 0 0 auto;
-  width: 96px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #dbe7f1;
+  border: 1px solid #e2ecf5;
   background: #eef3f8;
   display: flex;
   align-items: center;
@@ -4405,22 +4413,42 @@ a.row-action {
   justify-content: center;
 }
 .media-picker-field-info {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
   min-width: 0;
   flex: 1 1 auto;
 }
 .media-picker-field-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 220px;
 }
 .media-picker-field-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+}
+.media-picker-field-actions button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #dbe7f1;
+  background: #fff;
+  color: #0f5a96;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.media-picker-field-actions button:hover {
+  background: #eaf4fc;
+}
+.media-picker-field-actions button:last-child:not(:first-child) {
+  color: #64748b;
 }
 
 /* ── File picker (Hỗ trợ cài đặt: chọn/tải file tài liệu) ────────────────────── */
