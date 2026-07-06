@@ -24,11 +24,7 @@ const database = createDatabase(input.DATABASE_URL)
 try {
   const passwordHash = await hashPassword(input.CMS_ADMIN_PASSWORD)
 
-  const [adminRole] = await database.db
-    .select({ id: roles.id })
-    .from(roles)
-    .where(eq(roles.code, 'admin'))
-    .limit(1)
+  const [adminRole] = await database.db.select({ id: roles.id }).from(roles).where(eq(roles.code, 'admin')).limit(1)
 
   if (!adminRole) {
     throw new Error('Admin role is missing. Run pnpm.cmd db:seed first.')
@@ -57,10 +53,7 @@ try {
     throw new Error('Admin user could not be created')
   }
 
-  await database.db
-    .insert(userRoles)
-    .values({ userId: user.id, roleId: adminRole.id })
-    .onConflictDoNothing()
+  await database.db.insert(userRoles).values({ userId: user.id, roleId: adminRole.id }).onConflictDoNothing()
 
   await database.db.insert(auditLogs).values({
     userId: user.id,

@@ -58,8 +58,9 @@ export default function ScrollReveal() {
 
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const elements = Array.from(document.querySelectorAll(REVEAL_SELECTOR))
-      .filter((element) => !element.closest('.header, .footer, .floating-actions'))
+    const elements = Array.from(document.querySelectorAll(REVEAL_SELECTOR)).filter(
+      (element) => !element.closest('.header, .footer, .floating-actions'),
+    )
 
     elements.forEach((element, index) => {
       element.classList.remove('is-visible')

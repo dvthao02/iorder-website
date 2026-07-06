@@ -21,7 +21,7 @@ jobs:
         env:
           POSTGRES_DB: iorderCMS
           POSTGRES_USER: admin_iorder
-          POSTGRES_PASSWORD: "123"
+          POSTGRES_PASSWORD: '123'
         ports:
           - 5432:5432
         options: >-
@@ -42,7 +42,7 @@ jobs:
       MEDIA_PUBLIC_BASE_URL: http://127.0.0.1:4000/media
       MEDIA_MAX_FILE_SIZE_MB: 20
       HOMEPAGE_SLUG: home
-      TRUST_PROXY: "false"
+      TRUST_PROXY: 'false'
       CMS_ADMIN_USERNAME: admin
       CMS_ADMIN_NAME: CMS Administrator
       CMS_ADMIN_PASSWORD: ci-admin-password

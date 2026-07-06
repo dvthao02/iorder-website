@@ -1,17 +1,15 @@
 import { Mail, Phone } from 'lucide-react'
 import facebookIcon from '../assets/misc/logo-facebook.png'
 import zaloIcon from '../assets/misc/zalo-96.png'
-import { contactInfo, externalLinks } from '../data/siteContent'
+import { externalLinks } from '../data/siteContent'
+import { useSiteContact } from '../utils/useSiteContact'
 
 export default function FloatingActions() {
+  // Hotline/email từ CMS — đồng bộ với Footer và trang Liên hệ.
+  const contactInfo = useSiteContact()
   return (
     <div className="floating-actions" aria-hidden="false">
-      <a
-        className="floating-action facebook"
-        href={externalLinks.facebook}
-        target="_blank"
-        rel="noreferrer"
-      >
+      <a className="floating-action facebook" href={externalLinks.facebook} target="_blank" rel="noreferrer">
         <span className="floating-action-icon" aria-hidden="true">
           <img src={facebookIcon} alt="Facebook" loading="lazy" decoding="async" />
         </span>
@@ -27,19 +25,14 @@ export default function FloatingActions() {
         <span className="floating-action-icon" aria-hidden="true">
           <Mail size={18} />
         </span>
-        <span>{"G\u1eedi email"}</span>
+        <span>{'G\u1eedi email'}</span>
       </a>
 
-      <a
-        className="floating-action zalo"
-        href={externalLinks.zalo}
-        target="_blank"
-        rel="noreferrer"
-      >
+      <a className="floating-action zalo" href={externalLinks.zalo} target="_blank" rel="noreferrer">
         <span className="floating-action-icon" aria-hidden="true">
           <img src={zaloIcon} alt="Zalo" loading="lazy" decoding="async" />
         </span>
-        <span>{"Zalo OA - ho\u1eb7c g\u1eedi email"}</span>
+        <span>{'Zalo OA - ho\u1eb7c g\u1eedi email'}</span>
       </a>
 
       <a className="floating-action hotline" href={contactInfo.phoneHref}>

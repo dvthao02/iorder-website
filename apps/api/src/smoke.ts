@@ -16,6 +16,8 @@ const app = await buildApp({
   HOMEPAGE_SLUG: 'home',
   SENTRY_TRACES_SAMPLE_RATE: 0,
   TRUST_PROXY: 'false',
+  POST_SCHEDULER_ENABLED: false,
+  POST_SCHEDULER_INTERVAL_MS: 60_000,
 })
 
 const passwordHash = await hashPassword('correct-horse-battery-staple')

@@ -1,5 +1,5 @@
 import { readFile, copyFile, mkdir } from 'node:fs/promises'
-import { dirname, extname, resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createDatabase } from '@iorder/database'
 import { auditLogs, mediaAssets, postRevisions, posts } from '@iorder/database'
@@ -32,7 +32,12 @@ function readStaticArticles(source: string): StaticArticle[] {
   if (!match?.[1]) throw new Error('Could not parse apps/web/src/data/newsArticles.js')
 
   // The migration source is a repository-owned literal array; image imports are outside this captured expression.
-  return Function('newsImage1', 'newsImage2', 'newsImage3', `"use strict"; return (${match[1]})`)(null, null, null) as StaticArticle[]
+  return Function(
+    'newsImage1',
+    'newsImage2',
+    'newsImage3',
+    `"use strict"; return (${match[1]})`,
+  )(null, null, null) as StaticArticle[]
 }
 
 try {
@@ -48,19 +53,28 @@ try {
     const dimensions = imageSize(buffer)
     await mkdir(dirname(destination), { recursive: true })
     await copyFile(sourcePath, destination)
-    const [asset] = await database.db.insert(mediaAssets).values({
-      storageKey,
-      publicUrl: `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`,
-      originalName: `news${index}.jpg`,
-      mimeType: 'image/jpeg',
-      fileSize: buffer.length,
-      width: dimensions.width ?? null,
-      height: dimensions.height ?? null,
-      altText: `Ảnh bài viết iOrder ${index}`,
-    }).onConflictDoUpdate({
-      target: mediaAssets.storageKey,
-      set: { fileSize: buffer.length, width: dimensions.width ?? null, height: dimensions.height ?? null, updatedAt: new Date() },
-    }).returning({ id: mediaAssets.id })
+    const [asset] = await database.db
+      .insert(mediaAssets)
+      .values({
+        storageKey,
+        publicUrl: `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`,
+        originalName: `news${index}.jpg`,
+        mimeType: 'image/jpeg',
+        fileSize: buffer.length,
+        width: dimensions.width ?? null,
+        height: dimensions.height ?? null,
+        altText: `Ảnh bài viết iOrder ${index}`,
+      })
+      .onConflictDoUpdate({
+        target: mediaAssets.storageKey,
+        set: {
+          fileSize: buffer.length,
+          width: dimensions.width ?? null,
+          height: dimensions.height ?? null,
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ id: mediaAssets.id })
     if (!asset) throw new Error(`Could not import news image ${index}`)
     imageIds.push(asset.id)
   }
@@ -72,17 +86,28 @@ try {
     const coverMediaId = imageIds[index % imageIds.length]!
     const [existing] = await database.db.select().from(posts).where(eq(posts.slug, article.slug)).limit(1)
     const values = {
-      coverMediaId, type: 'news' as const, title: article.title, slug: article.slug,
-      excerpt: article.excerpt, contentJson, status: 'published' as const,
-      seoTitle: article.title.slice(0, 70), seoDescription: article.excerpt.slice(0, 180),
-      publishedAt, updatedAt: new Date(), deletedAt: null,
+      coverMediaId,
+      type: 'news' as const,
+      title: article.title,
+      slug: article.slug,
+      excerpt: article.excerpt,
+      contentJson,
+      status: 'published' as const,
+      seoTitle: article.title.slice(0, 70),
+      seoDescription: article.excerpt.slice(0, 180),
+      publishedAt,
+      updatedAt: new Date(),
+      deletedAt: null,
     }
     const [post] = existing
       ? await database.db.update(posts).set(values).where(eq(posts.id, existing.id)).returning()
       : await database.db.insert(posts).values(values).returning()
     if (!post) throw new Error(`Could not import post ${article.slug}`)
 
-    const [version] = await database.db.select({ value: max(postRevisions.versionNumber) }).from(postRevisions).where(eq(postRevisions.postId, post.id))
+    const [version] = await database.db
+      .select({ value: max(postRevisions.versionNumber) })
+      .from(postRevisions)
+      .where(eq(postRevisions.postId, post.id))
     await database.db.insert(postRevisions).values({
       postId: post.id,
       versionNumber: (version?.value ?? 0) + 1,
@@ -92,7 +117,9 @@ try {
     })
   }
 
-  await database.db.insert(auditLogs).values({ action: 'posts.import', entityType: 'post_import', afterData: { count: articles.length } })
+  await database.db
+    .insert(auditLogs)
+    .values({ action: 'posts.import', entityType: 'post_import', afterData: { count: articles.length } })
   process.stdout.write(`Imported ${articles.length} published posts and ${imageIds.length} news images.\n`)
 } finally {
   await database.close()

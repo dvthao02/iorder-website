@@ -16,7 +16,9 @@
     "gen:sitemap": "pnpm --filter @iorder/api gen:sitemap",
     "build": "pnpm --filter @iorder/web build",
     "preview": "pnpm --filter @iorder/web preview",
-    "lint": "pnpm --filter @iorder/web lint",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "dev:api": "pnpm --filter @iorder/api dev",
     "dev:admin": "pnpm --filter @iorder/admin dev",
     "build:cms": "pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api build && pnpm --filter @iorder/admin build",
@@ -28,8 +30,11 @@
     "test:media": "pnpm --filter @iorder/api test:media",
     "test:posts": "pnpm --filter @iorder/api test:posts",
     "test:homepage": "pnpm --filter @iorder/api test:homepage",
-    "test:api": "pnpm test:auth && pnpm test:media && pnpm test:posts && pnpm test:homepage",
-    "verify": "pnpm lint && pnpm typecheck:cms && pnpm build:production && pnpm test:api",
+    "test:offerings": "pnpm --filter @iorder/api test:offerings",
+    "test:api": "pnpm test:auth && pnpm test:media && pnpm test:posts && pnpm test:homepage && pnpm test:offerings",
+    "test:unit:api": "pnpm --filter @iorder/api test:unit",
+    "test:unit:admin": "pnpm --filter @iorder/admin test:unit",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck:cms && pnpm build:production && pnpm test:unit:api && pnpm test:unit:admin && pnpm test:api",
     "typecheck:cms": "pnpm --filter @iorder/contracts typecheck && pnpm --filter @iorder/database typecheck && pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api typecheck && pnpm --filter @iorder/admin typecheck",
     "db:create": "pnpm --filter @iorder/database db:create",
     "db:generate": "pnpm --filter @iorder/database db:generate",
@@ -45,8 +50,11 @@
     "@playwright/test": "^1.61.0",
     "concurrently": "^10.0.3",
     "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
-    "globals": "^17.7.0"
+    "globals": "^17.7.0",
+    "prettier": "^3.9.4",
+    "typescript-eslint": "^8.62.1"
   }
 }

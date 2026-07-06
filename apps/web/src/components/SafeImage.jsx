@@ -7,5 +7,14 @@ const PLACEHOLDER =
 export default function SafeImage({ src, alt = '', ...rest }) {
   const [errored, setErrored] = useState(false)
   const finalSrc = errored || !src ? PLACEHOLDER : src
-  return <img src={finalSrc} alt={alt} onError={() => { if (!errored) setErrored(true) }} {...rest} />
+  return (
+    <img
+      src={finalSrc}
+      alt={alt}
+      onError={() => {
+        if (!errored) setErrored(true)
+      }}
+      {...rest}
+    />
+  )
 }

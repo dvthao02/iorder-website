@@ -33,7 +33,7 @@ main {
 }
 
 .footer::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -99,7 +99,9 @@ main {
   font-weight: 560;
   line-height: 1.42;
   text-decoration: none;
-  transition: color 0.18s ease, transform 0.18s ease;
+  transition:
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .footer-contact-item svg {
@@ -143,7 +145,7 @@ main {
 }
 
 .footer-links a::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   right: 100%;
@@ -252,8 +254,7 @@ main {
   padding: 12px 18px;
   border: 1px solid rgba(226, 232, 240, 0.94);
   border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(240, 248, 255, 0.84));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(240, 248, 255, 0.84));
   box-shadow:
     0 14px 34px rgba(15, 23, 42, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
@@ -299,7 +300,9 @@ main {
   justify-content: center;
   height: 34px;
   text-decoration: none;
-  transition: transform 0.18s ease, filter 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
 }
 
 .footer-app-buttons a:hover {
@@ -388,7 +391,7 @@ main {
 }
 
 /* ── Dark mode ───────────────────────────────────────────────── */
-[data-theme="dark"] .footer {
+[data-theme='dark'] .footer {
   background:
     radial-gradient(circle at 8% 10%, rgba(11, 142, 220, 0.05), transparent 28%),
     radial-gradient(circle at 88% 15%, rgba(36, 198, 220, 0.04), transparent 30%),
@@ -397,64 +400,64 @@ main {
   color: #94a3b8;
 }
 
-[data-theme="dark"] .footer-desc,
-[data-theme="dark"] .footer-contact-item,
-[data-theme="dark"] .footer-links a {
+[data-theme='dark'] .footer-desc,
+[data-theme='dark'] .footer-contact-item,
+[data-theme='dark'] .footer-links a {
   color: #94a3b8;
 }
 
-[data-theme="dark"] .footer-column h3 {
+[data-theme='dark'] .footer-column h3 {
   color: #cbd5e1;
 }
 
-[data-theme="dark"] .footer-links a:hover,
-[data-theme="dark"] .footer-contact-item:hover {
+[data-theme='dark'] .footer-links a:hover,
+[data-theme='dark'] .footer-contact-item:hover {
   color: #60a5fa;
 }
 
-[data-theme="dark"] .footer-company-card {
+[data-theme='dark'] .footer-company-card {
   background: rgba(15, 34, 54, 0.8);
   border-color: rgba(30, 58, 82, 0.9);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
-[data-theme="dark"] .footer-company-card strong {
+[data-theme='dark'] .footer-company-card strong {
   color: #e2e8f0;
 }
 
-[data-theme="dark"] .footer-company-card span {
+[data-theme='dark'] .footer-company-card span {
   color: #64748b;
 }
 
-[data-theme="dark"] .footer-socials a {
+[data-theme='dark'] .footer-socials a {
   background: rgba(15, 34, 54, 0.9);
   border-color: rgba(30, 58, 82, 0.9);
   color: #60a5fa;
 }
 
-[data-theme="dark"] .footer-app-row {
+[data-theme='dark'] .footer-app-row {
   background: linear-gradient(135deg, rgba(10, 25, 45, 0.9), rgba(8, 20, 38, 0.88));
   border-color: rgba(30, 58, 82, 0.8);
 }
 
-[data-theme="dark"] .footer-trust {
+[data-theme='dark'] .footer-trust {
   color: #94a3b8;
 }
 
-[data-theme="dark"] .footer-apps > span {
+[data-theme='dark'] .footer-apps > span {
   color: #cbd5e1;
 }
 
-[data-theme="dark"] .footer-bottom-wrap {
+[data-theme='dark'] .footer-bottom-wrap {
   background: rgba(5, 11, 22, 0.9);
   border-top-color: rgba(30, 58, 82, 0.7);
 }
 
-[data-theme="dark"] .footer-bottom p {
+[data-theme='dark'] .footer-bottom p {
   color: #475569;
 }
 
-[data-theme="dark"] .footer-bottom p a {
+[data-theme='dark'] .footer-bottom p a {
   color: #60a5fa;
 }
 

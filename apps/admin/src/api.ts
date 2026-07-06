@@ -2,6 +2,12 @@ import type {
   AuthSessionResponse,
   CategoryInput,
   CategoryResponse,
+  ContactLead,
+  ContentPageInput,
+  ContentPageResponse,
+  DownloadInput,
+  DownloadResponse,
+  LeadStatus,
   MediaAsset,
   MediaListResponse,
   MediaMetadataInput,
@@ -12,8 +18,13 @@ import type {
   PartnerResponse,
   PostInput,
   PostResponse,
+  PostRevisionDetail,
+  PostRevisionSummary,
   TestimonialInput,
   TestimonialResponse,
+  CreateUserInput,
+  UpdateUserInput,
+  UserSummary,
   HomepageInput,
   HomepagePreviewSession,
   HomepageRevisionDetail,
@@ -24,9 +35,11 @@ import type {
   ExternalLinks,
   MenuResponse,
   MenuItemInput,
+  AuditLogEntry,
 } from '@iorder/contracts'
 
-const localApiHost = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
+const localApiHost =
+  typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
 const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
 const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
@@ -56,7 +69,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (lastError || !response) throw new Error('API_UNAVAILABLE')
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null) as { error?: string } | null
+    const body = (await response.json().catch(() => null)) as { error?: string } | null
     throw new Error(body?.error ?? `HTTP_${response.status}`)
   }
 
@@ -153,6 +166,24 @@ export function publishPost(id: string) {
   return request<{ item: PostResponse }>(`/api/admin/posts/${id}/publish`, { method: 'POST' })
 }
 
+export function unpublishPost(id: string) {
+  return request<{ item: PostResponse }>(`/api/admin/posts/${id}/unpublish`, { method: 'POST' })
+}
+
+export function listPostRevisions(postId: string) {
+  return request<{ items: PostRevisionSummary[] }>(`/api/admin/posts/${postId}/revisions`)
+}
+
+export function getPostRevision(postId: string, version: number) {
+  return request<{ item: PostRevisionDetail }>(`/api/admin/posts/${postId}/revisions/${version}`)
+}
+
+export function restorePostRevision(postId: string, version: number) {
+  return request<{ item: PostResponse }>(`/api/admin/posts/${postId}/revisions/${version}/restore`, {
+    method: 'POST',
+  })
+}
+
 export function listCategories() {
   return request<{ items: CategoryResponse[] }>('/api/admin/categories')
 }
@@ -162,7 +193,10 @@ export function createCategory(input: CategoryInput) {
 }
 
 export function updateCategory(id: string, input: CategoryInput) {
-  return request<{ item: CategoryResponse }>(`/api/admin/categories/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return request<{ item: CategoryResponse }>(`/api/admin/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function deleteCategory(id: string) {
@@ -171,6 +205,10 @@ export function deleteCategory(id: string) {
 
 export function archivePost(id: string) {
   return request<{ item: PostResponse }>(`/api/admin/posts/${id}/archive`, { method: 'POST' })
+}
+
+export function deletePost(id: string) {
+  return request<void>(`/api/admin/posts/${id}`, { method: 'DELETE' })
 }
 
 export function getHomepage() {
@@ -248,6 +286,10 @@ export function archiveOffering(id: string) {
   return request<{ item: OfferingResponse }>(`/api/admin/offerings/${id}/archive`, { method: 'POST' })
 }
 
+export function unpublishOffering(id: string) {
+  return request<{ item: OfferingResponse }>(`/api/admin/offerings/${id}/unpublish`, { method: 'POST' })
+}
+
 export function deleteOffering(id: string) {
   return request<void>(`/api/admin/offerings/${id}`, { method: 'DELETE' })
 }
@@ -275,6 +317,64 @@ export function deletePartner(id: string) {
   return request<void>(`/api/admin/partners/${id}`, { method: 'DELETE' })
 }
 
+// ── Content Pages (trang nội dung tĩnh) ─────────────────────────────────────
+export function listContentPages(search?: string, status?: string) {
+  const params = new URLSearchParams()
+  if (search?.trim()) params.set('search', search.trim())
+  if (status) params.set('status', status)
+  const qs = params.toString()
+  return request<{ items: ContentPageResponse[]; total: number }>(`/api/admin/content-pages${qs ? `?${qs}` : ''}`)
+}
+
+export function createContentPage(input: ContentPageInput) {
+  return request<{ item: ContentPageResponse }>('/api/admin/content-pages', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateContentPage(id: string, input: ContentPageInput) {
+  return request<{ item: ContentPageResponse }>(`/api/admin/content-pages/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function publishContentPage(id: string) {
+  return request<{ item: ContentPageResponse }>(`/api/admin/content-pages/${id}/publish`, { method: 'POST' })
+}
+
+export function unpublishContentPage(id: string) {
+  return request<{ item: ContentPageResponse }>(`/api/admin/content-pages/${id}/unpublish`, { method: 'POST' })
+}
+
+export function deleteContentPage(id: string) {
+  return request<void>(`/api/admin/content-pages/${id}`, { method: 'DELETE' })
+}
+
+// ── Downloads (Hỗ trợ cài đặt) ──────────────────────────────────────────────
+export function listDownloads() {
+  return request<{ items: DownloadResponse[]; total: number }>('/api/admin/downloads')
+}
+
+export function createDownload(input: DownloadInput) {
+  return request<{ item: DownloadResponse }>('/api/admin/downloads', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateDownload(id: string, input: DownloadInput) {
+  return request<{ item: DownloadResponse }>(`/api/admin/downloads/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteDownload(id: string) {
+  return request<void>(`/api/admin/downloads/${id}`, { method: 'DELETE' })
+}
+
 // ── Testimonials ───────────────────────────────────────────────────────────
 export function listTestimonials() {
   return request<{ items: TestimonialResponse[]; total: number }>('/api/admin/testimonials')
@@ -298,6 +398,23 @@ export function deleteTestimonial(id: string) {
   return request<void>(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
 }
 
+// ── Leads (khách liên hệ) ────────────────────────────────────────────────────
+export function getLeads(params: { page?: number; limit?: number; status?: LeadStatus }) {
+  const query = new URLSearchParams()
+  if (params.page) query.set('page', String(params.page))
+  if (params.limit) query.set('limit', String(params.limit))
+  if (params.status) query.set('status', params.status)
+  const qs = query.toString()
+  return request<{ items: ContactLead[]; total: number; totalNew: number }>(`/api/admin/leads${qs ? `?${qs}` : ''}`)
+}
+
+export function updateLeadStatus(id: string, status: LeadStatus) {
+  return request<{ item: ContactLead }>(`/api/admin/leads/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+}
+
 // ── Navigation ─────────────────────────────────────────────────────────────
 export function listMenus() {
   return request<{ items: MenuResponse[] }>('/api/admin/menus')
@@ -319,7 +436,9 @@ export function deleteMenuItem(location: string, itemId: string) {
 }
 
 export function listLinkGroups() {
-  return request<{ items: Array<{ id: string; code: string; name: string; links: unknown[] }> }>('/api/admin/link-groups')
+  return request<{ items: Array<{ id: string; code: string; name: string; links: unknown[] }> }>(
+    '/api/admin/link-groups',
+  )
 }
 
 export function upsertContentLink(code: string, linkId: string, input: Record<string, unknown>) {
@@ -377,5 +496,57 @@ export function updateAppearance(input: AppearanceSettings) {
   return request<{ item: AppearanceSettings }>('/api/admin/settings/appearance', {
     method: 'PUT',
     body: JSON.stringify(input),
+  })
+}
+
+// ── Activity (nhật ký hoạt động) ────────────────────────────────────────────
+
+export function listActivity(query: { page?: number; limit?: number; entityType?: string; action?: string } = {}) {
+  const params = new URLSearchParams()
+  if (query.page) params.set('page', String(query.page))
+  if (query.limit) params.set('limit', String(query.limit))
+  if (query.entityType) params.set('entityType', query.entityType)
+  if (query.action) params.set('action', query.action)
+  const suffix = params.size > 0 ? `?${params.toString()}` : ''
+  return request<{ items: AuditLogEntry[]; total: number }>(`/api/admin/activity${suffix}`)
+}
+
+// ── Users (quản lý người dùng) ───────────────────────────────────────────────
+
+export function listUsers() {
+  return request<{ items: UserSummary[] }>('/api/admin/users')
+}
+
+export function createUser(input: CreateUserInput) {
+  return request<{ item: UserSummary }>('/api/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateUser(id: string, input: UpdateUserInput) {
+  return request<{ item: UserSummary }>(`/api/admin/users/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function resetUserPassword(id: string, password: string) {
+  return request<{ item: UserSummary }>(`/api/admin/users/${id}/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify({ password }),
+  })
+}
+
+export function disableUser(id: string) {
+  return request<{ item: UserSummary }>(`/api/admin/users/${id}/disable`, {
+    method: 'POST',
+  })
+}
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return request<{ item: UserSummary }>('/api/admin/me/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
   })
 }

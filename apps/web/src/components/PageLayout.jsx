@@ -31,7 +31,9 @@ export default function PageLayout({ children, shellClassName = 'page-shell', ma
         location={location}
         logoMain={logo}
       />
-      <main className={mainClassName} {...mainProps}>{children}</main>
+      <main className={mainClassName} {...mainProps}>
+        {children}
+      </main>
       <Footer logoFooter={logo} />
     </div>
   )

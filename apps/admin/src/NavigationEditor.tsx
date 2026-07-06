@@ -1,7 +1,40 @@
+import type { OfferingResponse } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
-import { deleteContentLink, deleteMenuItem, listLinkGroups, listMenus, seedDefaultMenus, upsertContentLink, upsertMenuItem } from './api'
+import {
+  deleteContentLink,
+  deleteMenuItem,
+  listLinkGroups,
+  listMenus,
+  listOfferings,
+  seedDefaultMenus,
+  upsertContentLink,
+  upsertMenuItem,
+} from './api'
 import { toast } from './toast'
-import { PageHeader, ToggleSwitch } from './ui'
+import { PageHeader, ToggleSwitch, useEscapeAndSave } from './ui'
+
+// Mục header nào hiển thị danh sách con lấy từ Offerings (Phần mềm & Giải pháp), theo đúng loại + đường dẫn công khai.
+const OFFERING_MENU_MAP: Record<string, { type: string; prefix: string }> = {
+  '/phan-mem': { type: 'software', prefix: '/phan-mem' },
+  '/giai-phap': { type: 'solution', prefix: '/giai-phap' },
+  '/dich-vu': { type: 'service', prefix: '/dich-vu' },
+}
+
+function OfferingPreviewList({ items, prefix }: { items: OfferingResponse[]; prefix: string }) {
+  if (items.length === 0) return <p className="menu-item-hint">Chưa có nội dung nào đã xuất bản.</p>
+  return (
+    <div className="menu-offering-preview">
+      {items.map((item) => (
+        <span key={item.id} className="menu-offering-chip">
+          <strong>{item.title}</strong>{' '}
+          <small>
+            → {prefix}/{item.slug}
+          </small>
+        </span>
+      ))}
+    </div>
+  )
+}
 
 type MenuItem = {
   id: string
@@ -54,7 +87,15 @@ function MenuItemRow({
   onRefresh: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ label: item.label, url: item.url, target: item.target, icon: item.icon ?? '', sortOrder: item.sortOrder, isEnabled: item.isEnabled, parentId: item.parentId })
+  const [form, setForm] = useState({
+    label: item.label,
+    url: item.url,
+    target: item.target,
+    icon: item.icon ?? '',
+    sortOrder: item.sortOrder,
+    isEnabled: item.isEnabled,
+    parentId: item.parentId,
+  })
   const [busy, setBusy] = useState(false)
 
   const save = async () => {
@@ -82,7 +123,15 @@ function MenuItemRow({
   const quickToggle = async (enabled: boolean) => {
     setBusy(true)
     try {
-      await upsertMenuItem(location, item.id, { label: item.label, url: item.url, target: item.target as '_self' | '_blank', icon: item.icon, sortOrder: item.sortOrder, isEnabled: enabled, parentId: item.parentId })
+      await upsertMenuItem(location, item.id, {
+        label: item.label,
+        url: item.url,
+        target: item.target as '_self' | '_blank',
+        icon: item.icon,
+        sortOrder: item.sortOrder,
+        isEnabled: enabled,
+        parentId: item.parentId,
+      })
       onRefresh()
     } catch {
       toast.error('Không thể đổi trạng thái.')
@@ -104,39 +153,71 @@ function MenuItemRow({
     }
   }
 
-  useEffect(() => {
-    if (!editing) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setEditing(false) }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [editing])
+  useEscapeAndSave({ active: editing, onEscape: () => setEditing(false) })
 
   return (
     <div className="nav-item" style={{ marginLeft: depth * 20 }}>
       {editing ? (
         <div className="nav-item-form">
-          <input placeholder="Nhãn" value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} />
-          <input placeholder="URL hoặc đường dẫn" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} />
+          <input
+            placeholder="Nhãn"
+            value={form.label}
+            onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+          />
+          <input
+            placeholder="URL hoặc đường dẫn"
+            value={form.url}
+            onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+          />
           <select value={form.target} onChange={(e) => setForm((f) => ({ ...f, target: e.target.value }))}>
             <option value="_self">Cùng tab</option>
             <option value="_blank">Tab mới</option>
           </select>
-          <input placeholder="Icon key (tuỳ chọn)" value={form.icon} onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))} style={{ width: 120 }} />
-          <input type="number" placeholder="Thứ tự" value={form.sortOrder} onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))} style={{ width: 80 }} />
-          <ToggleSwitch checked={form.isEnabled} onChange={(next) => setForm((f) => ({ ...f, isEnabled: next }))} label="Hiển thị" />
-          <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>Lưu</button>
-          <button type="button" className="btn-secondary" onClick={() => setEditing(false)} disabled={busy}>Hủy</button>
+          <input
+            placeholder="Icon key (tuỳ chọn)"
+            value={form.icon}
+            onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
+            style={{ width: 120 }}
+          />
+          <input
+            type="number"
+            placeholder="Thứ tự"
+            value={form.sortOrder}
+            onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
+            style={{ width: 80 }}
+          />
+          <ToggleSwitch
+            checked={form.isEnabled}
+            onChange={(next) => setForm((f) => ({ ...f, isEnabled: next }))}
+            label="Hiển thị"
+          />
+          <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>
+            Lưu
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setEditing(false)} disabled={busy}>
+            Hủy
+          </button>
         </div>
       ) : (
         <div className="nav-item-row">
-          <ToggleSwitch checked={item.isEnabled} onChange={(next) => void quickToggle(next)} label="" hint="" disabled={busy} />
+          <ToggleSwitch
+            checked={item.isEnabled}
+            onChange={(next) => void quickToggle(next)}
+            label=""
+            hint=""
+            disabled={busy}
+          />
           <span className={item.isEnabled ? '' : 'nav-disabled'}>
             <strong>{item.label}</strong> <small>→ {item.url}</small>
             {item.target === '_blank' && <small> ↗</small>}
           </span>
           <div className="nav-item-actions">
-            <button type="button" className="btn-secondary" onClick={() => setEditing(true)}>Sửa</button>
-            <button type="button" className="btn-danger" onClick={() => void remove()} disabled={busy}>Xóa</button>
+            <button type="button" className="btn-secondary" onClick={() => setEditing(true)}>
+              Sửa
+            </button>
+            <button type="button" className="btn-danger" onClick={() => void remove()} disabled={busy}>
+              Xóa
+            </button>
           </div>
         </div>
       )}
@@ -148,7 +229,15 @@ function MenuItemRow({
   )
 }
 
-function AddMenuItemForm({ location, parentId, onDone }: { location: string; parentId: string | null; onDone: () => void }) {
+function AddMenuItemForm({
+  location,
+  parentId,
+  onDone,
+}: {
+  location: string
+  parentId: string | null
+  onDone: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ label: '', url: '', target: '_self', icon: '', sortOrder: 0, isEnabled: true })
   const [busy, setBusy] = useState(false)
@@ -157,7 +246,15 @@ function AddMenuItemForm({ location, parentId, onDone }: { location: string; par
     if (!form.label || !form.url) return
     setBusy(true)
     try {
-      await upsertMenuItem(location, 'new', { label: form.label, url: form.url, target: form.target as '_self' | '_blank', icon: form.icon || null, sortOrder: form.sortOrder, isEnabled: form.isEnabled, parentId })
+      await upsertMenuItem(location, 'new', {
+        label: form.label,
+        url: form.url,
+        target: form.target as '_self' | '_blank',
+        icon: form.icon || null,
+        sortOrder: form.sortOrder,
+        isEnabled: form.isEnabled,
+        parentId,
+      })
       setForm({ label: '', url: '', target: '_self', icon: '', sortOrder: 0, isEnabled: true })
       setOpen(false)
       onDone()
@@ -184,29 +281,75 @@ function AddMenuItemForm({ location, parentId, onDone }: { location: string; par
 
   return (
     <div className="nav-item-form" style={{ marginLeft: parentId ? 20 : 0 }}>
-      <input placeholder="Nhãn *" value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} required />
-      <input placeholder="URL hoặc đường dẫn *" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} required />
+      <input
+        placeholder="Nhãn *"
+        value={form.label}
+        onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+        required
+      />
+      <input
+        placeholder="URL hoặc đường dẫn *"
+        value={form.url}
+        onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+        required
+      />
       <select value={form.target} onChange={(e) => setForm((f) => ({ ...f, target: e.target.value }))}>
         <option value="_self">Cùng tab</option>
         <option value="_blank">Tab mới</option>
       </select>
-      <input type="number" placeholder="Thứ tự" value={form.sortOrder} onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))} style={{ width: 80 }} />
-      <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy || !form.label || !form.url}>Thêm</button>
-      <button type="button" className="btn-secondary" onClick={() => setOpen(false)} disabled={busy}>Hủy</button>
+      <input
+        type="number"
+        placeholder="Thứ tự"
+        value={form.sortOrder}
+        onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
+        style={{ width: 80 }}
+      />
+      <button
+        type="button"
+        className="btn-primary"
+        onClick={() => void save()}
+        disabled={busy || !form.label || !form.url}
+      >
+        Thêm
+      </button>
+      <button type="button" className="btn-secondary" onClick={() => setOpen(false)} disabled={busy}>
+        Hủy
+      </button>
     </div>
   )
 }
 
 function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: () => void }) {
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ label: '', url: '', type: 'external', target: '_self', sortOrder: 0, isEnabled: true })
+  const [editForm, setEditForm] = useState({
+    label: '',
+    url: '',
+    type: 'external',
+    target: '_self',
+    sortOrder: 0,
+    isEnabled: true,
+  })
   const [adding, setAdding] = useState(false)
-  const [newForm, setNewForm] = useState({ label: '', url: '', type: 'external', target: '_self', sortOrder: 0, isEnabled: true })
+  const [newForm, setNewForm] = useState({
+    label: '',
+    url: '',
+    type: 'external',
+    target: '_self',
+    sortOrder: 0,
+    isEnabled: true,
+  })
   const [busy, setBusy] = useState(false)
 
   const startEdit = (link: ContentLink) => {
     setEditingId(link.id)
-    setEditForm({ label: link.label, url: link.url, type: link.type, target: link.target, sortOrder: link.sortOrder, isEnabled: link.isEnabled })
+    setEditForm({
+      label: link.label,
+      url: link.url,
+      type: link.type,
+      target: link.target,
+      sortOrder: link.sortOrder,
+      isEnabled: link.isEnabled,
+    })
   }
 
   const saveLink = async () => {
@@ -253,7 +396,15 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
   const quickToggleLink = async (link: ContentLink, enabled: boolean) => {
     setBusy(true)
     try {
-      await upsertContentLink(group.code, link.id, { label: link.label, url: link.url, type: link.type, target: link.target, sortOrder: link.sortOrder, isEnabled: enabled, icon: link.icon })
+      await upsertContentLink(group.code, link.id, {
+        label: link.label,
+        url: link.url,
+        type: link.type,
+        target: link.target,
+        sortOrder: link.sortOrder,
+        isEnabled: enabled,
+        icon: link.icon,
+      })
       onRefresh()
     } catch {
       toast.error('Không thể đổi trạng thái.')
@@ -264,50 +415,92 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
 
   return (
     <div className="link-group-section">
-      <h4>{group.name} <small>({group.code})</small></h4>
+      <h4>
+        {group.name} <small>({group.code})</small>
+      </h4>
       {group.links.map((link) =>
         editingId === link.id ? (
           <div key={link.id} className="nav-item-form">
-            <input placeholder="Nhãn" value={editForm.label} onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))} />
-            <input placeholder="URL" value={editForm.url} onChange={(e) => setEditForm((f) => ({ ...f, url: e.target.value }))} />
+            <input
+              placeholder="Nhãn"
+              value={editForm.label}
+              onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))}
+            />
+            <input
+              placeholder="URL"
+              value={editForm.url}
+              onChange={(e) => setEditForm((f) => ({ ...f, url: e.target.value }))}
+            />
             <select value={editForm.type} onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
               <option value="internal">Nội bộ</option>
               <option value="external">Bên ngoài</option>
               <option value="email">Email</option>
               <option value="phone">Điện thoại</option>
             </select>
-            <ToggleSwitch checked={editForm.isEnabled} onChange={(next) => setEditForm((f) => ({ ...f, isEnabled: next }))} label="Hiển thị" />
-            <button type="button" className="btn-primary" onClick={() => void saveLink()} disabled={busy}>Lưu</button>
-            <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} disabled={busy}>Hủy</button>
+            <ToggleSwitch
+              checked={editForm.isEnabled}
+              onChange={(next) => setEditForm((f) => ({ ...f, isEnabled: next }))}
+              label="Hiển thị"
+            />
+            <button type="button" className="btn-primary" onClick={() => void saveLink()} disabled={busy}>
+              Lưu
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} disabled={busy}>
+              Hủy
+            </button>
           </div>
         ) : (
           <div key={link.id} className="nav-item-row">
-            <ToggleSwitch checked={link.isEnabled} onChange={(next) => void quickToggleLink(link, next)} label="" hint="" disabled={busy} />
+            <ToggleSwitch
+              checked={link.isEnabled}
+              onChange={(next) => void quickToggleLink(link, next)}
+              label=""
+              hint=""
+              disabled={busy}
+            />
             <span className={link.isEnabled ? '' : 'nav-disabled'}>
               <strong>{link.label}</strong> <small>→ {link.url}</small>
             </span>
             <div className="nav-item-actions">
-              <button type="button" className="btn-secondary" onClick={() => startEdit(link)}>Sửa</button>
-              <button type="button" className="btn-danger" onClick={() => void removeLink(link.id)}>Xóa</button>
+              <button type="button" className="btn-secondary" onClick={() => startEdit(link)}>
+                Sửa
+              </button>
+              <button type="button" className="btn-danger" onClick={() => void removeLink(link.id)}>
+                Xóa
+              </button>
             </div>
           </div>
-        )
+        ),
       )}
       {adding ? (
         <div className="nav-item-form">
-          <input placeholder="Nhãn *" value={newForm.label} onChange={(e) => setNewForm((f) => ({ ...f, label: e.target.value }))} />
-          <input placeholder="URL *" value={newForm.url} onChange={(e) => setNewForm((f) => ({ ...f, url: e.target.value }))} />
+          <input
+            placeholder="Nhãn *"
+            value={newForm.label}
+            onChange={(e) => setNewForm((f) => ({ ...f, label: e.target.value }))}
+          />
+          <input
+            placeholder="URL *"
+            value={newForm.url}
+            onChange={(e) => setNewForm((f) => ({ ...f, url: e.target.value }))}
+          />
           <select value={newForm.type} onChange={(e) => setNewForm((f) => ({ ...f, type: e.target.value }))}>
             <option value="internal">Nội bộ</option>
             <option value="external">Bên ngoài</option>
             <option value="email">Email</option>
             <option value="phone">Điện thoại</option>
           </select>
-          <button type="button" className="btn-primary" onClick={() => void addLink()} disabled={busy}>Thêm</button>
-          <button type="button" className="btn-secondary" onClick={() => setAdding(false)}>Hủy</button>
+          <button type="button" className="btn-primary" onClick={() => void addLink()} disabled={busy}>
+            Thêm
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setAdding(false)}>
+            Hủy
+          </button>
         </div>
       ) : (
-        <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setAdding(true)}>+ Thêm liên kết</button>
+        <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setAdding(true)}>
+          + Thêm liên kết
+        </button>
       )}
     </div>
   )
@@ -316,6 +509,7 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
 export function NavigationEditor() {
   const [menus, setMenus] = useState<Menu[]>([])
   const [linkGroups, setLinkGroups] = useState<LinkGroup[]>([])
+  const [offeringsByUrl, setOfferingsByUrl] = useState<Record<string, OfferingResponse[]>>({})
   const [activeTab, setActiveTab] = useState<'menus' | 'links'>('menus')
   const [loading, setLoading] = useState(false)
   const [seeding, setSeeding] = useState(false)
@@ -323,9 +517,21 @@ export function NavigationEditor() {
   const load = async () => {
     setLoading(true)
     try {
-      const [menusRes, groupsRes] = await Promise.all([listMenus(), listLinkGroups()])
+      const [menusRes, groupsRes, ...offeringsRes] = await Promise.all([
+        listMenus(),
+        listLinkGroups(),
+        ...Object.values(OFFERING_MENU_MAP).map((entry) => listOfferings(entry.type, 'published')),
+      ])
       setMenus(menusRes.items as Menu[])
       setLinkGroups(groupsRes.items as LinkGroup[])
+      setOfferingsByUrl(
+        Object.fromEntries(
+          Object.keys(OFFERING_MENU_MAP).map((url, index) => [
+            url,
+            [...(offeringsRes[index]?.items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+          ]),
+        ),
+      )
     } catch {
       toast.error('Không tải được dữ liệu menu.')
     } finally {
@@ -346,18 +552,37 @@ export function NavigationEditor() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   return (
     <div className="admin-module">
       <PageHeader
         title="Menu &amp; Điều hướng"
         description="Sắp xếp menu điều hướng và các nhóm liên kết hiển thị trên website."
+        actions={
+          <button type="button" className="btn-secondary" onClick={() => void handleSeedDefaults()} disabled={seeding}>
+            {seeding ? 'Đang đồng bộ...' : '↺ Đồng bộ theo giao diện web'}
+          </button>
+        }
       />
 
       <div className="tab-nav">
-        <button type="button" className={activeTab === 'menus' ? 'is-active' : ''} onClick={() => setActiveTab('menus')}>Menu điều hướng</button>
-        <button type="button" className={activeTab === 'links' ? 'is-active' : ''} onClick={() => setActiveTab('links')}>Nhóm liên kết</button>
+        <button
+          type="button"
+          className={activeTab === 'menus' ? 'is-active' : ''}
+          onClick={() => setActiveTab('menus')}
+        >
+          Menu điều hướng
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'links' ? 'is-active' : ''}
+          onClick={() => setActiveTab('links')}
+        >
+          Nhóm liên kết
+        </button>
       </div>
 
       {loading && <p className="admin-info">Đang tải...</p>}
@@ -365,7 +590,15 @@ export function NavigationEditor() {
       {activeTab === 'menus' && !loading && (
         <div>
           {menus.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 24px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #c8d8e8' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '48px 24px',
+                background: '#f8fafc',
+                borderRadius: 12,
+                border: '1px dashed #c8d8e8',
+              }}
+            >
               <p style={{ color: '#64748b', marginBottom: 16 }}>Chưa có menu nào trong database.</p>
               <button
                 type="button"
@@ -376,15 +609,39 @@ export function NavigationEditor() {
               >
                 {seeding ? 'Đang tạo...' : '✨ Tạo menu mặc định'}
               </button>
-              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 12 }}>Tạo Menu chính (main-nav) và Footer (footer-nav) với các mục điều hướng cơ bản.</p>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 12 }}>
+                Tạo Menu chính (main-nav) và Footer (footer-nav) với các mục điều hướng cơ bản.
+              </p>
             </div>
           )}
           {menus.map((menu) => (
             <div key={menu.id} className="menu-section">
-              <h3>{menu.name} <small>({menu.location})</small></h3>
-              {menu.items.map((item) => (
-                <MenuItemRow key={item.id} item={item} location={menu.location} depth={0} onRefresh={() => void load()} />
-              ))}
+              <h3>
+                {menu.name} <small>({menu.location})</small>
+              </h3>
+              {menu.location === 'main-nav' && menu.items.length > 0 && (
+                <p className="admin-info">
+                  Các thẻ dưới đây khớp từng mục trên thanh điều hướng website (theo đúng thứ tự). Ẩn/hiện, đổi nhãn
+                  hoặc thứ tự sẽ áp dụng ngay ngoài trang người dùng.
+                </p>
+              )}
+              {menu.items.map((item, index) => {
+                const offeringEntry = menu.location === 'main-nav' ? OFFERING_MENU_MAP[item.url] : undefined
+                return (
+                  <div key={item.id} className="menu-top-card">
+                    <span className="menu-top-order">#{index + 1}</span>
+                    <MenuItemRow item={item} location={menu.location} depth={0} onRefresh={() => void load()} />
+                    {offeringEntry && (
+                      <>
+                        <p className="menu-item-hint">
+                          Danh sách con lấy tự động từ "Phần mềm &amp; Giải pháp" — sửa nội dung ở đó, không sửa ở đây:
+                        </p>
+                        <OfferingPreviewList items={offeringsByUrl[item.url] ?? []} prefix={offeringEntry.prefix} />
+                      </>
+                    )}
+                  </div>
+                )
+              })}
               <AddMenuItemForm location={menu.location} parentId={null} onDone={() => void load()} />
             </div>
           ))}

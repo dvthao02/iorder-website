@@ -11,4 +11,3 @@ export function hashSessionToken(token: string): string {
 export function hashIpAddress(ipAddress: string, secret: string): string {
   return createHmac('sha256', secret).update(ipAddress).digest('hex')
 }
-

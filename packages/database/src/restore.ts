@@ -30,14 +30,6 @@ function run(command: string, args: string[]) {
   })
 }
 
-await run('pg_restore', [
-  '--clean',
-  '--if-exists',
-  '--no-owner',
-  '--no-acl',
-  '--dbname',
-  databaseUrl,
-  backupPath,
-])
+await run('pg_restore', ['--clean', '--if-exists', '--no-owner', '--no-acl', '--dbname', databaseUrl, backupPath])
 
 process.stdout.write(`Database restored from: ${backupPath}\n`)

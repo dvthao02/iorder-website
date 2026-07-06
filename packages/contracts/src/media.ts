@@ -45,6 +45,7 @@ export const mediaUsageSchema = z.object({
 
 export type MediaAsset = z.infer<typeof mediaAssetSchema>
 export type MediaKind = z.infer<typeof mediaKindSchema>
+export type MediaListQuery = z.infer<typeof mediaListQuerySchema>
 export type MediaListResponse = z.infer<typeof mediaListResponseSchema>
 export type MediaMetadataInput = z.infer<typeof mediaMetadataInputSchema>
 export type MediaUsage = z.infer<typeof mediaUsageSchema>

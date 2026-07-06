@@ -6,23 +6,25 @@ const SCRYPT_R = 8
 const SCRYPT_P = 1
 const SCRYPT_MAX_MEMORY = 64 * 1024 * 1024
 
-function deriveKey(
-  password: string,
-  salt: Buffer,
-  options: { N: number; r: number; p: number },
-): Promise<Buffer> {
+function deriveKey(password: string, salt: Buffer, options: { N: number; r: number; p: number }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    scrypt(password, salt, KEY_LENGTH, {
-      ...options,
-      maxmem: SCRYPT_MAX_MEMORY,
-    }, (error, derivedKey) => {
-      if (error) {
-        reject(error)
-        return
-      }
+    scrypt(
+      password,
+      salt,
+      KEY_LENGTH,
+      {
+        ...options,
+        maxmem: SCRYPT_MAX_MEMORY,
+      },
+      (error, derivedKey) => {
+        if (error) {
+          reject(error)
+          return
+        }
 
-      resolve(derivedKey)
-    })
+        resolve(derivedKey)
+      },
+    )
   })
 }
 
@@ -34,27 +36,15 @@ export async function hashPassword(password: string): Promise<string> {
     p: SCRYPT_P,
   })
 
-  return [
-    'scrypt',
-    SCRYPT_N,
-    SCRYPT_R,
-    SCRYPT_P,
-    salt.toString('base64url'),
-    derivedKey.toString('base64url'),
-  ].join('$')
+  return ['scrypt', SCRYPT_N, SCRYPT_R, SCRYPT_P, salt.toString('base64url'), derivedKey.toString('base64url')].join(
+    '$',
+  )
 }
 
 export async function verifyPassword(password: string, encodedHash: string): Promise<boolean> {
   const [algorithm, nValue, rValue, pValue, saltValue, hashValue] = encodedHash.split('$')
 
-  if (
-    algorithm !== 'scrypt'
-    || !nValue
-    || !rValue
-    || !pValue
-    || !saltValue
-    || !hashValue
-  ) {
+  if (algorithm !== 'scrypt' || !nValue || !rValue || !pValue || !saltValue || !hashValue) {
     return false
   }
 
@@ -79,4 +69,3 @@ export async function verifyPassword(password: string, encodedHash: string): Pro
     return false
   }
 }
-

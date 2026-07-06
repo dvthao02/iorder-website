@@ -25,13 +25,6 @@ function run(command: string, args: string[]) {
 }
 
 await mkdir(backupDir, { recursive: true })
-await run('pg_dump', [
-  '--format=custom',
-  '--no-owner',
-  '--no-acl',
-  '--file',
-  backupPath,
-  databaseUrl,
-])
+await run('pg_dump', ['--format=custom', '--no-owner', '--no-acl', '--file', backupPath, databaseUrl])
 
 process.stdout.write(`Database backup created: ${backupPath}\n`)

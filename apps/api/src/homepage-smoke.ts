@@ -62,12 +62,15 @@ try {
   const [role] = await database.db.select({ id: roles.id }).from(roles).where(eq(roles.code, 'admin')).limit(1)
   if (!role) throw new Error('Admin role missing')
 
-  const [user] = await database.db.insert(users).values({
-    username,
-    fullName: 'Homepage Smoke User',
-    passwordHash: await hashPassword(password),
-    status: 'active',
-  }).returning({ id: users.id })
+  const [user] = await database.db
+    .insert(users)
+    .values({
+      username,
+      fullName: 'Homepage Smoke User',
+      passwordHash: await hashPassword(password),
+      status: 'active',
+    })
+    .returning({ id: users.id })
   if (!user) throw new Error('Smoke user missing')
   userId = user.id
   await database.db.insert(userRoles).values({ userId, roleId: role.id })
@@ -89,17 +92,26 @@ try {
   if (published.statusCode !== 200) throw new Error('Homepage publish failed')
 
   const publicPage = await app.inject({ method: 'GET', url: '/api/public/homepage' })
-  if (publicPage.statusCode !== 200 || !publicPage.body.includes('Published hero title')) throw new Error('Published homepage missing')
+  if (publicPage.statusCode !== 200 || !publicPage.body.includes('Published hero title'))
+    throw new Error('Published homepage missing')
 
   const draftChanged = structuredClone(input)
   draftChanged.blocks[0]!.data.title = 'Unpublished changed title'
-  const resaved = await app.inject({ method: 'PUT', url: '/api/admin/homepage', headers: { cookie }, payload: draftChanged })
+  const resaved = await app.inject({
+    method: 'PUT',
+    url: '/api/admin/homepage',
+    headers: { cookie },
+    payload: draftChanged,
+  })
   if (resaved.statusCode !== 200) throw new Error('Homepage resave failed')
 
   const stablePublic = await app.inject({ method: 'GET', url: '/api/public/homepage' })
   if (stablePublic.body.includes('Unpublished changed title')) throw new Error('Draft leaked over published snapshot')
 
-  const [revisions] = await database.db.select({ value: count() }).from(pageRevisions).where(eq(pageRevisions.pageId, pageId))
+  const [revisions] = await database.db
+    .select({ value: count() })
+    .from(pageRevisions)
+    .where(eq(pageRevisions.pageId, pageId))
   if ((revisions?.value ?? 0) < 3) throw new Error('Homepage revisions missing')
 
   process.stdout.write('Homepage smoke test passed.\n')

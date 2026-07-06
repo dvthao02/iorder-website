@@ -6,10 +6,18 @@ import SafeImage from '../components/SafeImage'
 
 // Lucide đã gỡ icon thương hiệu → dùng SVG glyph cho Facebook và X.
 function IconFacebook() {
-  return <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7h2.3l.4-2.7h-2.7V9.5c0-.8.2-1.3 1.4-1.3h1.4V5.8c-.7-.1-1.4-.1-2.1-.1-2.1 0-3.5 1.3-3.5 3.6v2H8.3V14h2.3v7h2.9z" /></svg>
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+      <path d="M13.5 21v-7h2.3l.4-2.7h-2.7V9.5c0-.8.2-1.3 1.4-1.3h1.4V5.8c-.7-.1-1.4-.1-2.1-.1-2.1 0-3.5 1.3-3.5 3.6v2H8.3V14h2.3v7h2.9z" />
+    </svg>
+  )
 }
 function IconX() {
-  return <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M17.5 3h3l-6.6 7.5L21.7 21h-5.9l-4.6-6-5.3 6H3l7-8L2.6 3h6l4.2 5.5L17.5 3zm-1 16h1.6L8 4.7H6.3L16.5 19z" /></svg>
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+      <path d="M17.5 3h3l-6.6 7.5L21.7 21h-5.9l-4.6-6-5.3 6H3l7-8L2.6 3h6l4.2 5.5L17.5 3zm-1 16h1.6L8 4.7H6.3L16.5 19z" />
+    </svg>
+  )
 }
 import { findNewsArticle, newsArticles } from '../data/newsArticles'
 import { setPageSeo } from '../utils/seo'
@@ -37,7 +45,10 @@ function buildTableOfContents(html) {
     const text = heading.textContent.trim()
     if (!text) return
     let id = slugifyHeading(text) || 'muc'
-    if (used[id]) { used[id] += 1; id = `${id}-${used[id]}` } else used[id] = 1
+    if (used[id]) {
+      used[id] += 1
+      id = `${id}-${used[id]}`
+    } else used[id] = 1
     heading.setAttribute('id', id)
     toc.push({ id, text, level: heading.tagName === 'H3' ? 3 : 2 })
   })
@@ -53,7 +64,9 @@ function formatViews(count) {
 export default function NewsDetail() {
   const { slug } = useParams()
   const [article, setArticle] = useState(() => findNewsArticle(slug))
-  const [relatedArticles, setRelatedArticles] = useState(() => newsArticles.filter((item) => item.slug !== slug).slice(0, 3))
+  const [relatedArticles, setRelatedArticles] = useState(() =>
+    newsArticles.filter((item) => item.slug !== slug).slice(0, 3),
+  )
   const [isLoadingArticle, setIsLoadingArticle] = useState(true)
   const [activeId, setActiveId] = useState('')
   const [copied, setCopied] = useState(false)
@@ -72,7 +85,8 @@ export default function NewsDetail() {
   useEffect(() => {
     setPageSeo({
       title: article ? `${article.title} - iOrder` : 'Tin tức - iOrder',
-      description: article?.excerpt ?? 'Tin tức và hướng dẫn vận hành iOrder cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.',
+      description:
+        article?.excerpt ?? 'Tin tức và hướng dẫn vận hành iOrder cho nhà hàng, cafe, bán lẻ và chuỗi cửa hàng.',
       image: article?.image ?? undefined,
       type: 'article',
     })
@@ -108,17 +122,28 @@ export default function NewsDetail() {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1500)
-    } catch { /* clipboard không khả dụng */ }
+    } catch {
+      /* clipboard không khả dụng */
+    }
   }
 
-  if (isLoadingArticle && !article) return <main className="detail-not-found"><div className="container"><p>Đang tải bài viết...</p></div></main>
+  if (isLoadingArticle && !article)
+    return (
+      <main className="detail-not-found">
+        <div className="container">
+          <p>Đang tải bài viết...</p>
+        </div>
+      </main>
+    )
 
   if (!article) {
     return (
       <PageLayout mainClassName="detail-not-found">
         <div className="container">
           <h1>Không tìm thấy bài viết</h1>
-          <Link to="/tin-tuc" className="btn primary">Quay lại tin tức</Link>
+          <Link to="/tin-tuc" className="btn primary">
+            Quay lại tin tức
+          </Link>
         </div>
       </PageLayout>
     )
@@ -144,22 +169,47 @@ export default function NewsDetail() {
 
               <div className="article-meta-bar">
                 <div className="article-meta-left">
-                  <span><Calendar size={15} /> {new Date(article.date).toLocaleDateString('vi-VN')}</span>
-                  <span><Clock size={15} /> {article.readingTime}</span>
-                  <span><Eye size={15} /> {formatViews(article.viewCount)} lượt xem</span>
-                  <span><Users size={15} /> Đội ngũ iOrder</span>
+                  <span>
+                    <Calendar size={15} /> {new Date(article.date).toLocaleDateString('vi-VN')}
+                  </span>
+                  <span>
+                    <Clock size={15} /> {article.readingTime}
+                  </span>
+                  <span>
+                    <Eye size={15} /> {formatViews(article.viewCount)} lượt xem
+                  </span>
+                  <span>
+                    <Users size={15} /> Đội ngũ iOrder
+                  </span>
                 </div>
                 <div className="article-share">
                   <span className="article-share-label">Chia sẻ:</span>
-                  <a href={shareFacebook} target="_blank" rel="noreferrer" aria-label="Chia sẻ Facebook"><IconFacebook /></a>
-                  <a href={shareTwitter} target="_blank" rel="noreferrer" aria-label="Chia sẻ X"><IconX /></a>
-                  <button type="button" onClick={copyLink} aria-label="Sao chép liên kết" title={copied ? 'Đã sao chép!' : 'Sao chép liên kết'}><Link2 size={16} /></button>
+                  <a href={shareFacebook} target="_blank" rel="noreferrer" aria-label="Chia sẻ Facebook">
+                    <IconFacebook />
+                  </a>
+                  <a href={shareTwitter} target="_blank" rel="noreferrer" aria-label="Chia sẻ X">
+                    <IconX />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={copyLink}
+                    aria-label="Sao chép liên kết"
+                    title={copied ? 'Đã sao chép!' : 'Sao chép liên kết'}
+                  >
+                    <Link2 size={16} />
+                  </button>
                 </div>
               </div>
 
               {article.image ? (
                 <div className="article-cover">
-                  <SafeImage src={article.image} alt={article.imageAlt} loading="eager" decoding="sync" fetchPriority="high" />
+                  <SafeImage
+                    src={article.image}
+                    alt={article.imageAlt}
+                    loading="eager"
+                    decoding="sync"
+                    fetchPriority="high"
+                  />
                 </div>
               ) : null}
 
@@ -168,7 +218,9 @@ export default function NewsDetail() {
                   <article className="article-rich" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
                 ) : (
                   <article className="article-rich">
-                    {article.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                    {article.body.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
                   </article>
                 )}
 
@@ -189,7 +241,9 @@ export default function NewsDetail() {
                 {article.tags?.length ? (
                   <div className="article-tags">
                     {article.tags.map((tag) => (
-                      <span key={tag.id ?? tag.slug ?? tag} className="article-tag">#{tag.name ?? tag}</span>
+                      <span key={tag.id ?? tag.slug ?? tag} className="article-tag">
+                        #{tag.name ?? tag}
+                      </span>
                     ))}
                   </div>
                 ) : null}
@@ -199,9 +253,13 @@ export default function NewsDetail() {
             <aside className="article-sidebar">
               <div className="sidebar-card summary-card">
                 <h2 className="sidebar-card-title">Tóm tắt bài viết</h2>
-                <div className="summary-thumb"><SafeImage src={article.image} alt={article.imageAlt} loading="lazy" /></div>
+                <div className="summary-thumb">
+                  <SafeImage src={article.image} alt={article.imageAlt} loading="lazy" />
+                </div>
                 <p className="summary-text">{article.excerpt}</p>
-                <a className="summary-readmore" href="#article-body">Đọc tiếp <ArrowRight size={15} /></a>
+                <a className="summary-readmore" href="#article-body">
+                  Đọc tiếp <ArrowRight size={15} />
+                </a>
               </div>
 
               {toc.length > 0 ? (
@@ -209,7 +267,10 @@ export default function NewsDetail() {
                   <h2 className="sidebar-card-title">Mục lục</h2>
                   <ul className="toc-list">
                     {toc.map((item) => (
-                      <li key={item.id} className={`toc-item level-${item.level}${activeId === item.id ? ' is-active' : ''}`}>
+                      <li
+                        key={item.id}
+                        className={`toc-item level-${item.level}${activeId === item.id ? ' is-active' : ''}`}
+                      >
                         <a href={`#${item.id}`}>{item.text}</a>
                       </li>
                     ))}
@@ -229,21 +290,29 @@ export default function NewsDetail() {
                         <span className="sidebar-related-body">
                           <strong>{item.title}</strong>
                           <span className="sidebar-related-meta">
-                            <span><Calendar size={12} /> {new Date(item.date).toLocaleDateString('vi-VN')}</span>
-                            <span><Eye size={12} /> {formatViews(item.viewCount)} lượt xem</span>
+                            <span>
+                              <Calendar size={12} /> {new Date(item.date).toLocaleDateString('vi-VN')}
+                            </span>
+                            <span>
+                              <Eye size={12} /> {formatViews(item.viewCount)} lượt xem
+                            </span>
                           </span>
                         </span>
                       </Link>
                     ))}
                   </div>
-                  <Link to="/tin-tuc" className="summary-readmore">Xem tất cả bài viết <ArrowRight size={15} /></Link>
+                  <Link to="/tin-tuc" className="summary-readmore">
+                    Xem tất cả bài viết <ArrowRight size={15} />
+                  </Link>
                 </div>
               ) : null}
 
               <div className="sidebar-card cta-card">
                 <h2 className="sidebar-card-title">Đăng ký dùng thử iOrder</h2>
                 <p>Trải nghiệm đầy đủ tính năng miễn phí 7 ngày, không cần thẻ.</p>
-                <Link to="/lien-he" className="cta-card-btn">Dùng thử miễn phí <ArrowRight size={16} /></Link>
+                <Link to="/lien-he" className="cta-card-btn">
+                  Dùng thử miễn phí <ArrowRight size={16} />
+                </Link>
               </div>
             </aside>
           </div>

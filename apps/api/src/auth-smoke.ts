@@ -20,11 +20,7 @@ let userId: string | null = null
 const app = await buildApp(env)
 
 try {
-  const [adminRole] = await database.db
-    .select({ id: roles.id })
-    .from(roles)
-    .where(eq(roles.code, 'admin'))
-    .limit(1)
+  const [adminRole] = await database.db.select({ id: roles.id }).from(roles).where(eq(roles.code, 'admin')).limit(1)
 
   if (!adminRole) {
     throw new Error('Admin role is missing. Run the core database seed first.')

@@ -2,27 +2,11 @@ import { pgEnum } from 'drizzle-orm/pg-core'
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'disabled'])
 
-export const contentStatusEnum = pgEnum('content_status', [
-  'draft',
-  'review',
-  'scheduled',
-  'published',
-  'archived',
-])
+export const contentStatusEnum = pgEnum('content_status', ['draft', 'review', 'scheduled', 'published', 'archived'])
 
-export const postTypeEnum = pgEnum('post_type', [
-  'news',
-  'promotion',
-  'case_study',
-  'announcement',
-])
+export const postTypeEnum = pgEnum('post_type', ['news', 'promotion', 'case_study', 'announcement'])
 
-export const offeringTypeEnum = pgEnum('offering_type', [
-  'software',
-  'solution',
-  'service',
-  'industry',
-])
+export const offeringTypeEnum = pgEnum('offering_type', ['software', 'solution', 'service', 'industry'])
 
 export const pageBlockTypeEnum = pgEnum('page_block_type', [
   // homepage blocks (canonical)
@@ -55,10 +39,4 @@ export const pageBlockTypeEnum = pgEnum('page_block_type', [
 
 export const partnerKindEnum = pgEnum('partner_kind', ['partner', 'customer'])
 
-export const linkTypeEnum = pgEnum('link_type', [
-  'internal',
-  'external',
-  'email',
-  'phone',
-  'download',
-])
+export const linkTypeEnum = pgEnum('link_type', ['internal', 'external', 'email', 'phone', 'download'])

@@ -6,4 +6,3 @@ export function timestampColumns() {
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   }
 }
-

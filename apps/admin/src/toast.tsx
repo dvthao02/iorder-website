@@ -40,7 +40,9 @@ export function ToastHost() {
   const [list, setList] = useState<ToastItem[]>(items)
   useEffect(() => {
     listeners.add(setList)
-    return () => { listeners.delete(setList) }
+    return () => {
+      listeners.delete(setList)
+    }
   }, [])
 
   if (list.length === 0) return null
@@ -52,7 +54,9 @@ export function ToastHost() {
           <div key={item.id} className={`toast toast-${item.type}`} role="status">
             <Icon size={18} className="toast-icon" />
             <span className="toast-msg">{item.message}</span>
-            <button type="button" className="toast-close" aria-label="Đóng" onClick={() => dismiss(item.id)}><X size={14} /></button>
+            <button type="button" className="toast-close" aria-label="Đóng" onClick={() => dismiss(item.id)}>
+              <X size={14} />
+            </button>
           </div>
         )
       })}

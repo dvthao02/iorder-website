@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createPartner, deletePartner, listMedia, listPartners, updatePartner } from './api'
 import { toast } from './toast'
-import { ImagePicker, PageHeader, StatusDot, ToggleSwitch } from './ui'
+import { ImagePicker, ModalShell, PageHeader, StatusDot, ToggleSwitch, useEscapeAndSave } from './ui'
 
 const emptyPartner: PartnerInput = {
   name: '',
@@ -20,6 +20,14 @@ const KIND_LABEL: Record<PartnerKind, string> = { partner: 'Đối tác', custom
 
 type StatusFilter = 'all' | 'enabled' | 'disabled'
 type KindFilter = 'all' | PartnerKind
+
+function validatePartner(form: PartnerInput): string | null {
+  if (form.name.trim().length < 2) return 'Tên đối tác phải có ít nhất 2 ký tự.'
+  const website = (form.websiteUrl ?? '').trim()
+  if (website && !/^https?:\/\/.+/.test(website))
+    return 'Website phải là URL hợp lệ, bắt đầu bằng http:// hoặc https://.'
+  return null
+}
 
 function toInput(partner: PartnerResponse): PartnerInput {
   return {
@@ -57,18 +65,16 @@ export function PartnersManager() {
   }
 
   useEffect(() => {
-    void loadData().catch(() => toast.error('Không thể tải danh sách đối tác.')).finally(() => setLoading(false))
+    void loadData()
+      .catch(() => toast.error('Không thể tải danh sách đối tác.'))
+      .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (!editorOpen) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeEditor()
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); formRef.current?.requestSubmit() }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [editorOpen])
+  useEscapeAndSave({
+    active: editorOpen,
+    onSave: () => formRef.current?.requestSubmit(),
+    onEscape: () => closeEditor(),
+  })
 
   const logoUrl = (id: string | null) => images.find((image) => image.id === id)?.publicUrl ?? null
 
@@ -94,6 +100,11 @@ export function PartnersManager() {
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const validationError = validatePartner(form)
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
     setIsSaving(true)
     try {
       if (editingId) await updatePartner(editingId, form)
@@ -135,7 +146,12 @@ export function PartnersManager() {
       if (statusFilter === 'enabled' && !partner.isEnabled) return false
       if (statusFilter === 'disabled' && partner.isEnabled) return false
       if (kindFilter !== 'all' && partner.kind !== kindFilter) return false
-      if (query && !partner.name.toLowerCase().includes(query) && !(partner.websiteUrl ?? '').toLowerCase().includes(query)) return false
+      if (
+        query &&
+        !partner.name.toLowerCase().includes(query) &&
+        !(partner.websiteUrl ?? '').toLowerCase().includes(query)
+      )
+        return false
       return true
     })
   }, [items, search, statusFilter, kindFilter])
@@ -149,7 +165,9 @@ export function PartnersManager() {
       .filter(({ partner, index }) => partner.sortOrder !== index)
     setItems(ordered.map((partner, index) => ({ ...partner, sortOrder: index })))
     try {
-      await Promise.all(changed.map(({ partner, index }) => updatePartner(partner.id, { ...toInput(partner), sortOrder: index })))
+      await Promise.all(
+        changed.map(({ partner, index }) => updatePartner(partner.id, { ...toInput(partner), sortOrder: index })),
+      )
       await loadData()
     } catch {
       toast.error('Không thể lưu thứ tự.')
@@ -179,12 +197,26 @@ export function PartnersManager() {
     <section className="admin-card content-manager">
       <PageHeader
         title={<>Đối tác &amp; Khách hàng</>}
-        description={<>Quản lý logo đối tác/khách hàng hiển thị trên website. Tải logo trong "Ảnh &amp; tài liệu" trước khi chọn.</>}
-        actions={<button className="btn-primary btn-icon" type="button" onClick={openCreate}><Plus size={16} /> Thêm đối tác</button>}
+        description={
+          <>
+            Quản lý logo đối tác/khách hàng hiển thị trên website. Tải logo trong "Ảnh &amp; tài liệu" trước khi chọn.
+          </>
+        }
+        actions={
+          <button className="btn-primary btn-icon" type="button" onClick={openCreate}>
+            <Plus size={16} /> Thêm đối tác
+          </button>
+        }
       />
 
       <div className="toolbar">
-        <input className="toolbar-search" type="search" placeholder="Tìm theo tên hoặc website…" value={search} onChange={(event) => setSearch(event.target.value)} />
+        <input
+          className="toolbar-search"
+          type="search"
+          placeholder="Tìm theo tên hoặc website…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
         <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}>
           <option value="all">Mọi trạng thái</option>
           <option value="enabled">Đang hiển thị</option>
@@ -203,70 +235,128 @@ export function PartnersManager() {
         <div className="admin-empty">
           <Plus size={36} />
           <p>Chưa có đối tác nào.</p>
-          <button type="button" className="btn-primary btn-icon" onClick={openCreate}><Plus size={15} /> Thêm đối tác đầu tiên</button>
+          <button type="button" className="btn-primary btn-icon" onClick={openCreate}>
+            <Plus size={15} /> Thêm đối tác đầu tiên
+          </button>
         </div>
       )}
 
-      {!loading && items.length > 0 && <div className="data-table-wrap">
-        <table className="data-table partner-table">
-          <thead>
-            <tr>
-              <th className="col-grip" aria-label="Kéo thả" />
-              <th className="col-stt">STT</th>
-              <th>Logo</th>
-              <th>Tên</th>
-              <th>Loại</th>
-              <th>Website</th>
-              <th>Trạng thái</th>
-              <th className="col-order">Thứ tự</th>
-              <th className="col-actions">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={9} className="table-empty">Không có đối tác nào khớp.</td></tr>
-            ) : null}
-            {filtered.map((partner, index) => {
-              const thumb = logoUrl(partner.logoMediaId)
-              return (
-                <tr
-                  key={partner.id}
-                  className={dragId === partner.id ? 'is-dragging' : ''}
-                  draggable={isReorderable}
-                  onDragStart={() => isReorderable && setDragId(partner.id)}
-                  onDragOver={(event) => { if (isReorderable) event.preventDefault() }}
-                  onDrop={() => isReorderable && onDrop(partner.id)}
-                  onDragEnd={() => setDragId(null)}
-                >
-                  <td className="col-grip">{isReorderable ? <span className="drag-grip" title="Kéo để sắp xếp" aria-hidden="true">⠿</span> : null}</td>
-                  <td className="col-stt">{index + 1}</td>
-                  <td>
-                    <span className="cell-logo">
-                      {thumb ? <img src={thumb} alt="" /> : <span className="cell-logo-fallback">{partner.name.charAt(0).toUpperCase() || '?'}</span>}
-                    </span>
-                  </td>
-                  <td><strong>{partner.name}</strong></td>
-                  <td><span className={`kind-badge kind-${partner.kind}`}>{KIND_LABEL[partner.kind]}</span></td>
-                  <td className="cell-website">
-                    {partner.websiteUrl ? <a href={partner.websiteUrl} target="_blank" rel="noreferrer">{partner.websiteUrl.replace(/^https?:\/\//, '')}</a> : <span className="muted">—</span>}
-                  </td>
-                  <td>
-                    <button type="button" className="status-pill" onClick={() => void toggleEnabled(partner)} title="Bấm để bật/tắt">
-                      <StatusDot tone={partner.isEnabled ? 'on' : 'muted'} />{partner.isEnabled ? 'Đang hiển thị' : 'Đã ẩn'}
-                    </button>
-                  </td>
-                  <td className="col-order">#{partner.sortOrder}</td>
-                  <td className="col-actions">
-                    <button type="button" className="row-action icon-only" title="Sửa" aria-label={`Sửa ${partner.name}`} onClick={() => openEdit(partner)}><Pencil size={16} /></button>
-                    <button type="button" className="row-action icon-only is-danger" title="Xóa" aria-label={`Xóa ${partner.name}`} onClick={() => void remove(partner)}><Trash2 size={16} /></button>
+      {!loading && items.length > 0 && (
+        <div className="data-table-wrap">
+          <table className="data-table partner-table">
+            <thead>
+              <tr>
+                <th className="col-grip" aria-label="Kéo thả" />
+                <th className="col-stt">STT</th>
+                <th>Logo</th>
+                <th>Tên</th>
+                <th>Loại</th>
+                <th>Website</th>
+                <th>Trạng thái</th>
+                <th className="col-order">Thứ tự</th>
+                <th className="col-actions">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="table-empty">
+                    Không có đối tác nào khớp.
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>}
-      {!loading && items.length > 0 && <p className="table-hint">{isReorderable ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.' : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}</p>}
+              ) : null}
+              {filtered.map((partner, index) => {
+                const thumb = logoUrl(partner.logoMediaId)
+                return (
+                  <tr
+                    key={partner.id}
+                    className={dragId === partner.id ? 'is-dragging' : ''}
+                    draggable={isReorderable}
+                    onDragStart={() => isReorderable && setDragId(partner.id)}
+                    onDragOver={(event) => {
+                      if (isReorderable) event.preventDefault()
+                    }}
+                    onDrop={() => isReorderable && onDrop(partner.id)}
+                    onDragEnd={() => setDragId(null)}
+                  >
+                    <td className="col-grip">
+                      {isReorderable ? (
+                        <span className="drag-grip" title="Kéo để sắp xếp" aria-hidden="true">
+                          ⠿
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="col-stt">{index + 1}</td>
+                    <td>
+                      <span className="cell-logo">
+                        {thumb ? (
+                          <img src={thumb} alt="" />
+                        ) : (
+                          <span className="cell-logo-fallback">{partner.name.charAt(0).toUpperCase() || '?'}</span>
+                        )}
+                      </span>
+                    </td>
+                    <td>
+                      <strong>{partner.name}</strong>
+                    </td>
+                    <td>
+                      <span className={`kind-badge kind-${partner.kind}`}>{KIND_LABEL[partner.kind]}</span>
+                    </td>
+                    <td className="cell-website">
+                      {partner.websiteUrl ? (
+                        <a href={partner.websiteUrl} target="_blank" rel="noreferrer">
+                          {partner.websiteUrl.replace(/^https?:\/\//, '')}
+                        </a>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="status-pill"
+                        onClick={() => void toggleEnabled(partner)}
+                        title="Bấm để bật/tắt"
+                      >
+                        <StatusDot tone={partner.isEnabled ? 'on' : 'muted'} />
+                        {partner.isEnabled ? 'Đang hiển thị' : 'Đã ẩn'}
+                      </button>
+                    </td>
+                    <td className="col-order">#{partner.sortOrder}</td>
+                    <td className="col-actions">
+                      <button
+                        type="button"
+                        className="row-action icon-only"
+                        title="Sửa"
+                        aria-label={`Sửa ${partner.name}`}
+                        onClick={() => openEdit(partner)}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="row-action icon-only is-danger"
+                        title="Xóa"
+                        aria-label={`Xóa ${partner.name}`}
+                        onClick={() => void remove(partner)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {!loading && items.length > 0 && (
+        <p className="table-hint">
+          {isReorderable
+            ? 'Kéo thả các hàng để sắp xếp thứ tự hiển thị.'
+            : 'Bỏ tìm kiếm/bộ lọc để bật kéo-thả sắp xếp.'}
+        </p>
+      )}
 
       <div className="preview-panel">
         <div className="preview-head">
@@ -281,7 +371,11 @@ export function PartnersManager() {
               const thumb = logoUrl(partner.logoMediaId)
               return (
                 <span className="preview-logo" key={partner.id} title={`${partner.name} · ${KIND_LABEL[partner.kind]}`}>
-                  {thumb ? <img src={thumb} alt={partner.name} /> : <span className="preview-logo-text">{partner.name}</span>}
+                  {thumb ? (
+                    <img src={thumb} alt={partner.name} />
+                  ) : (
+                    <span className="preview-logo-text">{partner.name}</span>
+                  )}
                 </span>
               )
             })}
@@ -290,68 +384,102 @@ export function PartnersManager() {
       </div>
 
       {editorOpen ? (
-        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={closeEditor}>
-          <form ref={formRef} className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={save}>
-            <div className="modal-head">
-              <button type="button" className="modal-back" onClick={closeEditor}>← Trở về</button>
+        <ModalShell
+          as="form"
+          formRef={formRef}
+          onSubmit={save}
+          onOverlayClick={closeEditor}
+          header={
+            <>
+              <button type="button" className="modal-back" onClick={closeEditor}>
+                ← Trở về
+              </button>
               <h2>{editingId ? 'Sửa đối tác' : 'Thêm đối tác'}</h2>
-            </div>
-
-            <div className="modal-body">
-              <div className="form-row-2col">
-                <label>
-                  Tên đối tác
-                  <input required maxLength={180} value={form.name} onChange={(event) => patchForm('name', event.target.value)} />
-                </label>
-                <label>
-                  Loại
-                  <select value={form.kind} onChange={(event) => patchForm('kind', event.target.value as PartnerKind)}>
-                    <option value="partner">Đối tác</option>
-                    <option value="customer">Khách hàng</option>
-                  </select>
-                </label>
-              </div>
-
-              <ImagePicker
-                label="Logo"
-                ariaLabel="Chọn logo"
-                images={images}
-                value={form.logoMediaId}
-                onChange={(id) => patchForm('logoMediaId', id)}
-                onUploaded={(asset) => setImages((prev) => [asset, ...prev])}
+            </>
+          }
+          footer={
+            <>
+              <button type="button" className="secondary-button" onClick={closeEditor}>
+                Hủy
+              </button>
+              <button
+                className="btn-primary"
+                disabled={isSaving || Boolean(validatePartner(form))}
+                title={validatePartner(form) ?? undefined}
+                type="submit"
+              >
+                {isSaving ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </>
+          }
+        >
+          <div className="form-row-2col">
+            <label>
+              Tên đối tác
+              <input
+                required
+                maxLength={180}
+                value={form.name}
+                onChange={(event) => patchForm('name', event.target.value)}
               />
+            </label>
+            <label>
+              Loại
+              <select value={form.kind} onChange={(event) => patchForm('kind', event.target.value as PartnerKind)}>
+                <option value="partner">Đối tác</option>
+                <option value="customer">Khách hàng</option>
+              </select>
+            </label>
+          </div>
 
-              <div className="form-row-2col">
-                <label>
-                  Website
-                  <input type="url" placeholder="https://..." value={form.websiteUrl ?? ''} onChange={(event) => patchForm('websiteUrl', event.target.value || null)} />
-                </label>
-                <label>
-                  Thứ tự hiển thị
-                  <input type="number" min={0} max={9999} value={form.sortOrder} onChange={(event) => patchForm('sortOrder', Number(event.target.value))} />
-                </label>
-              </div>
+          <ImagePicker
+            label="Logo"
+            ariaLabel="Chọn logo"
+            images={images}
+            value={form.logoMediaId}
+            onChange={(id) => patchForm('logoMediaId', id)}
+            onUploaded={(asset) => setImages((prev) => [asset, ...prev])}
+          />
 
-              <label>
-                Mô tả ngắn
-                <textarea maxLength={2000} rows={3} value={form.description ?? ''} onChange={(event) => patchForm('description', event.target.value || null)} />
-              </label>
-
-              <ToggleSwitch
-                checked={form.isEnabled}
-                onChange={(next) => patchForm('isEnabled', next)}
-                label="Hiển thị trên website"
-                hint="Tắt để ẩn khỏi trang công khai"
+          <div className="form-row-2col">
+            <label>
+              Website
+              <input
+                type="url"
+                placeholder="https://..."
+                value={form.websiteUrl ?? ''}
+                onChange={(event) => patchForm('websiteUrl', event.target.value || null)}
               />
+            </label>
+            <label>
+              Thứ tự hiển thị
+              <input
+                type="number"
+                min={0}
+                max={9999}
+                value={form.sortOrder}
+                onChange={(event) => patchForm('sortOrder', Number(event.target.value))}
+              />
+            </label>
+          </div>
 
-            </div>
+          <label>
+            Mô tả ngắn
+            <textarea
+              maxLength={2000}
+              rows={3}
+              value={form.description ?? ''}
+              onChange={(event) => patchForm('description', event.target.value || null)}
+            />
+          </label>
 
-            <div className="modal-foot">
-              <button type="button" className="secondary-button" onClick={closeEditor}>Hủy</button>
-              <button className="btn-primary" disabled={isSaving || !form.name} type="submit">{isSaving ? 'Đang lưu...' : 'Lưu'}</button>
-            </div>
-          </form>
-        </div>
+          <ToggleSwitch
+            checked={form.isEnabled}
+            onChange={(next) => patchForm('isEnabled', next)}
+            label="Hiển thị trên website"
+            hint="Tắt để ẩn khỏi trang công khai"
+          />
+        </ModalShell>
       ) : null}
     </section>
   )

@@ -1,8 +1,17 @@
 import type { ExternalLinks, MediaAsset, SiteProfileInput, SiteProfileResponse } from '@iorder/contracts'
 import { useEffect, useRef, useState } from 'react'
-import { type AppearanceSettings, getAppearance, getExternalLinks, getSiteProfile, listMedia, updateAppearance, updateExternalLinks, updateSiteProfile } from './api'
+import {
+  type AppearanceSettings,
+  getAppearance,
+  getExternalLinks,
+  getSiteProfile,
+  listMedia,
+  updateAppearance,
+  updateExternalLinks,
+  updateSiteProfile,
+} from './api'
 import { toast } from './toast'
-import { ImagePicker, PageHeader, ToggleSwitch } from './ui'
+import { ImagePicker, PageHeader, ToggleSwitch, useEscapeAndSave } from './ui'
 
 const PROFILE_FIELDS: { key: keyof SiteProfileInput; label: string; type?: string }[] = [
   { key: 'companyName', label: 'Tên công ty *' },
@@ -63,16 +72,7 @@ export function SiteProfileEditor() {
   const [saving, setSaving] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault()
-        formRef.current?.requestSubmit()
-      }
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [])
+  useEscapeAndSave({ active: true, onSave: () => formRef.current?.requestSubmit() })
 
   useEffect(() => {
     Promise.all([getSiteProfile(), getExternalLinks(), getAppearance(), listMedia('image')])
@@ -139,19 +139,39 @@ export function SiteProfileEditor() {
     }
   }
 
-  if (loading) return <div className="admin-module"><p className="admin-info">Đang tải...</p></div>
+  if (loading)
+    return (
+      <div className="admin-module">
+        <p className="admin-info">Đang tải...</p>
+      </div>
+    )
 
   return (
     <div className="admin-module">
-      <PageHeader
-        title="Cài đặt website"
-        description="Thông tin công ty, logo và các liên kết ngoài của website."
-      />
+      <PageHeader title="Cài đặt website" description="Thông tin công ty, logo và các liên kết ngoài của website." />
 
       <div className="tab-nav">
-        <button type="button" className={activeTab === 'profile' ? 'is-active' : ''} onClick={() => setActiveTab('profile')}>Thông tin công ty</button>
-        <button type="button" className={activeTab === 'links' ? 'is-active' : ''} onClick={() => setActiveTab('links')}>Liên kết ngoài</button>
-        <button type="button" className={activeTab === 'appearance' ? 'is-active' : ''} onClick={() => setActiveTab('appearance')}>🎨 Giao diện</button>
+        <button
+          type="button"
+          className={activeTab === 'profile' ? 'is-active' : ''}
+          onClick={() => setActiveTab('profile')}
+        >
+          Thông tin công ty
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'links' ? 'is-active' : ''}
+          onClick={() => setActiveTab('links')}
+        >
+          Liên kết ngoài
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'appearance' ? 'is-active' : ''}
+          onClick={() => setActiveTab('appearance')}
+        >
+          🎨 Giao diện
+        </button>
       </div>
 
       {activeTab === 'profile' && (
@@ -179,14 +199,18 @@ export function SiteProfileEditor() {
             />
           </div>
           <div className="form-actions">
-            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu thông tin'}</button>
+            <button type="submit" className="btn-primary" disabled={saving}>
+              {saving ? 'Đang lưu...' : 'Lưu thông tin'}
+            </button>
           </div>
         </form>
       )}
 
       {activeTab === 'links' && (
         <form ref={formRef} className="admin-form" onSubmit={(e) => void saveLinks(e)}>
-          <p className="admin-info">Các URL này dùng để tạo nút CTA, link mạng xã hội và nút tải ứng dụng trên website.</p>
+          <p className="admin-info">
+            Các URL này dùng để tạo nút CTA, link mạng xã hội và nút tải ứng dụng trên website.
+          </p>
           {LINK_FIELDS.map(({ key, label }) => (
             <div key={key} className="form-row">
               <label>{label}</label>
@@ -199,7 +223,9 @@ export function SiteProfileEditor() {
             </div>
           ))}
           <div className="form-actions">
-            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu liên kết'}</button>
+            <button type="submit" className="btn-primary" disabled={saving}>
+              {saving ? 'Đang lưu...' : 'Lưu liên kết'}
+            </button>
           </div>
         </form>
       )}
@@ -215,7 +241,14 @@ export function SiteProfileEditor() {
                 type="color"
                 value={appearance.primaryColor}
                 onChange={(e) => setAppearance((a) => ({ ...a, primaryColor: e.target.value }))}
-                style={{ width: 48, height: 36, padding: 2, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}
+                style={{
+                  width: 48,
+                  height: 36,
+                  padding: 2,
+                  border: '1px solid #ddd',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
               />
               <input
                 type="text"
@@ -235,7 +268,14 @@ export function SiteProfileEditor() {
                 type="color"
                 value={appearance.accentColor}
                 onChange={(e) => setAppearance((a) => ({ ...a, accentColor: e.target.value }))}
-                style={{ width: 48, height: 36, padding: 2, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}
+                style={{
+                  width: 48,
+                  height: 36,
+                  padding: 2,
+                  border: '1px solid #ddd',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
               />
               <input
                 type="text"
@@ -261,15 +301,52 @@ export function SiteProfileEditor() {
           <div className="form-row">
             <label>Xem trước màu</label>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ background: appearance.primaryColor, color: '#fff', padding: '8px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600 }}>Nút chính</div>
-              <div style={{ border: `2px solid ${appearance.primaryColor}`, color: appearance.primaryColor, padding: '8px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600 }}>Nút outline</div>
-              <div style={{ background: `linear-gradient(135deg, ${appearance.primaryColor}, ${appearance.accentColor})`, color: '#fff', padding: '8px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600 }}>Gradient</div>
+              <div
+                style={{
+                  background: appearance.primaryColor,
+                  color: '#fff',
+                  padding: '8px 20px',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                Nút chính
+              </div>
+              <div
+                style={{
+                  border: `2px solid ${appearance.primaryColor}`,
+                  color: appearance.primaryColor,
+                  padding: '8px 20px',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                Nút outline
+              </div>
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${appearance.primaryColor}, ${appearance.accentColor})`,
+                  color: '#fff',
+                  padding: '8px 20px',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                Gradient
+              </div>
             </div>
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu giao diện'}</button>
-            <button type="button" className="btn-secondary" onClick={() => setAppearance(emptyAppearance())}>Reset mặc định</button>
+            <button type="submit" className="btn-primary" disabled={saving}>
+              {saving ? 'Đang lưu...' : 'Lưu giao diện'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => setAppearance(emptyAppearance())}>
+              Reset mặc định
+            </button>
           </div>
         </form>
       )}

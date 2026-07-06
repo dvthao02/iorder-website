@@ -1,0 +1,10 @@
+node_modules/
+**/dist/
+**/build/
+*.tsbuildinfo
+storage/
+test-results/
+pnpm-lock.yaml
+packages/database/migrations/
+.codex-qa/
+apps/web/public/

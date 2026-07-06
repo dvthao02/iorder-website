@@ -13,19 +13,26 @@ import Fastify from 'fastify'
 
 import { registerAuthRoutes } from './auth/auth-routes.js'
 import type { ApiEnv } from './env.js'
-import { registerMediaRoutes } from './media/media-routes.js'
 import { LocalMediaStorage } from './media/media-storage.js'
-import { registerNavigationRoutes } from './navigation/navigation-routes.js'
+import { registerActivityRoutes } from './modules/activity/activity-routes.js'
+import { registerCategoryRoutes } from './modules/categories/categories-routes.js'
+import { registerContentPageRoutes } from './modules/content-pages/content-pages-routes.js'
+import { registerDownloadRoutes } from './modules/downloads/downloads-routes.js'
+import { registerHomepageRoutes } from './modules/homepage/homepage-routes.js'
+import { registerLeadRoutes } from './modules/leads/leads-routes.js'
+import { registerMediaRoutes } from './modules/media/media-routes.js'
+import { registerNavigationRoutes } from './modules/navigation/navigation-routes.js'
+import { registerOfferingRoutes } from './modules/offerings/offerings-routes.js'
+import { registerPartnerRoutes } from './modules/partners/partners-routes.js'
+import { registerPostRoutes } from './modules/posts/posts-routes.js'
+import { registerSettingsRoutes } from './modules/settings/settings-routes.js'
+import { registerTestimonialRoutes } from './modules/testimonials/testimonials-routes.js'
+import { registerUserRoutes } from './modules/users/users-routes.js'
 import { initApiObservability, registerApiErrorReporting } from './observability/sentry.js'
-import { registerOfferingRoutes } from './offerings/offering-routes.js'
-import { registerPartnerRoutes } from './partners/partner-routes.js'
-import { registerHomepageRoutes } from './pages/homepage-routes.js'
-import { registerCategoryRoutes } from './posts/category-routes.js'
-import { registerPostRoutes } from './posts/post-routes.js'
 import { registerSeoRoutes } from './seo/seo-routes.js'
-import { registerSettingsRoutes } from './settings/settings-routes.js'
+import { HookManager } from './shared/hooks/index.js'
+import { startPostScheduler } from './shared/scheduler/post-scheduler.js'
 import { registerStatsRoutes } from './stats/stats-routes.js'
-import { registerTestimonialRoutes } from './testimonials/testimonial-routes.js'
 
 const moduleDir = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(moduleDir, '../../..')
@@ -45,6 +52,8 @@ export async function buildApp(env: ApiEnv) {
   const database = createDatabase(env.DATABASE_URL)
   const mediaRoot = resolve(env.MEDIA_STORAGE_PATH)
   const mediaStorage = new LocalMediaStorage(mediaRoot, env.MEDIA_PUBLIC_BASE_URL)
+  // Shared event bus: modules register lifecycle hooks (e.g. cache invalidation) on the same instance.
+  const hooks = new HookManager()
   const app = Fastify({
     genReqId: () => randomUUID(),
     requestIdHeader: 'x-request-id',
@@ -114,9 +123,10 @@ export async function buildApp(env: ApiEnv) {
       if (env.NODE_ENV !== 'production' && origin) {
         try {
           const url = new URL(origin)
-          localDevelopment = url.protocol === 'http:'
-            && ['127.0.0.1', 'localhost', '::1'].includes(url.hostname)
-            && ['5173', '5174'].includes(url.port)
+          localDevelopment =
+            url.protocol === 'http:' &&
+            ['127.0.0.1', 'localhost', '::1'].includes(url.hostname) &&
+            ['5173', '5174'].includes(url.port)
         } catch {
           localDevelopment = false
         }
@@ -145,8 +155,9 @@ export async function buildApp(env: ApiEnv) {
     db: database.db,
     storage: mediaStorage,
     maxFileSizeBytes: env.MEDIA_MAX_FILE_SIZE_MB * 1024 * 1024,
+    hooks,
   })
-  registerPostRoutes(app, { db: database.db })
+  const { service: postsService } = registerPostRoutes(app, { db: database.db, hooks })
   registerCategoryRoutes(app, { db: database.db })
   registerSeoRoutes(app, { db: database.db, publicOrigin: env.PUBLIC_ORIGIN })
   registerHomepageRoutes(app, {
@@ -154,16 +165,31 @@ export async function buildApp(env: ApiEnv) {
     slug: env.HOMEPAGE_SLUG,
     previewSecret: env.CMS_PREVIEW_SECRET ?? env.SESSION_SECRET,
     publicOrigin: env.PUBLIC_ORIGIN,
+    hooks,
   })
-  registerOfferingRoutes(app, { db: database.db })
+  registerOfferingRoutes(app, { db: database.db, hooks })
+  registerContentPageRoutes(app, { db: database.db, hooks })
   registerPartnerRoutes(app, { db: database.db })
   registerTestimonialRoutes(app, { db: database.db })
+  registerLeadRoutes(app, { db: database.db, sessionSecret: env.SESSION_SECRET })
+  registerDownloadRoutes(app, { db: database.db })
   registerNavigationRoutes(app, { db: database.db })
   registerSettingsRoutes(app, { db: database.db })
+  registerActivityRoutes(app, { db: database.db })
+  registerUserRoutes(app, { db: database.db })
   registerStatsRoutes(app, { appDbUrls: env.IORDER_APP_DB_URLS })
   registerApiErrorReporting(app)
 
+  // Scheduler tự động publish bài viết hẹn giờ (Posts.scheduledAt) — bật/tắt và cấu hình interval qua env.
+  const postScheduler = startPostScheduler({
+    postsService,
+    logger: app.log,
+    enabled: env.POST_SCHEDULER_ENABLED,
+    intervalMs: env.POST_SCHEDULER_INTERVAL_MS,
+  })
+
   app.addHook('onClose', async () => {
+    postScheduler.stop()
     await database.close()
   })
 

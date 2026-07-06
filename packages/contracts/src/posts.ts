@@ -19,6 +19,7 @@ export const postInputSchema = z.object({
   canonicalUrl: z.string().url().nullable().default(null),
   promotionStartAt: z.coerce.date().nullable().default(null),
   promotionEndAt: z.coerce.date().nullable().default(null),
+  scheduledAt: z.coerce.date().nullable().default(null),
   ctaLabel: z.string().trim().max(80).nullable().default(null),
   ctaUrl: z.string().url().nullable().default(null),
   badgeText: z.string().trim().max(60).nullable().default(null),
@@ -73,6 +74,9 @@ export const postResponseSchema = z.object({
   canonicalUrl: z.string().nullable(),
   promotionStartAt: z.string().datetime().nullable(),
   promotionEndAt: z.string().datetime().nullable(),
+  scheduledAt: z.string().datetime().nullable(),
+  authorId: contentIdSchema.nullable(),
+  authorName: z.string().nullable(),
   ctaLabel: z.string().nullable(),
   ctaUrl: z.string().nullable(),
   badgeText: z.string().nullable(),
@@ -84,6 +88,18 @@ export const postResponseSchema = z.object({
   updatedAt: z.string().datetime(),
 })
 
+// ── Lịch sử phiên bản (revisions) ───────────────────────────────────────────
+export const postRevisionSummarySchema = z.object({
+  version: z.number().int().positive(),
+  editorName: z.string().nullable(),
+  changeNote: z.string().nullable(),
+  createdAt: z.string().datetime(),
+})
+
+export const postRevisionDetailSchema = postRevisionSummarySchema.extend({
+  snapshot: postResponseSchema,
+})
+
 export type PostInput = z.infer<typeof postInputSchema>
 export type PostListQuery = z.infer<typeof postListQuerySchema>
 export type PostResponse = z.infer<typeof postResponseSchema>
@@ -91,3 +107,5 @@ export type CategoryInput = z.infer<typeof categoryInputSchema>
 export type CategoryResponse = z.infer<typeof categoryResponseSchema>
 export type CategoryRef = z.infer<typeof categoryRefSchema>
 export type TagRef = z.infer<typeof tagRefSchema>
+export type PostRevisionSummary = z.infer<typeof postRevisionSummarySchema>
+export type PostRevisionDetail = z.infer<typeof postRevisionDetailSchema>

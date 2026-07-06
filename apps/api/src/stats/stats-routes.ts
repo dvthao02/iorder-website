@@ -32,7 +32,10 @@ async function queryStoreCount(sql: ReturnType<typeof postgres>): Promise<number
 // ── Route registration ────────────────────────────────────────────────────────
 export function registerStatsRoutes(app: FastifyInstance, { appDbUrls }: { appDbUrls: string | undefined }) {
   const urls = appDbUrls
-    ? appDbUrls.split(',').map((u) => u.trim()).filter(Boolean)
+    ? appDbUrls
+        .split(',')
+        .map((u) => u.trim())
+        .filter(Boolean)
     : []
 
   app.get('/api/public/stats', async (_request, reply) => {

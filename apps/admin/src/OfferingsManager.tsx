@@ -1,7 +1,46 @@
 import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
-import { AlertCircle, Archive, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, GripVertical, LayoutGrid, List, Minus, MoreVertical, Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import {
+  ArrowLeft,
+  Building2,
+  CheckCircle2,
+  Coffee,
+  Copy,
+  Eye,
+  EyeOff,
+  Factory,
+  FileText,
+  GripVertical,
+  Layers,
+  Minus,
+  Package,
+  Plus,
+  Receipt,
+  Server,
+  Shield,
+  Star,
+  Store,
+  Utensils,
+  Wifi,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+import {
+  BasicInfoCard,
+  CategoryTagSelector,
+  ContentBodyEditor,
+  ContentCardsGrid,
+  ContentEditorPage,
+  ContentItemCard,
+  ContentListPage,
+  CoverImageCard,
+  DisplaySettingCard,
+  PublishSidebar,
+  SeoMetaCard,
+  StatusBadge,
+  type ContentStatus,
+} from './content-editor/ContentEditorPage'
 import {
   archiveOffering,
   createOffering,
@@ -9,53 +48,198 @@ import {
   listMedia,
   listOfferings,
   publishOffering,
+  unpublishOffering,
   updateOffering,
 } from './api'
+import { openPublicSite, publicSiteUrl } from './public-site'
+import { RichTextEditor } from './RichTextEditor'
 import { toast } from './toast'
-import { ImagePicker, PageHeader, StatusDot, ToggleSwitch, useDragReorder } from './ui'
+import { ActionMenu, type ActionMenuItem, ToggleSwitch, useEscapeAndSave } from './ui'
 
-const STATUS_TONE: Record<string, 'on' | 'muted' | 'danger'> = {
-  published: 'on', draft: 'muted', archived: 'danger',
-}
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Nháp', published: 'Đã đăng', archived: 'Đã ẩn',
-}
 const TYPES = [
   { key: 'software', label: 'Phần mềm' },
   { key: 'solution', label: 'Giải pháp' },
   { key: 'service', label: 'Dịch vụ' },
   { key: 'industry', label: 'Ngành hàng' },
 ] as const
-type OfferingType = typeof TYPES[number]['key']
 
-const TYPE_COLORS: Record<string, string> = {
-  software: '#2563eb', solution: '#7c3aed', service: '#0891b2', industry: '#16a34a',
+type OfferingType = (typeof TYPES)[number]['key']
+const MANAGED_TYPES = TYPES
+
+const TYPE_COLORS: Record<OfferingType, string> = {
+  software: '#2563eb',
+  solution: '#7c3aed',
+  service: '#0891b2',
+  industry: '#16a34a',
 }
+
+const TYPE_ICONS: Record<OfferingType, LucideIcon> = {
+  software: Package,
+  solution: Layers,
+  service: Wrench,
+  industry: Factory,
+}
+
 const TYPE_PREFIX: Record<OfferingType, string> = {
-  software: '/phan-mem', solution: '/giai-phap', service: '/dich-vu', industry: '/nganh-hang',
+  software: '/phan-mem',
+  solution: '/giai-phap',
+  service: '/dich-vu',
+  industry: '/nganh-hang',
 }
+
+const FORM_COPY: Record<
+  OfferingType,
+  {
+    headerDescription: string
+    titleLabel: string
+    summaryLabel: string
+    summaryPlaceholder: string
+    iconLabel: string
+    sortLabel: string
+    descriptionLabel: string
+    categoryLabel: string
+    categoryPlaceholder: string
+  }
+> = {
+  software: {
+    headerDescription: 'Chỉnh sửa nội dung, hiển thị, SEO và trạng thái xuất bản.',
+    titleLabel: 'Tiêu đề',
+    summaryLabel: 'Mô tả ngắn',
+    summaryPlaceholder: 'Hiển thị dưới tiêu đề trên trang listing...',
+    iconLabel: 'Biểu tượng',
+    sortLabel: 'Thứ tự hiển thị',
+    descriptionLabel: 'Mô tả chi tiết',
+    categoryLabel: 'Danh mục / nhóm nội dung',
+    categoryPlaceholder: 'Ví dụ: POS, CRM, quản lý bán hàng...',
+  },
+  solution: {
+    headerDescription: 'Chỉnh sửa nội dung, hiển thị, SEO và trạng thái xuất bản.',
+    titleLabel: 'Tiêu đề',
+    summaryLabel: 'Mô tả ngắn',
+    summaryPlaceholder: 'Hiển thị dưới tiêu đề trên trang listing...',
+    iconLabel: 'Biểu tượng',
+    sortLabel: 'Thứ tự hiển thị',
+    descriptionLabel: 'Mô tả chi tiết',
+    categoryLabel: 'Danh mục / nhóm nội dung',
+    categoryPlaceholder: 'Ví dụ: Hạ tầng, phần mềm, bảo mật...',
+  },
+  service: {
+    headerDescription: 'Chỉnh sửa nội dung, hiển thị, SEO và trạng thái xuất bản.',
+    titleLabel: 'Tiêu đề',
+    summaryLabel: 'Mô tả ngắn',
+    summaryPlaceholder: 'Hiển thị dưới tiêu đề trên trang listing...',
+    iconLabel: 'Biểu tượng',
+    sortLabel: 'Thứ tự hiển thị',
+    descriptionLabel: 'Mô tả chi tiết',
+    categoryLabel: 'Danh mục / nhóm nội dung',
+    categoryPlaceholder: 'Ví dụ: IT, website, chữ ký số...',
+  },
+  industry: {
+    headerDescription:
+      'Quản lý ngành hàng hiển thị tại section Theo ngành hàng trên trang chủ và trang chi tiết /nganh-hang.',
+    titleLabel: 'Tên ngành hàng',
+    summaryLabel: 'Mô tả trên trang chủ',
+    summaryPlaceholder: 'Tóm tắt ngành hàng hiển thị trong section Theo ngành hàng...',
+    iconLabel: 'Biểu tượng đại diện',
+    sortLabel: 'Thứ tự trong nhóm',
+    descriptionLabel: 'Mô tả trang chi tiết ngành',
+    categoryLabel: 'Nhóm trên trang chủ',
+    categoryPlaceholder: 'Ví dụ: Bán buôn, bán lẻ; Ăn uống, giải trí; Dịch vụ, lưu trú, làm đẹp...',
+  },
+}
+
+const ICONS: Record<string, LucideIcon> = {
+  building2: Building2,
+  coffee: Coffee,
+  receipt: Receipt,
+  server: Server,
+  shield: Shield,
+  store: Store,
+  utensils: Utensils,
+  wifi: Wifi,
+  wrench: Wrench,
+}
+
+const ICON_OPTIONS: Array<{ key: string; label: string; icon: LucideIcon }> = [
+  { key: 'receipt', label: 'Hóa đơn', icon: Receipt },
+  { key: 'store', label: 'Cửa hàng', icon: Store },
+  { key: 'utensils', label: 'Nhà hàng', icon: Utensils },
+  { key: 'coffee', label: 'Cafe', icon: Coffee },
+  { key: 'server', label: 'Hệ thống', icon: Server },
+  { key: 'shield', label: 'Bảo mật', icon: Shield },
+  { key: 'building2', label: 'Doanh nghiệp', icon: Building2 },
+  { key: 'wifi', label: 'Kết nối', icon: Wifi },
+  { key: 'wrench', label: 'Dịch vụ', icon: Wrench },
+]
 
 const emptyContent = (): OfferingContent => ({
-  description: '', tags: [], bestFor: null, keyValue: null,
-  metrics: [], features: [], benefits: [], faq: [], items: [], category: null,
+  description: '',
+  tags: [],
+  bestFor: null,
+  keyValue: null,
+  metrics: [],
+  features: [],
+  benefits: [],
+  faq: [],
+  items: [],
+  category: null,
 })
 
 const emptyInput = (type: OfferingType): OfferingInput => ({
-  type, title: '', slug: '', summary: null, icon: null, coverMediaId: null,
-  sortOrder: 0, isFeatured: false, seoTitle: null, seoDescription: null,
-  canonicalUrl: null, contentJson: emptyContent(),
+  type,
+  title: '',
+  slug: '',
+  summary: null,
+  icon: null,
+  coverMediaId: null,
+  sortOrder: 0,
+  isFeatured: false,
+  seoTitle: null,
+  seoDescription: null,
+  canonicalUrl: null,
+  contentJson: emptyContent(),
 })
 
 function slugify(text: string) {
-  return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/đ/g, 'd').replace(/[^a-z0-9\s-]/g, '').trim()
-    .replace(/\s+/g, '-').replace(/-+/g, '-')
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
 }
 
-// ── Dynamic list editor ────────────────────────────────────────────────────────
+function toOfferingInput(item: OfferingResponse): OfferingInput {
+  return {
+    type: item.type,
+    title: item.title,
+    slug: item.slug,
+    summary: item.summary,
+    icon: item.icon,
+    coverMediaId: item.coverMediaId,
+    sortOrder: item.sortOrder,
+    isFeatured: item.isFeatured,
+    seoTitle: item.seoTitle,
+    seoDescription: item.seoDescription,
+    canonicalUrl: item.canonicalUrl,
+    contentJson: item.contentJson,
+  }
+}
+
 function ListEditor({
-  label, items, onChange, placeholder,
-}: { label: string; items: string[]; onChange: (next: string[]) => void; placeholder?: string }) {
+  label,
+  items,
+  onChange,
+  placeholder,
+}: {
+  label: string
+  items: string[]
+  onChange: (next: string[]) => void
+  placeholder?: string
+}) {
   return (
     <div className="list-editor">
       <div className="list-editor-head">
@@ -64,471 +248,759 @@ function ListEditor({
           <Plus size={13} /> Thêm
         </button>
       </div>
-      {items.map((item, i) => (
-        <div key={i} className="list-editor-row">
+      {items.map((item, index) => (
+        <div key={index} className="list-editor-row">
           <GripVertical size={14} className="list-editor-grip" />
           <input
             value={item}
             placeholder={placeholder}
-            onChange={(e) => onChange(items.map((v, j) => j === i ? e.target.value : v))}
+            onChange={(event) =>
+              onChange(items.map((value, itemIndex) => (itemIndex === index ? event.target.value : value)))
+            }
           />
-          <button type="button" className="list-editor-remove" onClick={() => onChange(items.filter((_, j) => j !== i))}>
+          <button
+            type="button"
+            className="list-editor-remove"
+            onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}
+          >
             <Minus size={14} />
           </button>
         </div>
       ))}
-      {items.length === 0 && (
-        <p className="list-editor-empty">Chưa có mục nào. Nhấn "+ Thêm" để bắt đầu.</p>
-      )}
+      {items.length === 0 ? <p className="list-editor-empty">Chưa có mục nào.</p> : null}
     </div>
   )
 }
 
-// ── FAQ editor ─────────────────────────────────────────────────────────────────
 function FaqEditor({ items, onChange }: { items: [string, string][]; onChange: (next: [string, string][]) => void }) {
   return (
     <div className="list-editor">
       <div className="list-editor-head">
-        <span className="list-editor-label">Câu hỏi thường gặp (FAQ)</span>
+        <span className="list-editor-label">Câu hỏi thường gặp</span>
         <button type="button" className="list-editor-add" onClick={() => onChange([...items, ['', '']])}>
           <Plus size={13} /> Thêm câu hỏi
         </button>
       </div>
-      {items.map(([q, a], i) => (
-        <div key={i} className="faq-editor-row">
-          <div className="faq-editor-num">#{i + 1}</div>
+      {items.map(([question, answer], index) => (
+        <div key={index} className="faq-editor-row">
+          <div className="faq-editor-num">#{index + 1}</div>
           <div className="faq-editor-fields">
             <input
-              value={q}
+              value={question}
               placeholder="Câu hỏi?"
-              onChange={(e) => onChange(items.map((pair, j) => j === i ? [e.target.value, pair[1]] as [string, string] : pair))}
+              onChange={(event) =>
+                onChange(items.map((pair, itemIndex) => (itemIndex === index ? [event.target.value, pair[1]] : pair)))
+              }
             />
             <textarea
               rows={2}
-              value={a}
+              value={answer}
               placeholder="Câu trả lời..."
-              onChange={(e) => onChange(items.map((pair, j) => j === i ? [pair[0], e.target.value] as [string, string] : pair))}
+              onChange={(event) =>
+                onChange(items.map((pair, itemIndex) => (itemIndex === index ? [pair[0], event.target.value] : pair)))
+              }
             />
           </div>
-          <button type="button" className="list-editor-remove" onClick={() => onChange(items.filter((_, j) => j !== i))}>
+          <button
+            type="button"
+            className="list-editor-remove"
+            onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}
+          >
             <Minus size={14} />
           </button>
         </div>
       ))}
-      {items.length === 0 && (
-        <p className="list-editor-empty">Chưa có câu hỏi nào.</p>
-      )}
+      {items.length === 0 ? <p className="list-editor-empty">Chưa có câu hỏi nào.</p> : null}
     </div>
   )
 }
 
-// ── Tag chip input ─────────────────────────────────────────────────────────────
 function TagInput({ tags, onChange }: { tags: string[]; onChange: (next: string[]) => void }) {
   const [input, setInput] = useState('')
+
   const add = () => {
-    const val = input.trim()
-    if (val && !tags.includes(val)) onChange([...tags, val])
+    const value = input.trim()
+    if (value && !tags.includes(value)) onChange([...tags, value])
     setInput('')
   }
+
   return (
     <div className="tag-input-wrap">
       {tags.map((tag) => (
         <span key={tag} className="tag-chip">
           {tag}
-          <button type="button" onClick={() => onChange(tags.filter((t) => t !== tag))}>&times;</button>
+          <button type="button" onClick={() => onChange(tags.filter((value) => value !== tag))}>
+            ×
+          </button>
         </span>
       ))}
       <input
         className="tag-input-field"
         value={input}
         placeholder="Thêm tag, nhấn Enter..."
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
+        onChange={(event) => setInput(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            add()
+          }
+        }}
         onBlur={add}
       />
     </div>
   )
 }
 
-// ── Offering form (4 tabs) ─────────────────────────────────────────────────────
-type Tab = 'basic' | 'content' | 'seo' | 'preview'
-
-function OfferingForm({
-  initial, images, onSave, onCancel, onDuplicate,
+function OfferingIconFallback({
+  icon,
+  title,
+  type,
+  className = 'content-item-fallback',
+  size = 22,
 }: {
-  initial: OfferingInput
-  images: MediaAsset[]
-  onSave: (input: OfferingInput) => Promise<void>
-  onCancel: () => void
-  onDuplicate?: () => Promise<void>
+  icon: string | null
+  title: string
+  type: OfferingType
+  className?: string
+  size?: number
 }) {
-  const [form, setForm] = useState<OfferingInput>(initial)
-  const [tab, setTab] = useState<Tab>('basic')
-  const [saving, setSaving] = useState(false)
-  const [showCover, setShowCover] = useState(false)
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
-  const formRef = useRef<HTMLFormElement>(null)
-
-  const set = (patch: Partial<OfferingInput>) => setForm((f) => ({ ...f, ...patch }))
-  const setContent = (patch: Partial<OfferingContent>) =>
-    setForm((f) => ({ ...f, contentJson: { ...f.contentJson, ...patch } }))
-
-  const handleTitle = (title: string) => set({ title, slug: form.slug || slugify(title) })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    try { await onSave(form) }
-    catch (err) { toast.error(err instanceof Error ? err.message : 'Lỗi không xác định') }
-    finally { setSaving(false) }
-  }
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); formRef.current?.requestSubmit() }
-      if (e.key === 'Escape') onCancel()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onCancel])
-
-  const coverImg = images.find((img) => img.id === form.coverMediaId)
-
-  const contentCount = form.contentJson.features.length + form.contentJson.benefits.length + form.contentJson.metrics.length
-  const publicUrl = form.slug ? `${TYPE_PREFIX[form.type]}/${form.slug}` : ''
-  const TABS: { id: Tab; label: string; badge: number | null }[] = [
-    { id: 'basic', label: 'Cơ bản', badge: null },
-    { id: 'content', label: 'Nội dung', badge: contentCount || null },
-    { id: 'seo', label: 'SEO', badge: null },
-    { id: 'preview', label: 'Xem trước', badge: null },
-  ]
-
+  const Icon = icon ? ICONS[icon] : undefined
   return (
-    <form ref={formRef} className="offering-form" onSubmit={handleSubmit}>
-      {/* Sticky tab bar */}
-      <div className="form-tabs-wrap">
-        <div className="form-tabs">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" className={`form-tab${tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)}>
-              {t.label}
-              {t.badge !== null ? <span className="form-tab-badge">{t.badge}</span> : null}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Tab: Xem trước ── */}
-      {tab === 'preview' && (
-        <div className="form-preview-area">
-          <div className="form-preview-toolbar">
-            <div className="preview-mode-btns">
-              <button type="button" className={previewMode === 'desktop' ? 'is-active' : ''} onClick={() => setPreviewMode('desktop')}>Desktop</button>
-              <button type="button" className={previewMode === 'mobile' ? 'is-active' : ''} onClick={() => setPreviewMode('mobile')}>Mobile</button>
-            </div>
-            {publicUrl && (
-              <a className="btn-preview-page" href={publicUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink size={12} /> Mở tab mới
-              </a>
-            )}
-          </div>
-          {publicUrl
-            ? (
-              <div className={`form-preview-frame is-${previewMode}`}>
-                <iframe key={`${publicUrl}-${previewMode}`} src={publicUrl} title="Xem trước trang" />
-              </div>
-            )
-            : (
-              <div className="form-preview-empty">
-                <p>Nhập Slug ở tab Cơ bản để xem trước trang.</p>
-              </div>
-            )}
-        </div>
-      )}
-
-      {/* Scrollable content area */}
-      {tab !== 'preview' && (
-      <div className="form-content-wrap">
-        <div className="form-content-inner">
-
-      {/* ── Tab: Cơ bản ── */}
-      {tab === 'basic' && (
-        <div className="form-tab-panel">
-          <div className="offering-cover-row">
-            <div className="offering-cover-thumb" style={{ background: coverImg ? '#000' : TYPE_COLORS[form.type] ?? '#64748b' }}>
-              {coverImg
-                ? <img src={coverImg.publicUrl} alt="" />
-                : <span>{form.title?.[0]?.toUpperCase() ?? '?'}</span>}
-            </div>
-            <div className="offering-cover-actions">
-              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowCover((v) => !v)}>
-                {showCover ? 'Ẩn chọn ảnh' : 'Chọn ảnh bìa'}
-              </button>
-              {form.coverMediaId && (
-                <button type="button" className="btn-sm btn-ghost-danger" onClick={() => { set({ coverMediaId: null }); setShowCover(false) }}>
-                  Xóa ảnh
-                </button>
-              )}
-            </div>
-          </div>
-
-          {showCover && (
-            <ImagePicker
-              label="Ảnh bìa"
-              ariaLabel="Chọn ảnh bìa"
-              images={images}
-              value={form.coverMediaId ?? ''}
-              onChange={(id) => { set({ coverMediaId: id || null }); setShowCover(false) }}
-              onUploaded={(asset: MediaAsset) => { set({ coverMediaId: asset.id }); setShowCover(false) }}
-            />
-          )}
-
-          <div className="form-row">
-            <label>Tiêu đề *</label>
-            <input value={form.title} onChange={(e) => handleTitle(e.target.value)} required maxLength={220} />
-          </div>
-          <div className="form-row">
-            <label>Slug *</label>
-            <input value={form.slug} onChange={(e) => set({ slug: e.target.value })} required maxLength={180} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
-            <small className="form-hint">Địa chỉ URL: /{form.slug || '...'}</small>
-          </div>
-          <div className="form-row">
-            <label>Mô tả ngắn</label>
-            <textarea rows={3} value={form.summary ?? ''} onChange={(e) => set({ summary: e.target.value || null })} maxLength={600} placeholder="Hiển thị dưới tiêu đề trên trang listing..." />
-          </div>
-          <div className="form-row-2col">
-            <div className="form-row">
-              <label>Icon key</label>
-              <input value={form.icon ?? ''} onChange={(e) => set({ icon: e.target.value || null })} placeholder="receipt, users, server..." />
-            </div>
-            <div className="form-row">
-              <label>Thứ tự hiển thị</label>
-              <input type="number" value={form.sortOrder} onChange={(e) => set({ sortOrder: Number(e.target.value) })} min={0} />
-            </div>
-          </div>
-          <div className="form-row">
-            <ToggleSwitch checked={form.isFeatured} onChange={(next) => set({ isFeatured: next })} label="Nổi bật" hint="Ưu tiên hiển thị ở vị trí nổi bật" />
-          </div>
-        </div>
-      )}
-
-      {/* ── Tab: Nội dung ── */}
-      {tab === 'content' && (
-        <div className="form-tab-panel">
-          <div className="form-row">
-            <label>Mô tả chi tiết *</label>
-            <textarea rows={4} value={form.contentJson.description} onChange={(e) => setContent({ description: e.target.value })} required maxLength={1000} />
-          </div>
-          <div className="form-row-2col">
-            <div className="form-row">
-              <label>Phù hợp với</label>
-              <input value={form.contentJson.bestFor ?? ''} onChange={(e) => setContent({ bestFor: e.target.value || null })} placeholder="Cửa hàng bán lẻ, nhà hàng..." />
-            </div>
-            <div className="form-row">
-              <label>Giá trị cốt lõi</label>
-              <input value={form.contentJson.keyValue ?? ''} onChange={(e) => setContent({ keyValue: e.target.value || null })} placeholder="Vận hành bán hàng tập trung" />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <label>Tags</label>
-            <TagInput tags={form.contentJson.tags} onChange={(next) => setContent({ tags: next })} />
-          </div>
-
-          <ListEditor
-            label="Số liệu nhanh (metrics)"
-            items={form.contentJson.metrics}
-            onChange={(next) => setContent({ metrics: next })}
-            placeholder="Tạo đơn ít bước"
-          />
-
-          <ListEditor
-            label="Tính năng chính"
-            items={form.contentJson.features}
-            onChange={(next) => setContent({ features: next })}
-            placeholder="Bán hàng tại quầy, gọi món và tạo đơn nhanh..."
-          />
-
-          <ListEditor
-            label="Lợi ích vận hành"
-            items={form.contentJson.benefits}
-            onChange={(next) => setContent({ benefits: next })}
-            placeholder="Giảm thời gian đào tạo nhân viên mới..."
-          />
-
-          <FaqEditor items={form.contentJson.faq} onChange={(next) => setContent({ faq: next })} />
-        </div>
-      )}
-
-      {/* ── Tab: SEO ── */}
-      {tab === 'seo' && (
-        <div className="form-tab-panel">
-          <div className="form-row">
-            <label>SEO Title <span className="form-hint-inline">(tối đa 70 ký tự)</span></label>
-            <input value={form.seoTitle ?? ''} onChange={(e) => set({ seoTitle: e.target.value || null })} maxLength={70} placeholder={form.title} />
-            <small className="form-hint">{(form.seoTitle ?? '').length}/70 ký tự</small>
-          </div>
-          <div className="form-row">
-            <label>SEO Description <span className="form-hint-inline">(tối đa 160 ký tự)</span></label>
-            <textarea rows={3} value={form.seoDescription ?? ''} onChange={(e) => set({ seoDescription: e.target.value || null })} maxLength={160} placeholder={form.summary ?? ''} />
-            <small className="form-hint">{(form.seoDescription ?? '').length}/160 ký tự</small>
-          </div>
-          <div className="form-row">
-            <label>Canonical URL <span className="form-hint-inline">(để trống nếu không cần)</span></label>
-            <input value={form.canonicalUrl ?? ''} onChange={(e) => set({ canonicalUrl: e.target.value || null })} placeholder="https://..." />
-          </div>
-
-          <div className="seo-preview">
-            <p className="seo-preview-label">Xem trước Google</p>
-            <div className="seo-preview-box">
-              <p className="seo-preview-title">{form.seoTitle || form.title || 'Tiêu đề trang'}</p>
-              <p className="seo-preview-url">iorder.vn › {form.slug || '...'}</p>
-              <p className="seo-preview-desc">{form.seoDescription || form.summary || 'Mô tả trang sẽ hiển thị ở đây...'}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-        </div>{/* /form-content-inner */}
-      </div>
-      )}{/* /form-content-wrap */}
-
-      <div className="modal-foot">
-        {onDuplicate && <button type="button" className="btn-secondary modal-foot-start" onClick={() => void onDuplicate()} disabled={saving}>Nhân bản</button>}
-        <button type="button" className="btn-secondary" onClick={onCancel} disabled={saving}>Hủy</button>
-        <button type="submit" className="btn-primary" disabled={saving}>
-          {saving ? 'Đang lưu...' : 'Lưu nháp'}
-        </button>
-      </div>
-    </form>
+    <span className={className} style={{ background: TYPE_COLORS[type] }}>
+      {Icon ? <Icon size={size} strokeWidth={2.2} /> : <span>{title[0]?.toUpperCase() || '?'}</span>}
+    </span>
   )
 }
 
-// ── Offering card ──────────────────────────────────────────────────────────────
-function OfferingCard({
-  offering, coverUrl, typePrefix, onEdit, onPublish, onArchive, onDelete, onMoveUp, onMoveDown, onToggleFeatured,
-}: {
-  offering: OfferingResponse
-  coverUrl: string | undefined
-  typePrefix: string
-  onEdit: () => void
-  onPublish: () => Promise<void>
-  onArchive: () => Promise<void>
-  onDelete: () => Promise<void>
-  onMoveUp: (() => Promise<void>) | null
-  onMoveDown: (() => Promise<void>) | null
-  onToggleFeatured: () => Promise<void>
-}) {
-  const [busy, setBusy] = useState(false)
-  const [menuPos, setMenuPos] = useState<{ left: number; bottom: number } | null>(null)
-  const kebabRef = useRef<HTMLButtonElement>(null)
-  const act = async (fn: () => Promise<void>) => { setBusy(true); setMenuPos(null); try { await fn() } finally { setBusy(false) } }
-  const color = TYPE_COLORS[offering.type] ?? '#64748b'
-
-  const openMenu = () => {
-    if (!kebabRef.current) return
-    const r = kebabRef.current.getBoundingClientRect()
-    setMenuPos({
-      left: Math.max(4, r.right - 172),
-      bottom: window.innerHeight - r.top + 4,
-    })
-  }
-
+function OfferingCardCoverFallback({ type }: { type: OfferingType }) {
+  const Icon = TYPE_ICONS[type]
   return (
-    <div className="offering-card">
-      <div className="offering-card-thumb" style={{ background: coverUrl ? undefined : color }}>
-        {coverUrl
-          ? <img src={coverUrl} alt={offering.title} />
-          : <span>{offering.title[0]?.toUpperCase()}</span>}
-        {offering.isFeatured && <span className="offering-card-star" title="Nổi bật"><Star size={12} fill="currentColor" /></span>}
-      </div>
+    <span className={`card-cover-fallback card-cover-fallback--${type}`}>
+      <Icon size={26} strokeWidth={2} />
+    </span>
+  )
+}
 
-      <div className="offering-card-body">
-        <p className="offering-card-title">{offering.title}</p>
-        <p className="offering-card-meta">/{offering.slug}</p>
-        {offering.summary && <p className="offering-card-summary">{offering.summary}</p>}
-      </div>
-
-      <div className="offering-card-foot">
-        <span className={`status-badge status-${offering.status}`}>
-          <StatusDot tone={STATUS_TONE[offering.status] ?? 'muted'} />
-          {STATUS_LABELS[offering.status]}
-        </span>
-        {offering.status === 'published' && !offering.coverMediaId && (
-          <span className="offering-no-cover" title="Thiếu ảnh bìa — cần bổ sung"><AlertCircle size={13} /></span>
-        )}
-        <div className="offering-card-actions">
-          <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}>
-            <Pencil size={15} />
-          </button>
-          <button ref={kebabRef} type="button" className="offering-kebab" aria-label="Thao tác" disabled={busy} onClick={openMenu}>
-            <MoreVertical size={15} />
-          </button>
-          {menuPos && createPortal(
-            <>
-              <div className="menu-backdrop" onClick={() => setMenuPos(null)} />
-              <div className="card-menu offering-card-menu" role="menu" style={{ position: 'fixed', left: menuPos.left, bottom: menuPos.bottom, top: 'auto', right: 'auto', zIndex: 9999 }}>
-                {onMoveUp && <button type="button" role="menuitem" onClick={() => void act(onMoveUp)}>↑ Lên</button>}
-                {onMoveDown && <button type="button" role="menuitem" onClick={() => void act(onMoveDown)}>↓ Xuống</button>}
-                <button type="button" role="menuitem" onClick={() => void act(onToggleFeatured)}>
-                  {offering.isFeatured ? '★ Bỏ nổi bật' : '☆ Đánh dấu nổi bật'}
-                </button>
-                <a href={`${typePrefix}/${offering.slug}`} target="_blank" rel="noopener noreferrer" role="menuitem" className="card-menu-link" onClick={() => setMenuPos(null)}>
-                  <ExternalLink size={13} /> Xem trên website
-                </a>
-                {offering.status !== 'published'
-                  ? <button type="button" role="menuitem" onClick={() => void act(onPublish)}><Eye size={13} /> Xuất bản</button>
-                  : <button type="button" role="menuitem" onClick={() => void act(onArchive)}><EyeOff size={13} /> Ẩn nội dung</button>}
-                <button type="button" role="menuitem" className="card-menu-danger" onClick={() => void act(onDelete)}><Trash2 size={13} /> Xóa</button>
-              </div>
-            </>,
-            document.body
-          )}
-        </div>
+function IconPicker({
+  value,
+  onChange,
+  label,
+}: {
+  value: string | null
+  onChange: (next: string | null) => void
+  label: string
+}) {
+  return (
+    <div className="form-field offering-icon-picker">
+      <span className="field-label">{label}</span>
+      <div className="icon-option-grid" role="radiogroup" aria-label={label}>
+        {ICON_OPTIONS.map((option) => {
+          const Icon = option.icon
+          const selected = value === option.key
+          return (
+            <button
+              key={option.key}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`icon-option${selected ? ' is-active' : ''}`}
+              title={option.label}
+              onClick={() => onChange(selected ? null : option.key)}
+            >
+              <Icon size={18} />
+              <span>{option.label}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
 }
 
-function toOfferingInput(item: OfferingResponse): OfferingInput {
-  return {
-    type: item.type, title: item.title, slug: item.slug,
-    summary: item.summary, icon: item.icon, coverMediaId: item.coverMediaId,
-    sortOrder: item.sortOrder, isFeatured: item.isFeatured,
-    seoTitle: item.seoTitle, seoDescription: item.seoDescription,
-    canonicalUrl: item.canonicalUrl, contentJson: item.contentJson,
-  }
+function ItemsEditor({
+  items,
+  onChange,
+}: {
+  items: Array<{ title: string; href: string }>
+  onChange: (next: Array<{ title: string; href: string }>) => void
+}) {
+  return (
+    <div className="list-editor">
+      <div className="list-editor-head">
+        <span className="list-editor-label">Liên kết / mục con</span>
+        <button type="button" className="list-editor-add" onClick={() => onChange([...items, { title: '', href: '' }])}>
+          <Plus size={13} /> Thêm
+        </button>
+      </div>
+      {items.map((item, index) => (
+        <div key={index} className="faq-editor-row">
+          <div className="faq-editor-num">#{index + 1}</div>
+          <div className="faq-editor-fields">
+            <input
+              value={item.title}
+              placeholder="Tên mục"
+              onChange={(event) =>
+                onChange(
+                  items.map((value, itemIndex) =>
+                    itemIndex === index ? { ...value, title: event.target.value } : value,
+                  ),
+                )
+              }
+            />
+            <input
+              value={item.href}
+              placeholder="/duong-dan-hoac-https://..."
+              onChange={(event) =>
+                onChange(
+                  items.map((value, itemIndex) =>
+                    itemIndex === index ? { ...value, href: event.target.value } : value,
+                  ),
+                )
+              }
+            />
+          </div>
+          <button
+            type="button"
+            className="list-editor-remove"
+            onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}
+          >
+            <Minus size={14} />
+          </button>
+        </div>
+      ))}
+      {items.length === 0 ? <p className="list-editor-empty">Chưa có liên kết nào.</p> : null}
+    </div>
+  )
 }
 
-// ── Main manager ───────────────────────────────────────────────────────────────
-export function OfferingsManager() {
-  const [activeType, setActiveType] = useState<OfferingType>('software')
+const INDUSTRY_DEFAULT_CATEGORIES = ['Bán buôn, bán lẻ', 'Ăn uống, giải trí', 'Dịch vụ, lưu trú, làm đẹp']
+
+const NEW_CATEGORY_OPTION = '__new__'
+
+function validateOffering(form: OfferingInput): string | null {
+  if (form.title.trim().length < 2) return 'Tiêu đề phải có ít nhất 2 ký tự.'
+  if (form.slug.trim().length < 3) return 'Slug phải có ít nhất 3 ký tự.'
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug)) return 'Slug không hợp lệ (chỉ chữ thường, số và dấu gạch ngang).'
+  if (form.type === 'industry' && !(form.summary ?? '').trim())
+    return 'Mô tả trên trang chủ là bắt buộc với ngành hàng.'
+  // Mọi loại đều phải có mô tả chi tiết — trang public render trực tiếp nội dung này,
+  // publish rỗng sẽ ra trang trống (giữ lại ràng buộc của điều kiện canPublish cũ).
+  const descriptionText = String(form.contentJson.description ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .trim()
+  if (!descriptionText) return 'Mô tả chi tiết không được để trống.'
+  return null
+}
+
+function CategoryCombobox({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string | null
+  onChange: (next: string | null) => void
+  options: string[]
+  placeholder?: string
+}) {
+  const hasValueInOptions = value ? options.includes(value) : false
+  const [creatingNew, setCreatingNew] = useState(!hasValueInOptions && Boolean(value))
+
+  const selectValue = creatingNew ? NEW_CATEGORY_OPTION : (value ?? '')
+
+  return (
+    <div className="form-field">
+      <select
+        value={selectValue}
+        onChange={(event) => {
+          const next = event.target.value
+          if (next === NEW_CATEGORY_OPTION) {
+            setCreatingNew(true)
+            onChange(null)
+          } else {
+            setCreatingNew(false)
+            onChange(next || null)
+          }
+        }}
+      >
+        <option value="">— Chọn nhóm —</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+        <option value={NEW_CATEGORY_OPTION}>➕ Nhóm mới…</option>
+      </select>
+      {creatingNew ? (
+        <input
+          maxLength={120}
+          value={value ?? ''}
+          autoFocus
+          onChange={(event) => onChange(event.target.value || null)}
+          placeholder={placeholder}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+function OfferingForm({
+  initial,
+  current,
+  images,
+  items,
+  onSave,
+  onPublish,
+  onArchive,
+  onUnpublish,
+  onCancel,
+  onDuplicate,
+}: {
+  initial: OfferingInput
+  current: OfferingResponse | null
+  images: MediaAsset[]
+  items: OfferingResponse[]
+  onSave: (input: OfferingInput) => Promise<void>
+  onPublish: (input: OfferingInput) => Promise<void>
+  onArchive?: () => Promise<void>
+  onUnpublish?: () => Promise<void>
+  onCancel: () => void
+  onDuplicate?: () => Promise<void>
+}) {
+  const [form, setForm] = useState<OfferingInput>(initial)
+  const [saving, setSaving] = useState(false)
+  const [showCover, setShowCover] = useState(false)
+  const [availableImages, setAvailableImages] = useState(images)
+
+  useEffect(() => setAvailableImages(images), [images])
+
+  const set = (patch: Partial<OfferingInput>) => setForm((value) => ({ ...value, ...patch }))
+  const setContent = (patch: Partial<OfferingContent>) =>
+    setForm((value) => ({ ...value, contentJson: { ...value.contentJson, ...patch } }))
+
+  const handleTitle = (title: string) => set({ title, slug: form.slug || slugify(title) })
+  const coverImg = availableImages.find((image) => image.id === form.coverMediaId)
+  const publicUrl = form.slug ? publicSiteUrl(`${TYPE_PREFIX[form.type]}/${form.slug}`) : ''
+  const copy = FORM_COPY[form.type]
+  const status = current?.status ?? 'draft'
+  const descriptionText = form.contentJson.description.replace(/<[^>]+>/g, ' ').trim()
+  const wordCount = descriptionText ? descriptionText.replace(/\s+/g, ' ').split(' ').filter(Boolean).length : 0
+
+  const categoryOptionsForType = useMemo(() => {
+    const names = new Set(
+      items
+        .filter((item) => item.type === form.type)
+        .map((item) => item.contentJson.category)
+        .filter((value): value is string => Boolean(value)),
+    )
+    if (form.type === 'industry' && names.size === 0) {
+      return [...INDUSTRY_DEFAULT_CATEGORIES]
+    }
+    return Array.from(names)
+  }, [items, form.type])
+
+  const validationError = validateOffering(form)
+  const canPublish = !validationError
+
+  const saveDraft = async () => {
+    const error = validateOffering(form)
+    if (error) {
+      toast.error(error)
+      return
+    }
+    setSaving(true)
+    try {
+      await onSave(form)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Không thể lưu nội dung.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const publishNow = async () => {
+    const error = validateOffering(form)
+    if (error) {
+      toast.error(error)
+      return
+    }
+    setSaving(true)
+    try {
+      await onPublish(form)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Không thể xuất bản.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  useEscapeAndSave({ active: true, onSave: () => void saveDraft(), onEscape: onCancel })
+
+  const typeLabel = MANAGED_TYPES.find((type) => type.key === form.type)?.label ?? 'Nội dung'
+
+  return (
+    <ContentEditorPage
+      standalone
+      title={current ? `Chỉnh sửa ${typeLabel.toLowerCase()}` : `Thêm ${typeLabel.toLowerCase()}`}
+      description={copy.headerDescription}
+      status={<StatusBadge status={status} />}
+      eyebrow={
+        <span className="editor-breadcrumb">
+          <button type="button" onClick={onCancel}>
+            <ArrowLeft size={16} /> {typeLabel}
+          </button>
+          <span>›</span>
+          {current ? 'Chỉnh sửa' : 'Thêm mới'}
+        </span>
+      }
+      actions={
+        <>
+          <button
+            type="button"
+            className="secondary-button btn-icon save-draft-button"
+            disabled={saving}
+            onClick={() => void saveDraft()}
+          >
+            <FileText size={15} /> Lưu nháp
+          </button>
+          <button
+            type="button"
+            className="btn-primary btn-icon"
+            disabled={saving || !canPublish}
+            title={!canPublish ? (validationError ?? undefined) : undefined}
+            onClick={() => void publishNow()}
+          >
+            <CheckCircle2 size={15} /> Xuất bản ngay
+          </button>
+          <ActionMenu
+            items={
+              [
+                ...(publicUrl
+                  ? [
+                      {
+                        label: 'Xem trước',
+                        icon: Eye,
+                        onClick: () => window.open(publicUrl, '_blank', 'noopener'),
+                      },
+                    ]
+                  : []),
+                ...(onDuplicate
+                  ? [
+                      {
+                        label: 'Nhân bản',
+                        icon: Copy,
+                        disabled: saving,
+                        onClick: () => void onDuplicate(),
+                      },
+                    ]
+                  : []),
+                { divider: true } as const,
+                ...(onUnpublish && status === 'published'
+                  ? [
+                      {
+                        label: 'Gỡ xuất bản',
+                        icon: EyeOff,
+                        disabled: saving,
+                        onClick: () => void onUnpublish(),
+                      },
+                    ]
+                  : []),
+                ...(onArchive
+                  ? [
+                      {
+                        label: 'Ẩn',
+                        icon: EyeOff,
+                        tone: 'danger' as const,
+                        disabled: saving,
+                        onClick: () => void onArchive(),
+                      },
+                    ]
+                  : []),
+              ] satisfies (ActionMenuItem | { divider: true })[]
+            }
+          />
+        </>
+      }
+      onSubmit={(event) => {
+        event.preventDefault()
+        void saveDraft()
+      }}
+      main={
+        <>
+          <BasicInfoCard>
+            <div className="form-row-2col">
+              <label>
+                {copy.titleLabel} <span className="field-counter">{form.title.length}/220</span>
+                <input
+                  value={form.title}
+                  onChange={(event) => handleTitle(event.target.value)}
+                  required
+                  maxLength={220}
+                />
+              </label>
+              <label>
+                Slug
+                <input
+                  value={form.slug}
+                  onChange={(event) => set({ slug: slugify(event.target.value) })}
+                  required
+                  maxLength={180}
+                  pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                />
+              </label>
+            </div>
+            <label className="full-field">
+              {copy.summaryLabel} <span className="field-counter">{(form.summary ?? '').length}/600</span>
+              <textarea
+                rows={3}
+                value={form.summary ?? ''}
+                onChange={(event) => set({ summary: event.target.value || null })}
+                maxLength={600}
+                placeholder={copy.summaryPlaceholder}
+              />
+            </label>
+            <div className="form-row-2col">
+              <IconPicker value={form.icon} label={copy.iconLabel} onChange={(icon) => set({ icon })} />
+              <label className="sort-order-field">
+                {copy.sortLabel}
+                <input
+                  type="number"
+                  value={form.sortOrder}
+                  onChange={(event) => set({ sortOrder: Number(event.target.value) })}
+                  min={0}
+                />
+              </label>
+            </div>
+            {form.type === 'industry' ? (
+              <label className="full-field">
+                {copy.categoryLabel}
+                <CategoryCombobox
+                  value={form.contentJson.category}
+                  onChange={(category) => setContent({ category })}
+                  options={categoryOptionsForType}
+                  placeholder={copy.categoryPlaceholder}
+                />
+              </label>
+            ) : null}
+          </BasicInfoCard>
+
+          <ContentBodyEditor wordCount={wordCount}>
+            <div className="form-field">
+              <span className="field-label">{copy.descriptionLabel}</span>
+              <RichTextEditor
+                value={form.contentJson.description}
+                placeholder={`Soạn ${copy.descriptionLabel.toLowerCase()}...`}
+                onChange={(html) => setContent({ description: html })}
+              />
+            </div>
+            <div className="form-row-2col">
+              <label>
+                Phù hợp với
+                <input
+                  value={form.contentJson.bestFor ?? ''}
+                  onChange={(event) => setContent({ bestFor: event.target.value || null })}
+                  maxLength={300}
+                  placeholder="Cửa hàng bán lẻ, nhà hàng..."
+                />
+              </label>
+              <label>
+                Giá trị cốt lõi
+                <input
+                  value={form.contentJson.keyValue ?? ''}
+                  onChange={(event) => setContent({ keyValue: event.target.value || null })}
+                  maxLength={300}
+                  placeholder="Vận hành bán hàng tập trung"
+                />
+              </label>
+            </div>
+            <div className="form-field">
+              <span className="field-label">Tags</span>
+              <TagInput tags={form.contentJson.tags} onChange={(next) => setContent({ tags: next })} />
+            </div>
+            <ListEditor
+              label="Số liệu nhanh"
+              items={form.contentJson.metrics}
+              onChange={(next) => setContent({ metrics: next })}
+              placeholder="Tạo đơn ít bước"
+            />
+            <ListEditor
+              label="Tính năng chính"
+              items={form.contentJson.features}
+              onChange={(next) => setContent({ features: next })}
+              placeholder="Bán hàng tại quầy, gọi món..."
+            />
+            <ListEditor
+              label="Lợi ích vận hành"
+              items={form.contentJson.benefits}
+              onChange={(next) => setContent({ benefits: next })}
+              placeholder="Giảm thời gian đào tạo..."
+            />
+            <FaqEditor items={form.contentJson.faq} onChange={(next) => setContent({ faq: next })} />
+            <ItemsEditor items={form.contentJson.items} onChange={(next) => setContent({ items: next })} />
+          </ContentBodyEditor>
+
+          {form.type !== 'industry' ? (
+            <CategoryTagSelector>
+              <label className="full-field">
+                {copy.categoryLabel}
+                <CategoryCombobox
+                  value={form.contentJson.category}
+                  onChange={(category) => setContent({ category })}
+                  options={categoryOptionsForType}
+                  placeholder={copy.categoryPlaceholder}
+                />
+              </label>
+            </CategoryTagSelector>
+          ) : null}
+
+          <SeoMetaCard
+            title={form.seoTitle || form.title || 'Tiêu đề trang'}
+            description={form.seoDescription || form.summary || 'Mô tả trang sẽ hiển thị ở đây...'}
+            url={`https://iorder.vn${TYPE_PREFIX[form.type]}/${form.slug || 'slug'}`}
+          >
+            <div className="form-row-2col">
+              <label>
+                Tiêu đề SEO <span className="field-counter">{(form.seoTitle ?? '').length}/70</span>
+                <input
+                  value={form.seoTitle ?? ''}
+                  onChange={(event) => set({ seoTitle: event.target.value || null })}
+                  maxLength={70}
+                  placeholder={form.title}
+                />
+              </label>
+              <label>
+                Mô tả SEO <span className="field-counter">{(form.seoDescription ?? '').length}/180</span>
+                <textarea
+                  rows={3}
+                  value={form.seoDescription ?? ''}
+                  onChange={(event) => set({ seoDescription: event.target.value || null })}
+                  maxLength={180}
+                  placeholder={form.summary ?? ''}
+                />
+              </label>
+            </div>
+            <label className="full-field">
+              Canonical URL
+              <input
+                value={form.canonicalUrl ?? ''}
+                onChange={(event) => set({ canonicalUrl: event.target.value || null })}
+                placeholder="https://..."
+              />
+            </label>
+          </SeoMetaCard>
+        </>
+      }
+      sidebar={
+        <>
+          <PublishSidebar
+            status={status}
+            updatedAt={current?.updatedAt ?? null}
+            publishedAt={current?.publishedAt ?? null}
+            isSaving={saving}
+            canPublish={canPublish}
+            onSaveDraft={() => void saveDraft()}
+            hideActions
+          />
+          <CoverImageCard
+            coverUrl={coverImg?.publicUrl ?? null}
+            images={availableImages}
+            value={form.coverMediaId}
+            onChange={(id) => set({ coverMediaId: id })}
+            onUploaded={(asset) => {
+              setAvailableImages((prev) => [asset, ...prev])
+              set({ coverMediaId: asset.id })
+            }}
+            onRemove={() => set({ coverMediaId: null })}
+            pickerOpen={showCover}
+            onTogglePicker={() => setShowCover((value) => !value)}
+            fallback={
+              <OfferingIconFallback
+                icon={form.icon}
+                title={form.title}
+                type={form.type}
+                className="content-cover-fallback"
+                size={30}
+              />
+            }
+          />
+          <DisplaySettingCard
+            readMinutes={Math.max(1, Math.ceil(wordCount / 200))}
+            wordCount={wordCount}
+            updatedAt={current?.updatedAt ?? null}
+            visible={status === 'published'}
+            onVisibleChange={(visible) => {
+              if (visible) void publishNow()
+              else if (onArchive) void onArchive()
+            }}
+          >
+            <div className="content-sidebar-extra">
+              <ToggleSwitch
+                checked={form.isFeatured}
+                onChange={(next) => set({ isFeatured: next })}
+                label="Nổi bật"
+                hint="Ưu tiên hiển thị ở vị trí nổi bật"
+              />
+            </div>
+          </DisplaySettingCard>
+        </>
+      }
+    />
+  )
+}
+
+export function OfferingsManager({ type: activeType }: { type: OfferingType }) {
   const [items, setItems] = useState<OfferingResponse[]>([])
   const [images, setImages] = useState<MediaAsset[]>([])
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState<OfferingResponse | null | 'new'>(null)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
+  const [statusFilter, setStatusFilter] = useState<ContentStatus>('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => localStorage.getItem('admin.offerings.view') === 'list' ? 'list' : 'grid')
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() =>
+    localStorage.getItem('admin.offerings.view') === 'list' ? 'list' : 'grid',
+  )
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const [res, mediaRes] = await Promise.all([listOfferings(activeType), listMedia('image')])
       setItems(res.items)
       setImages(mediaRes.items)
-    } catch { toast.error('Không tải được danh sách. Kiểm tra kết nối API.') }
-    finally { setLoading(false) }
-  }
+    } catch {
+      toast.error('Không tải được danh sách. Kiểm tra kết nối API.')
+    } finally {
+      setLoading(false)
+    }
+  }, [activeType])
 
-  useEffect(() => { void load() }, [activeType])
-  useEffect(() => { setStatusFilter('all'); setSearch('') }, [activeType])
+  useEffect(() => {
+    void load()
+  }, [load])
 
-  const handleSave = async (input: OfferingInput) => {
+  useEffect(() => {
+    setEditing(null)
+    setStatusFilter('all')
+    setCategoryFilter('all')
+    setSearch('')
+  }, [activeType])
+
+  const saveOffering = async (input: OfferingInput) => {
     if (editing === 'new') await createOffering(input)
     else if (editing) await updateOffering(editing.id, input)
     setEditing(null)
     await load()
     toast.success('Đã lưu nội dung.')
+  }
+
+  const publishOfferingInput = async (input: OfferingInput) => {
+    const saved =
+      editing === 'new' ? await createOffering(input) : editing ? await updateOffering(editing.id, input) : null
+    if (!saved) return
+    await publishOffering(saved.item.id)
+    setEditing(null)
+    await load()
+    toast.success('Đã xuất bản.')
   }
 
   const handleDuplicate = async (item: OfferingResponse) => {
@@ -546,7 +1018,7 @@ export function OfferingsManager() {
   }
 
   const handleToggleFeatured = async (id: string) => {
-    const item = items.find((i) => i.id === id)
+    const item = items.find((value) => value.id === id)
     if (!item) return
     try {
       await updateOffering(id, { ...toOfferingInput(item), isFeatured: !item.isFeatured })
@@ -558,29 +1030,44 @@ export function OfferingsManager() {
   }
 
   const handlePublish = async (id: string) => {
-    await publishOffering(id); await load(); toast.success('Đã xuất bản.')
+    await publishOffering(id)
+    await load()
+    toast.success('Đã xuất bản.')
+  }
+
+  const handleUnpublish = async (id: string) => {
+    try {
+      const result = await unpublishOffering(id)
+      setItems((current) => current.map((item) => (item.id === id ? result.item : item)))
+      toast.success('Đã gỡ xuất bản. Nội dung chuyển về bản nháp.')
+    } catch {
+      toast.error('Không thể gỡ xuất bản.')
+    }
   }
 
   const handleArchive = async (id: string) => {
-    await archiveOffering(id); await load(); toast.warning('Đã ẩn nội dung.')
+    await archiveOffering(id)
+    await load()
+    toast.warning('Đã ẩn nội dung.')
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Xóa vĩnh viễn? Hành động này không thể hoàn tác.')) return
-    await deleteOffering(id); await load(); toast.warning('Đã xóa nội dung.')
+    await deleteOffering(id)
+    await load()
+    toast.warning('Đã xóa nội dung.')
   }
 
   const moveItem = async (id: string, direction: 'up' | 'down') => {
-    const s = [...items].sort((a, b) => a.sortOrder - b.sortOrder)
-    const idx = s.findIndex((i) => i.id === id)
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
-    const a = s[idx]
-    const b = s[swapIdx]
-    if (!a || !b) return
+    const ordered = [...items].sort((a, b) => a.sortOrder - b.sortOrder)
+    const index = ordered.findIndex((item) => item.id === id)
+    const swapIndex = direction === 'up' ? index - 1 : index + 1
+    const current = ordered[index]
+    const target = ordered[swapIndex]
+    if (!current || !target) return
     try {
       await Promise.all([
-        updateOffering(a.id, { ...toOfferingInput(a), sortOrder: b.sortOrder }),
-        updateOffering(b.id, { ...toOfferingInput(b), sortOrder: a.sortOrder }),
+        updateOffering(current.id, { ...toOfferingInput(current), sortOrder: target.sortOrder }),
+        updateOffering(target.id, { ...toOfferingInput(target), sortOrder: current.sortOrder }),
       ])
       await load()
     } catch {
@@ -588,222 +1075,176 @@ export function OfferingsManager() {
     }
   }
 
-  const { dragIdx, rowProps: dragRowProps } = useDragReorder(async (from, toIdx) => {
-    const arr = [...filtered]
-    const [moved] = arr.splice(from, 1)
-    if (!moved) return
-    arr.splice(toIdx, 0, moved)
-    const lo = Math.min(from, toIdx), hi = Math.max(from, toIdx)
-    try {
-      await Promise.all(
-        arr.slice(lo, hi + 1).map((item, i) =>
-          updateOffering(item.id, { ...toOfferingInput(item), sortOrder: filtered[lo + i]?.sortOrder ?? item.sortOrder })
-        )
-      )
-      await load()
-      toast.success('Đã cập nhật thứ tự.')
-    } catch {
-      toast.error('Không thể đổi thứ tự.')
-    }
-  })
+  const coverMap = new Map(images.map((image) => [image.id, image.publicUrl]))
+  const typeLabel = TYPES.find((type) => type.key === activeType)?.label ?? ''
 
-  const coverMap = new Map(images.map((img) => [img.id, img.publicUrl]))
+  const stats = useMemo(
+    () => [
+      {
+        key: 'all',
+        label: `Tổng ${typeLabel.toLowerCase()}`,
+        value: items.length,
+        note: `Tất cả ${typeLabel.toLowerCase()}`,
+      },
+      {
+        key: 'published',
+        label: 'Đã đăng',
+        value: items.filter((item) => item.status === 'published').length,
+        note: 'Hiển thị công khai',
+      },
+      {
+        key: 'draft',
+        label: 'Nháp',
+        value: items.filter((item) => item.status === 'draft').length,
+        note: 'Chưa xuất bản',
+      },
+      {
+        key: 'archived',
+        label: 'Ẩn',
+        value: items.filter((item) => item.status === 'archived').length,
+        note: 'Đang ẩn khỏi site',
+      },
+    ],
+    [items, typeLabel],
+  )
 
-  const statusCounts = useMemo(() => ({
-    all: items.length,
-    draft: items.filter((i) => i.status === 'draft').length,
-    published: items.filter((i) => i.status === 'published').length,
-    archived: items.filter((i) => i.status === 'archived').length,
-  }), [items])
-
-  const isReorderable = !search.trim() && statusFilter === 'all'
+  const categoryOptions = useMemo(() => {
+    const names = new Set(items.map((item) => item.contentJson.category).filter(Boolean) as string[])
+    return Array.from(names).map((name) => ({ value: name, label: name }))
+  }, [items])
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
     return items
-      .filter((i) => statusFilter === 'all' || i.status === statusFilter)
-      .filter((i) => !query || i.title.toLowerCase().includes(query) || i.slug.toLowerCase().includes(query))
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-  }, [items, statusFilter, search])
+      .filter((item) => statusFilter === 'all' || item.status === statusFilter)
+      .filter((item) => categoryFilter === 'all' || item.contentJson.category === categoryFilter)
+      .filter((item) => {
+        if (!query) return true
+        return `${item.title} ${item.slug} ${item.summary ?? ''} ${item.contentJson.description}`
+          .toLowerCase()
+          .includes(query)
+      })
+      .sort((a, b) => {
+        const left = new Date(a.updatedAt).getTime()
+        const right = new Date(b.updatedAt).getTime()
+        return sortOrder === 'newest' ? right - left : left - right
+      })
+  }, [items, statusFilter, categoryFilter, search, sortOrder])
+
+  const isReorderable = !search.trim() && statusFilter === 'all' && categoryFilter === 'all'
+
+  if (editing !== null) {
+    return (
+      <OfferingForm
+        images={images}
+        items={items}
+        current={editing === 'new' ? null : editing}
+        initial={
+          editing === 'new'
+            ? emptyInput(activeType)
+            : { ...editing, contentJson: editing.contentJson as OfferingContent }
+        }
+        onSave={saveOffering}
+        onPublish={publishOfferingInput}
+        onCancel={() => setEditing(null)}
+        {...(editing !== 'new'
+          ? {
+              onArchive: async () => handleArchive((editing as OfferingResponse).id),
+              onUnpublish: async () => handleUnpublish((editing as OfferingResponse).id),
+              onDuplicate: async () => handleDuplicate(editing as OfferingResponse),
+            }
+          : {})}
+      />
+    )
+  }
 
   return (
     <div className="admin-module">
-      <PageHeader
-        title="Phần mềm & Giải pháp"
-        description="Quản lý phần mềm, giải pháp, dịch vụ và ngành hàng hiển thị trên website."
-        actions={
-          <button type="button" className="btn-primary btn-icon" onClick={() => setEditing('new')}>
-            <Plus size={16} /> Thêm mới
-          </button>
-        }
-      />
-
-      <div className="tab-nav">
-        {TYPES.map((t) => (
-          <button key={t.key} type="button" className={activeType === t.key ? 'is-active' : ''} onClick={() => setActiveType(t.key)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {loading && <p className="admin-info">Đang tải...</p>}
-
-      {!loading && items.length === 0 && (
-        <div className="admin-empty">
-          <Archive size={36} />
-          <p>Chưa có nội dung nào trong mục này.</p>
-          <button type="button" className="btn-primary btn-icon" onClick={() => setEditing('new')}><Plus size={15} /> Thêm mới</button>
-        </div>
-      )}
-
-      {!loading && items.length > 0 && (
-        <>
-          <div className="toolbar">
-            <span className="toolbar-search-wrap">
-              <Search size={15} className="toolbar-search-icon" aria-hidden="true" />
-              <input className="toolbar-search" type="search" placeholder="Tìm theo tên, slug…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            </span>
-            <button
-              type="button"
-              className="view-toggle-btn"
-              title={viewMode === 'grid' ? 'Xem dạng danh sách' : 'Xem dạng lưới'}
-              onClick={() => setViewMode((v) => { const next = v === 'grid' ? 'list' : 'grid'; localStorage.setItem('admin.offerings.view', next); return next })}
-            >
-              {viewMode === 'grid' ? <List size={15} /> : <LayoutGrid size={15} />}
-            </button>
+      <ContentListPage
+        title={typeLabel}
+        description={`Quản lý ${typeLabel.toLowerCase()} hiển thị trên website.`}
+        actionLabel={`Thêm ${typeLabel.toLowerCase()}`}
+        onCreate={() => setEditing('new')}
+        stats={stats}
+        search={search}
+        onSearch={setSearch}
+        status={statusFilter}
+        onStatus={setStatusFilter}
+        sort={sortOrder}
+        onSort={setSortOrder}
+        viewMode={viewMode}
+        onViewMode={(next) => {
+          setViewMode(next)
+          localStorage.setItem('admin.offerings.view', next)
+        }}
+        {...(categoryOptions.length > 0
+          ? { categoryOptions, categoryValue: categoryFilter, onCategoryChange: setCategoryFilter }
+          : {})}
+      >
+        {loading ? <p className="admin-info">Đang tải...</p> : null}
+        {!loading && filtered.length === 0 ? (
+          <div className="admin-empty admin-empty--inline">
+            <p>Không có mục nào khớp với bộ lọc.</p>
           </div>
+        ) : null}
 
-          <div className="status-pills">
-            {(['all', 'draft', 'published', 'archived'] as const).map((key) => {
-              const LABELS = { all: 'Tất cả', draft: 'Nháp', published: 'Đã đăng', archived: 'Đã ẩn' }
-              const count = statusCounts[key]
+        {!loading ? (
+          <ContentCardsGrid
+            addLabel={`Thêm ${typeLabel.toLowerCase()} mới`}
+            addDescription={`Tạo nội dung ${typeLabel.toLowerCase()} để hiển thị trên website`}
+            onCreate={() => setEditing('new')}
+            isList={viewMode === 'list'}
+          >
+            {filtered.map((item, index) => {
+              const coverUrl = item.coverMediaId ? (coverMap.get(item.coverMediaId) ?? null) : null
               return (
-                <button
-                  key={key}
-                  type="button"
-                  className={`status-pill${statusFilter === key ? ' is-active' : ''}${count === 0 && key !== 'all' ? ' is-empty' : ''}`}
-                  onClick={() => setStatusFilter(key)}
-                >
-                  {LABELS[key]}{count > 0 ? ` (${count})` : ''}
-                </button>
+                <ContentItemCard
+                  key={item.id}
+                  title={item.title}
+                  slug={item.slug}
+                  summary={item.summary}
+                  status={item.status}
+                  updatedAt={item.updatedAt}
+                  coverUrl={coverUrl}
+                  fallback={<OfferingCardCoverFallback type={item.type} />}
+                  categoryLabel={item.contentJson.category ?? null}
+                  marker={
+                    item.isFeatured ? (
+                      <span className="content-featured-marker" title="Nổi bật">
+                        <Star size={12} fill="currentColor" />
+                      </span>
+                    ) : null
+                  }
+                  onEdit={() => setEditing(item)}
+                  onDuplicate={() => void handleDuplicate(item)}
+                  onPreview={() => openPublicSite(`${TYPE_PREFIX[activeType]}/${item.slug}`)}
+                  menuActions={
+                    [
+                      ...(isReorderable && index > 0
+                        ? [{ label: 'Lên', onClick: () => void moveItem(item.id, 'up') }]
+                        : []),
+                      ...(isReorderable && index < filtered.length - 1
+                        ? [{ label: 'Xuống', onClick: () => void moveItem(item.id, 'down') }]
+                        : []),
+                      {
+                        label: item.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật',
+                        onClick: () => void handleToggleFeatured(item.id),
+                      },
+                      item.status === 'published'
+                        ? { label: 'Gỡ xuất bản', onClick: () => void handleUnpublish(item.id) }
+                        : { label: 'Xuất bản', onClick: () => void handlePublish(item.id) },
+                      item.status === 'published'
+                        ? { label: 'Ẩn nội dung', onClick: () => void handleArchive(item.id) }
+                        : null,
+                      { label: 'Xóa', onClick: () => void handleDelete(item.id), danger: true },
+                    ].filter(Boolean) as Array<{ label: string; onClick: () => void; danger?: boolean }>
+                  }
+                />
               )
             })}
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="admin-empty admin-empty--inline">
-              <p>Không có mục nào khớp với bộ lọc.</p>
-              {(search || statusFilter !== 'all') && (
-                <button type="button" className="btn-secondary" onClick={() => { setSearch(''); setStatusFilter('all') }}>Xóa bộ lọc</button>
-              )}
-            </div>
-          ) : viewMode === 'list' ? (
-            <div className="data-table-wrap">
-              <table className="data-table offering-table">
-                <thead>
-                  <tr>
-                    {isReorderable && <th className="col-grip" />}
-                    <th className="col-stt">STT</th>
-                    <th>Ảnh bìa</th>
-                    <th>Tên</th>
-                    <th>Trạng thái</th>
-                    <th className="col-actions">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((item, idx) => {
-                    const cover = item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined
-                    return (
-                      <tr
-                        key={item.id}
-                        {...(isReorderable ? dragRowProps(idx) : {})}
-                      >
-                        {isReorderable && (
-                          <td className="col-grip"><GripVertical size={15} className="drag-handle-icon" /></td>
-                        )}
-                        <td className="col-stt">{idx + 1}</td>
-                        <td>
-                          <span className="cell-cover">
-                            {cover
-                              ? <img src={cover} alt={item.title} />
-                              : <span className="cell-cover-fallback" style={{ background: TYPE_COLORS[item.type] ?? '#64748b' }}>{item.title[0]?.toUpperCase()}</span>}
-                          </span>
-                        </td>
-                        <td>
-                          <strong className="offering-list-title">{item.title}</strong>
-                          <span className="cell-slug">/{item.slug}</span>
-                          {item.isFeatured && <span className="offering-list-star" title="Nổi bật"><Star size={11} fill="currentColor" /></span>}
-                          {item.status === 'published' && !item.coverMediaId && <span className="offering-no-cover" title="Thiếu ảnh bìa"><AlertCircle size={12} /></span>}
-                        </td>
-                        <td><span className={`status-badge status-${item.status}`}><StatusDot tone={STATUS_TONE[item.status] ?? 'muted'} />{STATUS_LABELS[item.status]}</span></td>
-                        <td className="col-actions">
-                          <button type="button" className="row-action icon-only" title="Sửa" onClick={() => setEditing(item)}><Pencil size={15} /></button>
-                          <a className="row-action icon-only" href={`${TYPE_PREFIX[activeType]}/${item.slug}`} target="_blank" rel="noreferrer" title="Xem website"><ExternalLink size={15} /></a>
-                          {item.status !== 'published'
-                            ? <button type="button" className="row-action icon-only" title="Xuất bản" onClick={() => void handlePublish(item.id)}><Eye size={15} /></button>
-                            : <button type="button" className="row-action icon-only" title="Ẩn" onClick={() => void handleArchive(item.id)}><EyeOff size={15} /></button>}
-                          <button type="button" className="row-action icon-only is-danger" title="Xóa" onClick={() => void handleDelete(item.id)}><Trash2 size={15} /></button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="offering-grid">
-              {filtered.map((item, idx) => (
-                <OfferingCard
-                  key={item.id}
-                  offering={item}
-                  coverUrl={item.coverMediaId ? coverMap.get(item.coverMediaId) : undefined}
-                  typePrefix={TYPE_PREFIX[activeType]}
-                  onEdit={() => setEditing(item)}
-                  onPublish={async () => handlePublish(item.id)}
-                  onArchive={async () => handleArchive(item.id)}
-                  onDelete={async () => handleDelete(item.id)}
-                  onMoveUp={isReorderable && idx > 0 ? async () => moveItem(item.id, 'up') : null}
-                  onMoveDown={isReorderable && idx < filtered.length - 1 ? async () => moveItem(item.id, 'down') : null}
-                  onToggleFeatured={async () => handleToggleFeatured(item.id)}
-                />
-              ))}
-            </div>
-          )}
-          {viewMode === 'grid' && isReorderable && filtered.length > 1 && (
-            <p className="table-hint">Dùng menu ⋯ trên mỗi thẻ để sắp xếp thứ tự hiển thị.</p>
-          )}
-        </>
-      )}
-
-      {editing !== null ? (
-        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={() => setEditing(null)}>
-          <div className="modal-card modal-card-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <button type="button" className="modal-back" onClick={() => setEditing(null)}>← Trở về</button>
-              <h2>{editing === 'new' ? 'Thêm mới' : 'Chỉnh sửa'} — {TYPES.find((t) => t.key === activeType)?.label}</h2>
-              {editing !== 'new' && editing?.slug && (
-                <a
-                  className="btn-preview-page"
-                  href={`${TYPE_PREFIX[activeType]}/${editing.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink size={13} /> Xem trang
-                </a>
-              )}
-            </div>
-            <div className="modal-body">
-              <OfferingForm
-                images={images}
-                initial={editing === 'new' ? emptyInput(activeType) : { ...editing, contentJson: editing.contentJson as OfferingContent }}
-                onSave={handleSave}
-                onCancel={() => setEditing(null)}
-                {...(editing !== 'new' ? { onDuplicate: async () => handleDuplicate(editing as OfferingResponse) } : {})}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+          </ContentCardsGrid>
+        ) : null}
+      </ContentListPage>
     </div>
   )
 }

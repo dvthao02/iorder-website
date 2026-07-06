@@ -1,5 +1,7 @@
 # iOrder Web/CMS Review for Codex
 
+> 2026-07-05 note: this review predates the newer API/admin modules now present in the worktree. Use `docs/BUSINESS_REBUILD_BLUEPRINT.md` and `docs/CMS_USE_CASES.md` as the current business baseline; treat the findings below as historical migration notes and re-verify them against current code before acting.
+
 Last updated: 2026-06-21
 
 This review is written to make structural problems obvious to a code-reading agent. The goal is not to restate the architecture plan, but to highlight where the current implementation still prevents a complete product.
@@ -19,15 +21,18 @@ This review is written to make structural problems obvious to a code-reading age
 The public site is not yet fully driven by CMS data. Core pages still rely on hardcoded content in [apps/web/src/data/siteContent.js](../apps/web/src/data/siteContent.js), [apps/web/src/data/newsArticles.js](../apps/web/src/data/newsArticles.js), and route-driven fallback content in [apps/web/src/pages/StaticPage.jsx](../apps/web/src/pages/StaticPage.jsx). Even though [apps/web/src/pages/Home.jsx](../apps/web/src/pages/Home.jsx) and [apps/web/src/utils/contentApi.js](../apps/web/src/utils/contentApi.js) already consume the CMS for part of the homepage and posts, the product still has two sources of truth.
 
 Why this matters:
+
 - Content can drift between admin and public rendering.
 - SEO and public delivery are only partially aligned with the CMS.
 - New content types still need code changes instead of CMS updates.
 
 What Codex should infer:
+
 - The current product is a hybrid migration, not a finished CMS-powered website.
 - The public site cannot be considered complete until menus, links, company profile, static landing pages, and detail pages are sourced from public APIs or a controlled rendering pipeline.
 
 Recommended fix:
+
 - Move remaining static content into CMS-backed public APIs and explicit contracts.
 - Remove duplicated route content progressively, starting with pages that users expect to edit without deployment.
 - Keep the current fallback code until the CMS-backed output matches it.
@@ -37,14 +42,17 @@ Recommended fix:
 The admin UI currently exposes dashboard, homepage, posts, and media only in [apps/admin/src/AdminApp.tsx](../apps/admin/src/AdminApp.tsx). The API layer matches that limited scope in [apps/api/src/app.ts](../apps/api/src/app.ts), which registers auth, media, posts, and homepage routes only.
 
 Why this matters:
+
 - The implementation plan and use-cases describe a broader CMS: menus, links, site settings, company profile, redirects, SEO, and offerings.
 - Without those screens, editors cannot manage the full product from the CMS.
 
 What Codex should infer:
+
 - The admin is functional, but it is still an MVP shell rather than the completed CMS product.
 - Product completeness is blocked by missing domain modules, not by styling.
 
 Recommended fix:
+
 - Add admin modules in the order already described in the implementation plan: menus, links, site profile, settings, then SEO and redirects.
 - Add corresponding API routes and shared contracts before wiring UI.
 - Do not expand the admin shell before the backend contract exists.
@@ -54,14 +62,17 @@ Recommended fix:
 The repository documentation names menus, menu items, link groups, content links, site profile, site settings, redirects, and offerings as part of the CMS domain in [CMS_IMPLEMENTATION_PLAN.md](../CMS_IMPLEMENTATION_PLAN.md), but the API entrypoint [apps/api/src/app.ts](../apps/api/src/app.ts) does not expose routes for those domains yet.
 
 Why this matters:
+
 - The frontend must keep hardcoding values that should be manageable from CMS.
 - The architecture promise of public website -> public read API -> CMS PostgreSQL is not fully realized.
 
 What Codex should infer:
+
 - The missing public read layer is a product gap, not just an implementation detail.
 - The system still behaves like a partially migrated static website rather than a complete CMS platform.
 
 Recommended fix:
+
 - Add public read endpoints for menus, site settings, site profile, and offerings.
 - Add admin write endpoints only after the corresponding data model and validation are defined.
 - Preserve the existing static front-end data until the public API returns the same shape.
@@ -71,10 +82,12 @@ Recommended fix:
 The homepage editor in [apps/admin/src/HomepageEditor.tsx](../apps/admin/src/HomepageEditor.tsx) supports a useful set of blocks, but it is still intentionally limited and does not yet cover the broader content model described in the plan, such as contact information, more reusable link blocks, or richer page composition.
 
 Why this matters:
+
 - The product is safe, but editors cannot finish the entire homepage and system content story in the UI.
 - This is where a CMS often stops being useful if the content model is too narrow.
 
 Recommended fix:
+
 - Keep the validated block approach.
 - Expand block coverage only where the product actually needs reusable CMS-managed content, instead of introducing a free-form page builder.
 - Prefer adding a small block or field over adding a new one-off hardcoded page.

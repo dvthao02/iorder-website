@@ -1,4 +1,5 @@
-const localApiHost = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
+const localApiHost =
+  typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
 const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
 const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
@@ -11,6 +12,21 @@ async function apiFetch(path, options = {}) {
   return response.json()
 }
 
+// ── Contact leads ────────────────────────────────────────────────────────────
+
+export async function submitContactLead(payload) {
+  const response = await fetch(`${API_URL}/api/public/contact`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.error ?? `HTTP_${response.status}`)
+  }
+  return response.json()
+}
+
 // ── Posts ──────────────────────────────────────────────────────────────────
 
 // Bài viết từ TipTap được lưu dưới dạng HTML (chứa thẻ < >).
@@ -19,7 +35,10 @@ const isHtml = (value) => typeof value === 'string' && /<\/?[a-z][\s\S]*>/i.test
 
 export function normalizeCmsPost(post) {
   const rawBody = post.body ?? ''
-  const wordCount = rawBody.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
+  const wordCount = rawBody
+    .replace(/<[^>]+>/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean).length
   return {
     ...post,
     category: post.category ?? (post.type === 'promotion' ? 'Khuyến mãi' : 'Tin tức'),
@@ -121,6 +140,13 @@ export async function fetchTestimonials() {
   }))
 }
 
+// ── Downloads (Hỗ trợ cài đặt) ───────────────────────────────────────────────
+
+export async function fetchDownloads() {
+  const payload = await apiFetch('/api/public/downloads')
+  return payload.items ?? []
+}
+
 // ── Site stats ─────────────────────────────────────────────────────────────
 
 let _statsCache = null
@@ -133,6 +159,13 @@ export async function fetchSiteStats() {
   _statsCache = data
   _statsCacheExpiry = now + 5 * 60 * 1000
   return data
+}
+
+// ── Content Pages (trang nội dung tĩnh, vd FAQ/hướng dẫn) ───────────────────
+
+export async function fetchContentPage(slug) {
+  const payload = await apiFetch(`/api/public/content-pages/${slug}`)
+  return payload.item
 }
 
 // ── Navigation & settings ──────────────────────────────────────────────────

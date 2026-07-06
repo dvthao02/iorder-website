@@ -9,10 +9,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const logoPath = resolve(root, 'src/assets/header/logo.png')
 const outPath = resolve(root, 'public/og-image.png')
 
-const W = 1200, H = 630
+const W = 1200,
+  H = 630
 // Khung trắng giữa chứa logo
-const cardW = 560, cardH = 230
-const cardX = (W - cardW) / 2, cardY = 150
+const cardW = 560,
+  cardH = 230
+const cardX = (W - cardW) / 2,
+  cardY = 150
 
 const bg = Buffer.from(`
 <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">

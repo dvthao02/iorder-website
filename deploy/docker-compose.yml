@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin_iorder -d iorderCMS"]
+      test: ['CMD-SHELL', 'pg_isready -U admin_iorder -d iorderCMS']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "80:8080"
+      - '80:8080'
     environment:
       NODE_ENV: production
       API_HOST: 0.0.0.0
@@ -46,7 +46,7 @@ services:
       MEDIA_STORAGE_PATH: /app/storage/media
       MEDIA_PUBLIC_BASE_URL: ${SITE_URL}/media
       HOMEPAGE_SLUG: home
-      TRUST_PROXY: "true"
+      TRUST_PROXY: 'true'
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
       SENTRY_RELEASE: ${SENTRY_RELEASE:-}

@@ -7,13 +7,13 @@ config({ path: resolve(import.meta.dirname, '../../../.env') })
 const sql = postgres(process.env.DATABASE_URL!)
 
 const typeMap: Record<string, string> = {
-  hero:          'home_hero',
-  feature_grid:  'home_features',
+  hero: 'home_hero',
+  feature_grid: 'home_features',
   industry_grid: 'home_industries',
-  deployment:    'home_process',
-  ecosystem:     'home_ecosystem_services',
-  article_list:  'home_featured_posts',
-  cta:           'home_cta',
+  deployment: 'home_process',
+  ecosystem: 'home_ecosystem_services',
+  article_list: 'home_featured_posts',
+  cta: 'home_cta',
 }
 const removeTypes = new Set(['rich_text', 'partner_list'])
 

@@ -1,24 +1,25 @@
 import { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 // Khi mở qua IP LAN (vd 192.168.x.x) thì gọi tương đối để đi qua proxy của vite,
 // chỉ trỏ thẳng :4000 khi chạy ở localhost/127.0.0.1.
 const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
-const localApiHost = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
+const localApiHost =
+  typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
 const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
 function useAppearance() {
   useEffect(() => {
     fetch(`${API_URL}/api/public/settings`, { cache: 'no-store' })
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         const a = data?.appearance
         if (!a) return
         const root = document.documentElement
         if (a.primaryColor) root.style.setProperty('--primary', a.primaryColor)
-        if (a.accentColor)  root.style.setProperty('--accent-3', a.accentColor)
-        if (a.darkMode)     root.setAttribute('data-theme', 'dark')
-        else                root.removeAttribute('data-theme')
+        if (a.accentColor) root.style.setProperty('--accent-3', a.accentColor)
+        if (a.darkMode) root.setAttribute('data-theme', 'dark')
+        else root.removeAttribute('data-theme')
       })
       .catch(() => undefined)
   }, [])
@@ -37,7 +38,6 @@ import ContactPage from './pages/ContactPage'
 import ToolsDownloadPage from './pages/ToolsDownloadPage'
 import StaticPage from './pages/StaticPage'
 import NotFound from './pages/NotFound'
-
 
 export default function App() {
   useAppearance()
@@ -60,7 +60,8 @@ export default function App() {
       <Route path="/ho-tro/cai-dat" element={<ToolsDownloadPage />} />
       <Route path="/ho-tro/:slug" element={<StaticPage />} />
       <Route path="/huong-dan" element={<StaticPage />} />
-      <Route path="/faq" element={<StaticPage />} />
+      {/* /faq trùng nội dung với /ho-tro/faq — hợp nhất về một URL để tránh trùng lặp nội dung (SEO) */}
+      <Route path="/faq" element={<Navigate to="/ho-tro/faq" replace />} />
       <Route path="/ho-tro-tu-xa" element={<StaticPage />} />
       <Route path="/gioi-thieu" element={<StaticPage />} />
       <Route path="/terms" element={<StaticPage />} />

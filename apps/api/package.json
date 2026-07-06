@@ -16,6 +16,8 @@
     "test:auth": "tsx src/auth-smoke.ts",
     "test:media": "tsx src/media-smoke.ts",
     "test:posts": "tsx src/posts-smoke.ts",
+    "test:offerings": "tsx src/offerings-smoke.ts",
+    "test:unit": "vitest run",
     "test:homepage": "tsx src/homepage-smoke.ts",
     "start": "node dist/server.js"
   },
@@ -38,6 +40,7 @@
   "devDependencies": {
     "@types/node": "26.0.0",
     "tsx": "4.22.4",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.9"
   }
 }

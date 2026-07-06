@@ -1,109 +1,182 @@
-# iOrder CMS - Use Cases and Progress
+# iOrder CMS Use Cases
 
-Last updated: 2026-06-21
+Last updated: 2026-07-05
 
-## Product boundary
+This document is the working use-case baseline for the iOrder public website CMS. For the fuller rebuild plan, database boundary, and implementation roadmap, read `docs/BUSINESS_REBUILD_BLUEPRINT.md`.
 
-The CMS is an internal tool for maintaining the existing iOrder company website. It is not a public-user, CRM, customer, or POS system.
+## Product Boundary
 
-Actors:
+The CMS is an internal administration tool for the iOrder company website. It manages public website content and website contact leads. It is not a POS, order, product, inventory, payment, customer-account, or full CRM system.
 
-- Internal administrator: signs in and manages public website content.
-- Public website: reads published content through public APIs.
-- Website visitor: only reads the rendered website and has no CMS account.
+## Actors
 
-## Core use cases
+- Website visitor: reads public content, downloads support files, and submits contact forms.
+- Content author: drafts content and uploads media.
+- Editor: edits, publishes, archives, and restores website content.
+- Admin: manages CMS users, settings, navigation, and all website content.
+- Public website: reads published CMS data through public APIs.
+- Operator: deploys, backs up, restores, and verifies the production system.
 
-### 1. Administrator authentication
+## Core Use Cases
 
-1. Administrator submits username and password.
-2. API verifies the scrypt password hash.
+### 1. Authentication And Access
+
+1. User submits username and password in the internal CMS.
+2. API verifies the password hash.
 3. API creates a server-side session and signed HttpOnly cookie.
-4. Administrator enters the CMS.
-5. Logout revokes the session.
+4. CMS loads the user's role set.
+5. Logout, disable user, reset password, or change password invalidates affected access where required.
 
-There is no public registration or user-management screen.
+Rules:
 
-### 2. Homepage management
+- No public registration exists.
+- CMS roles are `admin`, `editor`, and `author`.
+- The permission matrix still needs to be formalized so broad authenticated routes can be narrowed by business role.
 
-1. Administrator opens the single homepage record.
-2. Administrator edits validated fixed blocks such as hero, features, offerings, partners, posts, downloads, CTA, and contact information.
-3. Administrator reorders or hides blocks.
-4. Administrator saves a draft and previews it.
-5. Publishing creates a revision and makes the new version available to the public API.
+### 2. Homepage Management
 
-The administrator cannot create arbitrary HTML, CSS, or JavaScript.
+1. Editor opens the single homepage record.
+2. Editor edits fixed, validated blocks such as hero, stats, industries, features, testimonials, process, featured posts, FAQ, and CTA.
+3. Editor autosaves draft data.
+4. Editor creates checkpoints or publishes.
+5. API stores revisions and exposes only the published snapshot to the public website.
 
-### 3. Post management
+Rules:
 
-1. Administrator creates or edits a news or promotion post.
-2. Administrator chooses a cover image, slug, excerpt, content, CTA, and basic SEO fields.
-3. Administrator saves a draft and previews it.
-4. Administrator publishes or hides the post.
-5. The public API returns published posts only.
+- Homepage blocks are contract-driven, not arbitrary HTML/CSS/JS.
+- One block type should not appear more than once in the homepage payload.
+- Draft data must not leak to public APIs.
 
-First-release workflow: `draft -> published -> archived/hidden`.
+### 3. Posts And Categories
 
-### 4. Media and downloadable documents
+1. Editor creates a post of type `news`, `promotion`, `case_study`, or `announcement`.
+2. Editor sets title, slug, cover image, excerpt, rich content, categories, CTA, SEO, and schedule fields.
+3. Editor saves draft, publishes, schedules, unpublishes, archives, restores a revision, or deletes.
+4. Public API returns published posts and public categories only.
 
-1. Administrator uploads an allowed image or document.
-2. API validates MIME type, extension, file size, and filename.
-3. File storage returns a storage key and public URL.
-4. CMS saves metadata, alt text, and caption in `media_assets`.
-5. Administrator attaches the asset to a homepage block, post, or download link.
-6. An asset in use cannot be permanently deleted.
+Rules:
 
-### 5. Shared website content
+- Active slugs are unique.
+- Published post data is the public source of truth for news and promotion pages.
+- Scheduled publishing is handled by the API scheduler.
 
-Administrator manages header/footer menus, internal and external links, CTA links, hotline, email, address, social links, and basic site metadata.
+### 4. Offerings
 
-### 6. Public delivery
+1. Editor creates an offering with type `software`, `solution`, `service`, or `industry`.
+2. Editor manages summary, content JSON, metrics, features, benefits, FAQ, cover media, icon, sort order, featured flag, and SEO.
+3. Editor publishes, unpublishes, archives, or deletes.
+4. Public website renders listing and detail routes from published offerings.
 
-1. Public website requests published homepage, post, menu, link, and site-profile data.
-2. Public API excludes drafts and archived content.
-3. Website renders API data with a controlled static fallback during migration.
-4. Publishing invalidates the affected cache.
+Rules:
 
-## Explicitly deferred
+- Slug uniqueness is scoped by offering type.
+- Admin UI currently exposes software, solutions, and services; industry management must be confirmed if industry pages remain public.
 
-- Customer accounts, CRM, POS data, orders, products, payments, and inventory.
-- Public registration and customer login.
-- User-management UI and editor/author approval workflow.
-- Scheduled publishing and complex category/tag hierarchy.
-- General-purpose drag-and-drop page builder.
-- Separate offerings module unless homepage and current detail-page migration proves it is necessary.
+### 5. Content Pages
 
-## Current implementation status
+1. Editor creates a simple static content page with slug, title, lead, body, SEO, and status.
+2. Editor publishes or unpublishes.
+3. Public website reads `/api/public/content-pages/*` by slug.
 
-Completed:
+Rules:
 
-- PostgreSQL CMS database and two applied migrations.
-- Internal authentication, sessions, admin guard, logout, and login rate limiting.
-- Admin login UI and administrator bootstrap command.
-- Base schemas for content, pages, posts, media, navigation, and settings.
-- Local media/document storage, protected upload/list/update APIs, public file delivery, and the admin media-library screen.
-- Media validation for allowed extension, MIME type, file signature, image dimensions, and the configured size limit.
-- Posts CRUD for news and promotions, cover-image selection, unique slugs, draft/publish/archive actions, revisions, audit logs, and published-only public APIs.
-- Admin post list/editor with automatic slug generation and basic SEO fields.
-- Single-homepage editor with validated fixed blocks, ordering, visibility, draft revisions, published snapshots, and published-only public API.
-- Idempotent current-homepage import with 9 ordered blocks, a 3-slide hero carousel, 16 partners, deployment media, and 22 seeded media assets.
-- Public homepage integration for hero, introduction cards/chips, partners, industries, features, deployment, ecosystem, articles, and CTA. Published block order and visibility drive the public body layout.
-- Admin task dashboard with live homepage/post/media totals and a persistent navigation sidebar.
-- Full homepage nested editing for hero slides, feature items, partner logos, article feed configuration, downloads, and CTA.
-- Six existing articles imported into Posts; homepage cards, `/tin-tuc`, and article details now read published CMS data with static fallback.
-- CMS typecheck, build, health smoke, and authentication smoke tests.
+- Use this module for simple rich-text pages such as support, FAQ, guides, and policies.
+- Use the composable `pages` + `page_blocks` model for structured landing pages.
+- `content_pages` status should be standardized with the main content status model before adding more workflow.
 
-Not implemented yet:
+### 6. Media And Downloads
 
-- Menu/link/company-profile screens.
-- Public content APIs and integration with the existing static website.
+1. Editor uploads an image or document.
+2. API validates filename, extension, MIME type, file signature, size, and image dimensions.
+3. API stores metadata in `media_assets`.
+4. Editor attaches media to content or creates support-download records.
+5. Public website reads enabled support downloads from the public API.
 
-## Next implementation order
+Rules:
 
-1. Create the real internal administrator account.
-2. Move the remaining industry, deployment, ecosystem, and intro-card details from static JSX/data into explicit CMS blocks.
-3. Implement menus, links, and company information.
-4. Connect the existing news pages to the published Posts API.
-5. Add remaining public read APIs and migrate existing static data with parity checks.
+- Media metadata should include alt text and caption.
+- Files in use should not be destructively deleted.
+- Upload limits are environment-driven.
 
-Read `CMS_IMPLEMENTATION_PLAN.md` for architecture, database, validation history, and broader handoff notes.
+### 7. Navigation, Links, And Settings
+
+1. Admin creates or seeds menu locations.
+2. Admin edits menu items, nested items, link groups, and shared links.
+3. Admin edits site profile, hotline, support email, sales email, address, logo, working hours, external links, and appearance settings.
+4. Public website reads menus and settings through public APIs.
+
+Rules:
+
+- Header, footer, contact page, floating actions, and shared CTA links should use the same settings and navigation source.
+- Disabled menu items and links must be hidden publicly.
+- Navigation and settings mutations should be auditable.
+
+### 8. Partners And Testimonials
+
+1. Editor creates partner/customer logos and testimonials.
+2. Editor controls sort order and enabled state.
+3. Public homepage and related sections read enabled records.
+
+Rules:
+
+- Homepage blocks may configure headings and limits, but reusable partner/testimonial data should live in shared tables.
+
+### 9. Contact Leads
+
+1. Visitor submits the public contact form.
+2. API validates contact data and honeypot field.
+3. API stores a `new` lead.
+4. Admin views new leads and updates status to `contacted` or `closed`.
+
+Rules:
+
+- This is a website lead inbox, not a full CRM pipeline.
+- Lead status changes should be auditable.
+
+### 10. SEO, Redirects, And Public Delivery
+
+1. Public website reads published data from `/api/public/*`.
+2. API serves sitemap and robots output.
+3. Redirects should be managed from the DB if production SEO needs editable redirects.
+
+Rules:
+
+- Static fallback is allowed during migration only.
+- Final public content should have one source of truth in the CMS database.
+- `redirects` currently exists in the DB schema, but contracts/routes/UI still need confirmation.
+
+## Current Implementation Summary
+
+Implemented surfaces observed in the current codebase:
+
+- Auth, sessions, users, roles.
+- Homepage editor, autosave, revisions, preview token, public homepage.
+- Posts, categories, revisions, scheduler, public posts.
+- Offerings and public offering pages.
+- Content pages and public content-page lookup.
+- Media library and support downloads.
+- Partners and testimonials.
+- Contact leads.
+- Navigation, menus, link groups.
+- Site profile, settings, external links, appearance settings.
+- Activity log.
+- Public stats, sitemap, and robots.
+
+Known product gaps:
+
+- Role permission matrix is not yet explicit enough.
+- Statuses should be normalized across publishable modules.
+- `pages` and `content_pages` need a firm boundary.
+- Industry offering management must be confirmed.
+- Redirects need contracts/routes/UI if they remain in scope.
+- Static public fallbacks should be removed only after API parity is proven.
+- Some modules still need service tests and audit-log consistency.
+
+## Recommended Completion Order
+
+1. Approve the business boundary and exclusions.
+2. Normalize statuses, page model boundaries, industry management, permissions, and redirects.
+3. Complete API module-standard debt and missing service tests.
+4. Finish any missing admin screens or controls.
+5. Migrate public routes from static fallback to CMS APIs with parity checks.
+6. Run `pnpm verify` plus focused browser/API smoke before production release.

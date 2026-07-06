@@ -71,11 +71,13 @@ export async function findSessionUser(db: CmsDatabase, token: string): Promise<A
       userId: sessions.userId,
     })
     .from(sessions)
-    .where(and(
-      eq(sessions.tokenHash, hashSessionToken(token)),
-      isNull(sessions.revokedAt),
-      gt(sessions.expiresAt, new Date()),
-    ))
+    .where(
+      and(
+        eq(sessions.tokenHash, hashSessionToken(token)),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, new Date()),
+      ),
+    )
     .limit(1)
 
   if (!session) {
@@ -88,20 +90,30 @@ export async function findSessionUser(db: CmsDatabase, token: string): Promise<A
     return null
   }
 
-  await db
-    .update(sessions)
-    .set({ lastSeenAt: new Date() })
-    .where(eq(sessions.id, session.id))
+  await db.update(sessions).set({ lastSeenAt: new Date() }).where(eq(sessions.id, session.id))
 
   return user
+}
+
+export async function findSessionIdByToken(db: CmsDatabase, token: string): Promise<string | null> {
+  const [session] = await db
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(
+      and(
+        eq(sessions.tokenHash, hashSessionToken(token)),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, new Date()),
+      ),
+    )
+    .limit(1)
+
+  return session?.id ?? null
 }
 
 export async function revokeSession(db: CmsDatabase, token: string): Promise<void> {
   await db
     .update(sessions)
     .set({ revokedAt: new Date() })
-    .where(and(
-      eq(sessions.tokenHash, hashSessionToken(token)),
-      isNull(sessions.revokedAt),
-    ))
+    .where(and(eq(sessions.tokenHash, hashSessionToken(token)), isNull(sessions.revokedAt)))
 }

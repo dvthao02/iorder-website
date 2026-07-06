@@ -17,23 +17,23 @@ export default function NotFound() {
 
   return (
     <PageLayout>
-        <section className="notfound-section">
-          <div className="container notfound-box">
-            <p className="notfound-code">404</p>
-            <h1>Không tìm thấy trang</h1>
-            <p className="notfound-lead">
-              Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
-            </p>
+      <section className="notfound-section">
+        <div className="container notfound-box">
+          <p className="notfound-code">404</p>
+          <h1>Không tìm thấy trang</h1>
+          <p className="notfound-lead">
+            Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
+          </p>
 
-            <div className="notfound-actions">
-              <Link to="/" className="btn primary notfound-home">
-                <RotateCcw size={19} />
-                <span>Quay về trang chủ</span>
-                <Home size={18} />
-              </Link>
-            </div>
+          <div className="notfound-actions">
+            <Link to="/" className="btn primary notfound-home">
+              <RotateCcw size={19} />
+              <span>Quay về trang chủ</span>
+              <Home size={18} />
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
     </PageLayout>
   )
 }

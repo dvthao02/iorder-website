@@ -49,4 +49,3 @@ export function requireCmsUser(request: FastifyRequest): AuthUser {
 
   return request.cmsUser
 }
-

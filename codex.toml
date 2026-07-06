@@ -1,0 +1,12 @@
+# Codex configuration for webiorder project
+# Docs: https://github.com/openai/codex
+
+model = "codex-mini-latest"
+
+# Approval policy: auto-approve safe read/edit operations
+approval_policy = "unless-allow-listed"
+
+# MCP server — same filesystem server as Claude Code
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\ThinkPad\\Downloads\\webiorder"]

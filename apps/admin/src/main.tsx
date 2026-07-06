@@ -3,10 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { AdminApp } from './AdminApp'
-import { AdminErrorBoundary, initSentry } from './observability/sentry'
+import { AdminErrorBoundary } from './observability/error-boundary'
 import './styles.css'
-
-initSentry()
 
 const root = document.getElementById('root')
 
@@ -21,6 +19,7 @@ createRoot(root).render(
         <Routes>
           <Route path="/" element={<AdminApp />} />
           <Route path="/:section" element={<AdminApp />} />
+          <Route path="/:section/*" element={<AdminApp />} />
         </Routes>
       </BrowserRouter>
     </AdminErrorBoundary>

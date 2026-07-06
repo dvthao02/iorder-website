@@ -14,7 +14,10 @@ const OFFERING_PREFIX: Record<string, string> = {
 const STATIC_PATHS = ['/', '/tin-tuc', '/phan-mem', '/giai-phap', '/dich-vu', '/lien-he']
 
 function xmlEscape(value: string) {
-  return value.replace(/[<>&'"]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[char] as string))
+  return value.replace(
+    /[<>&'"]/g,
+    (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[char] as string,
+  )
 }
 
 function normalizeOrigin(origin: string) {
@@ -26,9 +29,19 @@ export async function buildSitemapXml(db: CmsDatabase, publicOrigin: string) {
   const origin = normalizeOrigin(publicOrigin)
   const now = new Date()
   const [postRows, offeringRows] = await Promise.all([
-    db.select({ slug: posts.slug, updatedAt: posts.updatedAt }).from(posts)
-      .where(and(eq(posts.status, 'published'), isNull(posts.deletedAt), or(isNull(posts.publishedAt), lte(posts.publishedAt, now)))),
-    db.select({ type: offerings.type, slug: offerings.slug, updatedAt: offerings.updatedAt }).from(offerings)
+    db
+      .select({ slug: posts.slug, updatedAt: posts.updatedAt })
+      .from(posts)
+      .where(
+        and(
+          eq(posts.status, 'published'),
+          isNull(posts.deletedAt),
+          or(isNull(posts.publishedAt), lte(posts.publishedAt, now)),
+        ),
+      ),
+    db
+      .select({ type: offerings.type, slug: offerings.slug, updatedAt: offerings.updatedAt })
+      .from(offerings)
       .where(and(eq(offerings.status, 'published'), isNull(offerings.deletedAt))),
   ])
 
@@ -40,10 +53,12 @@ export async function buildSitemapXml(db: CmsDatabase, publicOrigin: string) {
     urls.push({ loc: `${origin}/${prefix}/${row.slug}`, lastmod: row.updatedAt })
   }
 
-  const body = urls.map((url) => {
-    const lastmod = url.lastmod ? `<lastmod>${url.lastmod.toISOString()}</lastmod>` : ''
-    return `<url><loc>${xmlEscape(url.loc)}</loc>${lastmod}</url>`
-  }).join('')
+  const body = urls
+    .map((url) => {
+      const lastmod = url.lastmod ? `<lastmod>${url.lastmod.toISOString()}</lastmod>` : ''
+      return `<url><loc>${xmlEscape(url.loc)}</loc>${lastmod}</url>`
+    })
+    .join('')
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`
 }
 

@@ -103,7 +103,9 @@ test('Cài đặt website — profile và external links load', async ({ page })
 
   // Tab Liên kết ngoài
   await page.click('.tab-nav button:has-text("Liên kết ngoài")')
-  await expect(page.locator('input[placeholder*="https://app.iorder"], input[placeholder*="app.iorder"], input').first()).toBeVisible({ timeout: 6000 })
+  await expect(
+    page.locator('input[placeholder*="https://app.iorder"], input[placeholder*="app.iorder"], input').first(),
+  ).toBeVisible({ timeout: 6000 })
   console.log('  → Settings loaded OK')
 })
 

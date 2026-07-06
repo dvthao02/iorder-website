@@ -24,7 +24,9 @@
   border-radius: 999px;
   background: #ffffff;
   color: #172033;
-  box-shadow: 0 16px 38px rgba(15, 35, 68, 0.18), 0 5px 14px rgba(15, 35, 68, 0.08);
+  box-shadow:
+    0 16px 38px rgba(15, 35, 68, 0.18),
+    0 5px 14px rgba(15, 35, 68, 0.08);
   text-decoration: none;
   font-size: 14.5px;
   font-weight: 700;
@@ -34,7 +36,14 @@
   pointer-events: auto;
   overflow: visible;
   transform-origin: center;
-  transition: width 0.28s ease, min-width 0.28s ease, padding 0.28s ease, transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, color 0.22s ease;
+  transition:
+    width 0.28s ease,
+    min-width 0.28s ease,
+    padding 0.28s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease,
+    color 0.22s ease;
 }
 
 .floating-action-icon {
@@ -49,7 +58,9 @@
   justify-content: center;
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(11, 148, 238, 0.22));
-  box-shadow: inset 0 0 0 1px rgba(21, 136, 227, 0.16), 0 8px 18px rgba(21, 136, 227, 0.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(21, 136, 227, 0.16),
+    0 8px 18px rgba(21, 136, 227, 0.12);
 }
 
 .floating-action-icon img,
@@ -101,13 +112,17 @@
   font-weight: 800;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
   z-index: 30;
 }
 
 .floating-action:hover {
   transform: translateY(-2px);
-  box-shadow: 0 22px 52px rgba(15, 35, 68, 0.22), 0 8px 22px rgba(15, 35, 68, 0.1);
+  box-shadow:
+    0 22px 52px rgba(15, 35, 68, 0.22),
+    0 8px 22px rgba(15, 35, 68, 0.1);
 }
 
 .floating-action:hover > span:not(.floating-action-icon) {
@@ -153,7 +168,7 @@
 .floating-action.facebook > span:not(.floating-action-icon) {
   background: linear-gradient(135deg, #1877f2, #0b5bd3);
   color: #ffffff;
-  box-shadow: 0 12px 30px rgba(24,119,242,0.16);
+  box-shadow: 0 12px 30px rgba(24, 119, 242, 0.16);
 }
 
 .floating-action.gmail {
@@ -162,29 +177,33 @@
 }
 
 .floating-action.gmail .floating-action-icon {
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.06);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(0, 0, 0, 0.06);
 }
 
 .floating-action.gmail:hover {
-  box-shadow: 0 22px 52px rgba(197,57,41,0.28);
+  box-shadow: 0 22px 52px rgba(197, 57, 41, 0.28);
 }
 
 .floating-action.gmail .floating-action-icon::before,
 .floating-action.gmail .floating-action-icon::after {
-  background: rgba(209,72,54,0.16);
+  background: rgba(209, 72, 54, 0.16);
 }
 
 .floating-action.gmail > span:not(.floating-action-icon) {
   background: linear-gradient(135deg, #d14836, #c5372f);
   color: #fff;
-  box-shadow: 0 12px 30px rgba(209,72,54,0.14);
+  box-shadow: 0 12px 30px rgba(209, 72, 54, 0.14);
 }
 
 .floating-action.zalo .floating-action-icon {
   background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(0, 122, 255, 0.16), 0 8px 18px rgba(0, 122, 255, 0.14);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 122, 255, 0.16),
+    0 8px 18px rgba(0, 122, 255, 0.14);
 }
 
 .floating-action.zalo .floating-action-icon::before,
@@ -195,7 +214,7 @@
 .floating-action.zalo > span:not(.floating-action-icon) {
   background: #ffffff;
   color: #0b67b2;
-  box-shadow: 0 12px 30px rgba(11,103,178,0.08);
+  box-shadow: 0 12px 30px rgba(11, 103, 178, 0.08);
 }
 
 .floating-action.hotline {
@@ -204,13 +223,17 @@
 }
 
 .floating-action.hotline:hover {
-  box-shadow: 0 24px 58px rgba(21, 136, 227, 0.35), 0 8px 22px rgba(21, 136, 227, 0.18);
+  box-shadow:
+    0 24px 58px rgba(21, 136, 227, 0.35),
+    0 8px 22px rgba(21, 136, 227, 0.18);
 }
 
 .floating-action.hotline .floating-action-icon {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 8px 18px rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 8px 18px rgba(255, 255, 255, 0.08);
 }
 
 .floating-action.hotline .floating-action-icon::before,
@@ -221,12 +244,12 @@
 .floating-action.hotline > span:not(.floating-action-icon) {
   background: linear-gradient(135deg, var(--primary), #136dd9);
   color: #fff;
-  box-shadow: 0 12px 30px rgba(19,103,200,0.14);
+  box-shadow: 0 12px 30px rgba(19, 103, 200, 0.14);
 }
 
 .floating-action-icon::before,
 .floating-action-icon::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -252,25 +275,65 @@
 }
 
 @keyframes floating-wave {
-  0% { opacity: 0.8; transform: scale(1); }
-  70% { opacity: 0; transform: scale(1.75); }
-  100% { opacity: 0; transform: scale(1.75); }
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.75);
+  }
 }
 
 @keyframes floating-icon-shake {
-  0%,100% { transform: rotate(0deg) scale(1); }
-  18% { transform: rotate(-8deg) scale(1.05); }
-  36% { transform: rotate(8deg) scale(1.05); }
-  54% { transform: rotate(-5deg) scale(1.03); }
-  72% { transform: rotate(5deg) scale(1.03); }
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  18% {
+    transform: rotate(-8deg) scale(1.05);
+  }
+  36% {
+    transform: rotate(8deg) scale(1.05);
+  }
+  54% {
+    transform: rotate(-5deg) scale(1.03);
+  }
+  72% {
+    transform: rotate(5deg) scale(1.03);
+  }
 }
 
 @media (max-width: 640px) {
-  .floating-actions { right: 7px; bottom: 12px; gap: 9px; }
-  .floating-action { width: 44px; height: 44px; min-width: 44px; font-size: 13px; }
-  .floating-action-icon { width: 44px; height: 44px; min-width: 44px; flex-basis: 44px; }
-  .floating-action-icon img, .floating-action-icon svg { width: 24px; height: 24px; }
+  .floating-actions {
+    right: 7px;
+    bottom: 12px;
+    gap: 9px;
+  }
+  .floating-action {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 13px;
+  }
+  .floating-action-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    flex-basis: 44px;
+  }
+  .floating-action-icon img,
+  .floating-action-icon svg {
+    width: 24px;
+    height: 24px;
+  }
   .floating-action.facebook .floating-action-icon img,
-  .floating-action.zalo .floating-action-icon img { width: 28px; height: 28px; }
+  .floating-action.zalo .floating-action-icon img {
+    width: 28px;
+    height: 28px;
+  }
 }
-

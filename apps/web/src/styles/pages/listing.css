@@ -1,8 +1,6 @@
 ﻿.listing-hero {
   padding: 92px 0 62px;
-  background:
-    linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(18, 185, 167, 0.08)),
-    #f7fbff;
+  background: linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(18, 185, 167, 0.08)), #f7fbff;
 }
 
 .listing-hero-title {
@@ -39,8 +37,7 @@
 }
 
 .listing-section.soft {
-  background:
-    linear-gradient(180deg, #f4fbff 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #f4fbff 0%, #ffffff 100%);
 }
 
 .listing-grid {
@@ -76,7 +73,9 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .listing-card:hover {
@@ -372,15 +371,13 @@
   min-height: 100%;
   padding: 0;
   border-color: rgba(193, 217, 238, 0.95);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, #ffffff 72%),
-    #ffffff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, #ffffff 72%), #ffffff;
   box-shadow: 0 18px 42px rgba(15, 35, 68, 0.055);
 }
 
 .software-listing-card::before,
 .solution-listing-card::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0 0 auto;
   height: 4px;
@@ -411,7 +408,9 @@
   object-fit: cover;
   object-position: center;
   opacity: 0.92;
-  transition: transform 0.28s ease, opacity 0.28s ease;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
 }
 
 .software-listing-card:hover .software-card-media img,
@@ -653,89 +652,87 @@
   }
 }
 
-
-
 /* ── Dark mode ───────────────────────────────────────────────── */
-[data-theme="dark"] .listing-card {
+[data-theme='dark'] .listing-card {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .listing-card-title {
+[data-theme='dark'] .listing-card-title {
   color: var(--heading) !important;
 }
 
-[data-theme="dark"] .listing-card-desc {
+[data-theme='dark'] .listing-card-desc {
   color: var(--text) !important;
 }
 
-[data-theme="dark"] .listing-card-icon {
+[data-theme='dark'] .listing-card-icon {
   background: rgba(11, 142, 220, 0.1) !important;
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .news-feature-card,
-[data-theme="dark"] .software-hero-panel {
+[data-theme='dark'] .news-feature-card,
+[data-theme='dark'] .software-hero-panel {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .news-feature-card h2,
-[data-theme="dark"] .software-hero-panel h2 {
+[data-theme='dark'] .news-feature-card h2,
+[data-theme='dark'] .software-hero-panel h2 {
   color: var(--heading) !important;
 }
 
-[data-theme="dark"] .news-feature-card p {
+[data-theme='dark'] .news-feature-card p {
   color: var(--text) !important;
 }
 
-[data-theme="dark"] .news-highlight-section {
+[data-theme='dark'] .news-highlight-section {
   background: var(--soft) !important;
 }
 
-[data-theme="dark"] .news-insight-card {
+[data-theme='dark'] .news-insight-card {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .news-insight-card h3 {
+[data-theme='dark'] .news-insight-card h3 {
   color: var(--heading) !important;
 }
 
-[data-theme="dark"] .news-insight-card p,
-[data-theme="dark"] .news-insight-card > span {
+[data-theme='dark'] .news-insight-card p,
+[data-theme='dark'] .news-insight-card > span {
   color: var(--text) !important;
 }
 
-[data-theme="dark"] .category-tabs button {
+[data-theme='dark'] .category-tabs button {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
   color: var(--text) !important;
 }
 
-[data-theme="dark"] .category-tabs button.active {
+[data-theme='dark'] .category-tabs button.active {
   background: var(--primary) !important;
   color: #fff !important;
 }
 
-[data-theme="dark"] .software-stats {
+[data-theme='dark'] .software-stats {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .software-stats div {
+[data-theme='dark'] .software-stats div {
   border-color: var(--border) !important;
 }
 
-[data-theme="dark"] .software-stats strong {
+[data-theme='dark'] .software-stats strong {
   color: var(--heading) !important;
 }
 
-[data-theme="dark"] .software-stats span {
+[data-theme='dark'] .software-stats span {
   color: var(--muted) !important;
 }
 
-[data-theme="dark"] .news-hero-tools span {
+[data-theme='dark'] .news-hero-tools span {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
   color: var(--text) !important;

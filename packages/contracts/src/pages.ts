@@ -18,13 +18,7 @@ export const HOMEPAGE_SECTION_ORDER = [
 
 export type HomepageSectionType = (typeof HOMEPAGE_SECTION_ORDER)[number]
 
-export const SECTION_BACKGROUND_COLORS = [
-  '#ffffff',
-  '#f6fbff',
-  '#eaf6ff',
-  '#0a1628',
-  '#0f2236',
-] as const
+export const SECTION_BACKGROUND_COLORS = ['#ffffff', '#f6fbff', '#eaf6ff', '#0a1628', '#0f2236'] as const
 
 export const DEFAULT_SECTION_APPEARANCE = {
   backgroundMediaId: null,
@@ -36,21 +30,28 @@ export const DEFAULT_SECTION_APPEARANCE = {
   overlay: 'none',
 } as const
 
-export const sectionAppearanceSchema = z.object({
-  backgroundMediaId: contentIdSchema.nullable().default(null),
-  mobileBackgroundMediaId: contentIdSchema.nullable().default(null),
-  backgroundColor: z.enum(SECTION_BACKGROUND_COLORS).nullable().default(null),
-  backgroundFit: z.enum(['cover', 'contain']).default('cover'),
-  focalPointX: z.number().int().min(0).max(100).default(50),
-  focalPointY: z.number().int().min(0).max(100).default(50),
-  overlay: z.enum(['none', 'light', 'dark-soft', 'dark-medium']).default('none'),
-}).default(DEFAULT_SECTION_APPEARANCE)
+export const sectionAppearanceSchema = z
+  .object({
+    backgroundMediaId: contentIdSchema.nullable().default(null),
+    mobileBackgroundMediaId: contentIdSchema.nullable().default(null),
+    backgroundColor: z.enum(SECTION_BACKGROUND_COLORS).nullable().default(null),
+    backgroundFit: z.enum(['cover', 'contain']).default('cover'),
+    focalPointX: z.number().int().min(0).max(100).default(50),
+    focalPointY: z.number().int().min(0).max(100).default(50),
+    overlay: z.enum(['none', 'light', 'dark-soft', 'dark-medium']).default('none'),
+  })
+  .default(DEFAULT_SECTION_APPEARANCE)
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().default(null)
-const contentUrlSchema = z.string().trim().min(1).max(1000).refine(
-  (value) => value.startsWith('/') || /^(https?:|mailto:|tel:)/.test(value),
-  'URL must be an internal path, HTTP URL, email, or phone link',
-)
+const contentUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(1000)
+  .refine(
+    (value) => value.startsWith('/') || /^(https?:|mailto:|tel:)/.test(value),
+    'URL must be an internal path, HTTP URL, email, or phone link',
+  )
 
 const iconKeySchema = z.enum(['store', 'utensils', 'shield', 'smartphone', 'server', 'headphones', 'check'])
 const linkItemSchema = z.object({
@@ -73,11 +74,16 @@ const homeHeroBlockSchema = z.object({
     secondaryLabel: optionalText(80),
     secondaryUrl: contentUrlSchema.nullable().default(null),
     points: z.array(z.string().trim().min(1).max(120)).max(8).default([]),
-    slides: z.array(z.object({
-      title: z.string().trim().min(1).max(220),
-      description: z.string().trim().min(1).max(1200),
-      imageMediaId: contentIdSchema,
-    })).max(6).default([]),
+    slides: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(220),
+          description: z.string().trim().min(1).max(1200),
+          imageMediaId: contentIdSchema,
+        }),
+      )
+      .max(6)
+      .default([]),
   }),
 })
 
@@ -87,17 +93,30 @@ const homeStatsBlockSchema = z.object({
   isEnabled: z.boolean().default(true),
   appearance: sectionAppearanceSchema,
   data: z.object({
-    stats: z.array(z.object({
-      value: z.string().trim().min(1).max(80),
-      label: z.string().trim().min(1).max(120),
-      note: optionalText(120),
-    })).max(8).default([]),
+    stats: z
+      .array(
+        z.object({
+          value: z.string().trim().min(1).max(80),
+          label: z.string().trim().min(1).max(120),
+          note: optionalText(120),
+        }),
+      )
+      .max(8)
+      .default([]),
     partnersHeading: optionalText(180),
-    partners: z.array(z.object({
-      name: z.string().trim().min(1).max(180),
-      mediaId: contentIdSchema,
-      websiteUrl: z.string().url().nullable().default(null),
-    })).max(40).default([]),
+    /** @deprecated Nội dung logo đối tác lấy từ kho "Đối tác & Khách hàng" dùng chung (sidebar).
+     * Field này chỉ giữ lại để các snapshot đã publish trước đây (bảng CMS chưa tồn tại) vẫn parse được. */
+    partners: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1).max(180),
+          mediaId: contentIdSchema,
+          websiteUrl: z.string().url().nullable().default(null),
+        }),
+      )
+      .max(40)
+      .default([]),
+    partnersLimit: z.number().int().min(1).max(40).default(12),
   }),
 })
 
@@ -110,12 +129,17 @@ const homeFeaturesBlockSchema = z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
     intro: optionalText(1200),
-    items: z.array(z.object({
-      title: z.string().trim().min(1).max(180),
-      description: z.string().trim().min(1).max(1000),
-      href: contentUrlSchema.nullable().default(null),
-      mediaId: z.string().nullable().default(null),
-    })).min(1).max(12),
+    items: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(180),
+          description: z.string().trim().min(1).max(1000),
+          href: contentUrlSchema.nullable().default(null),
+          mediaId: z.string().nullable().default(null),
+        }),
+      )
+      .min(1)
+      .max(12),
   }),
 })
 
@@ -128,15 +152,25 @@ const homeIndustriesBlockSchema = z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
     intro: optionalText(1200),
-    groups: z.array(z.object({
-      title: z.string().trim().min(1).max(180),
-      iconKey: iconKeySchema.default('store'),
-      items: z.array(z.object({
-        title: z.string().trim().min(1).max(180),
-        description: z.string().trim().min(1).max(1000),
-        href: contentUrlSchema,
-      })).min(1).max(12),
-    })).min(1).max(6),
+    groups: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(180),
+          iconKey: iconKeySchema.default('store'),
+          items: z
+            .array(
+              z.object({
+                title: z.string().trim().min(1).max(180),
+                description: z.string().trim().min(1).max(1000),
+                href: contentUrlSchema,
+              }),
+            )
+            .min(1)
+            .max(12),
+        }),
+      )
+      .min(1)
+      .max(6),
   }),
 })
 
@@ -149,14 +183,19 @@ const homeEcosystemServicesBlockSchema = z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
     intro: optionalText(1200),
-    groups: z.array(z.object({
-      iconKey: iconKeySchema.default('check'),
-      label: z.string().trim().min(1).max(120),
-      title: z.string().trim().min(1).max(180),
-      description: z.string().trim().min(1).max(1200),
-      href: contentUrlSchema,
-      items: z.array(linkItemSchema).max(20),
-    })).min(1).max(8),
+    groups: z
+      .array(
+        z.object({
+          iconKey: iconKeySchema.default('check'),
+          label: z.string().trim().min(1).max(120),
+          title: z.string().trim().min(1).max(180),
+          description: z.string().trim().min(1).max(1200),
+          href: contentUrlSchema,
+          items: z.array(linkItemSchema).max(20),
+        }),
+      )
+      .min(1)
+      .max(8),
   }),
 })
 
@@ -172,15 +211,24 @@ const homeProcessBlockSchema = z.object({
     buttonLabel: z.string().trim().min(1).max(80),
     buttonUrl: contentUrlSchema,
     featureMediaId: contentIdSchema,
-    steps: z.array(z.object({
-      title: z.string().trim().min(1).max(180),
-      description: z.string().trim().min(1).max(1000),
-    })).min(1).max(8),
-    models: z.array(z.object({
-      title: z.string().trim().min(1).max(180),
-      description: z.string().trim().min(1).max(1000),
-      mediaId: contentIdSchema,
-    })).max(6),
+    steps: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(180),
+          description: z.string().trim().min(1).max(1000),
+        }),
+      )
+      .min(1)
+      .max(8),
+    models: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(180),
+          description: z.string().trim().min(1).max(1000),
+          mediaId: contentIdSchema,
+        }),
+      )
+      .max(6),
   }),
 })
 
@@ -192,13 +240,21 @@ const homeTestimonialsBlockSchema = z.object({
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
-    items: z.array(z.object({
-      quote: z.string().trim().min(1).max(1200),
-      name: z.string().trim().min(1).max(180),
-      role: optionalText(180),
-      company: optionalText(180),
-      avatarMediaId: contentIdSchema.nullable().default(null),
-    })).max(12).default([]),
+    /** @deprecated Nội dung đánh giá lấy từ kho "Đánh giá khách hàng" dùng chung (sidebar).
+     * Field này chỉ giữ lại để các snapshot đã publish trước đây (bảng CMS chưa tồn tại) vẫn parse được. */
+    items: z
+      .array(
+        z.object({
+          quote: z.string().trim().min(1).max(1200),
+          name: z.string().trim().min(1).max(180),
+          role: optionalText(180),
+          company: optionalText(180),
+          avatarMediaId: contentIdSchema.nullable().default(null),
+        }),
+      )
+      .max(12)
+      .default([]),
+    limit: z.number().int().min(1).max(12).default(6),
   }),
 })
 
@@ -226,10 +282,15 @@ const homeFaqBlockSchema = z.object({
   data: z.object({
     eyebrow: optionalText(120),
     heading: z.string().trim().min(1).max(220),
-    items: z.array(z.object({
-      question: z.string().trim().min(1).max(300),
-      answer: z.string().trim().min(1).max(3000),
-    })).min(1).max(20),
+    items: z
+      .array(
+        z.object({
+          question: z.string().trim().min(1).max(300),
+          answer: z.string().trim().min(1).max(3000),
+        }),
+      )
+      .min(1)
+      .max(20),
   }),
 })
 
@@ -271,7 +332,12 @@ const homepageInputObjectSchema = z.object({
 export const homepageInputSchema = homepageInputObjectSchema.superRefine((input, context) => {
   const seen = new Set<string>()
   input.blocks.forEach((block, index) => {
-    if (seen.has(block.type)) context.addIssue({ code: 'custom', path: ['blocks', index, 'type'], message: 'Each homepage block type can only appear once' })
+    if (seen.has(block.type))
+      context.addIssue({
+        code: 'custom',
+        path: ['blocks', index, 'type'],
+        message: 'Each homepage block type can only appear once',
+      })
     seen.add(block.type)
   })
 })

@@ -19,6 +19,8 @@
     "db:migrate": "tsx src/migrate.ts",
     "db:normalize-ownership": "psql -v ON_ERROR_STOP=1 -v app_owner=admin_iorder -d iorderCMS -f scripts/02-normalize-ownership.sql",
     "db:seed": "tsx src/seed.ts",
+    "seed:content-pages": "tsx src/seed-content-pages.ts",
+    "seed:industries": "tsx src/seed-industries.ts",
     "db:backup": "tsx src/backup.ts",
     "db:restore": "tsx src/restore.ts"
   },

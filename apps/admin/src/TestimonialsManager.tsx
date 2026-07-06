@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
 import { toast } from './toast'
-import { ImagePicker, PageHeader, ToggleSwitch } from './ui'
+import { ImagePicker, ModalShell, PageHeader, ToggleSwitch, useEscapeAndSave } from './ui'
 
 const emptyTestimonial: TestimonialInput = {
   authorName: '',
@@ -15,6 +15,12 @@ const emptyTestimonial: TestimonialInput = {
   avatarMediaId: null,
   sortOrder: 0,
   isEnabled: true,
+}
+
+function validateTestimonial(form: TestimonialInput): string | null {
+  if (form.authorName.trim().length < 2) return 'Tên khách hàng phải có ít nhất 2 ký tự.'
+  if (form.quote.trim().length < 10) return 'Nội dung đánh giá phải có ít nhất 10 ký tự.'
+  return null
 }
 
 function toInput(item: TestimonialResponse): TestimonialInput {
@@ -49,7 +55,9 @@ function StarPicker({ value, onChange }: { value: number | null; onChange: (v: n
         </button>
       ))}
       {value !== null && (
-        <button type="button" className="star-clear" onClick={() => onChange(null)}>Bỏ chọn</button>
+        <button type="button" className="star-clear" onClick={() => onChange(null)}>
+          Bỏ chọn
+        </button>
       )}
     </div>
   )
@@ -69,7 +77,13 @@ function StarDisplay({ value }: { value: number | null }) {
 
 // ── Testimonial card ───────────────────────────────────────────────────────────
 function TestimonialCard({
-  item, avatarUrl, onEdit, onDelete, onToggle, onMoveUp, onMoveDown,
+  item,
+  avatarUrl,
+  onEdit,
+  onDelete,
+  onToggle,
+  onMoveUp,
+  onMoveDown,
 }: {
   item: TestimonialResponse
   avatarUrl: string | null
@@ -80,8 +94,20 @@ function TestimonialCard({
   onMoveDown: (() => Promise<void>) | null
 }) {
   const [busy, setBusy] = useState(false)
-  const act = async (fn: () => Promise<void>) => { setBusy(true); try { await fn() } finally { setBusy(false) } }
-  const initials = item.authorName.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase()
+  const act = async (fn: () => Promise<void>) => {
+    setBusy(true)
+    try {
+      await fn()
+    } finally {
+      setBusy(false)
+    }
+  }
+  const initials = item.authorName
+    .split(' ')
+    .slice(-2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
 
   return (
     <div className={`testimonial-card${item.isEnabled ? '' : ' is-disabled'}`}>
@@ -92,9 +118,7 @@ function TestimonialCard({
 
       <div className="testimonial-card-author">
         <div className="testimonial-avatar">
-          {avatarUrl
-            ? <img src={avatarUrl} alt={item.authorName} />
-            : <span>{initials}</span>}
+          {avatarUrl ? <img src={avatarUrl} alt={item.authorName} /> : <span>{initials}</span>}
         </div>
         <div className="testimonial-author-info">
           <strong>{item.authorName}</strong>
@@ -117,10 +141,23 @@ function TestimonialCard({
           {item.isEnabled ? 'Hiển thị' : 'Đã ẩn'}
         </button>
         <div className="testimonial-actions">
-          <button type="button" title="Lên" onClick={() => onMoveUp && void act(onMoveUp)} disabled={busy || !onMoveUp}><ChevronUp size={15} /></button>
-          <button type="button" title="Xuống" onClick={() => onMoveDown && void act(onMoveDown)} disabled={busy || !onMoveDown}><ChevronDown size={15} /></button>
-          <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}><Pencil size={15} /></button>
-          <button type="button" title="Xóa" className="act-danger" onClick={() => void act(onDelete)} disabled={busy}><Trash2 size={15} /></button>
+          <button type="button" title="Lên" onClick={() => onMoveUp && void act(onMoveUp)} disabled={busy || !onMoveUp}>
+            <ChevronUp size={15} />
+          </button>
+          <button
+            type="button"
+            title="Xuống"
+            onClick={() => onMoveDown && void act(onMoveDown)}
+            disabled={busy || !onMoveDown}
+          >
+            <ChevronDown size={15} />
+          </button>
+          <button type="button" title="Chỉnh sửa" onClick={onEdit} disabled={busy}>
+            <Pencil size={15} />
+          </button>
+          <button type="button" title="Xóa" className="act-danger" onClick={() => void act(onDelete)} disabled={busy}>
+            <Trash2 size={15} />
+          </button>
         </div>
       </div>
     </div>
@@ -147,18 +184,16 @@ export function TestimonialsManager() {
   }
 
   useEffect(() => {
-    void loadData().catch(() => toast.error('Không thể tải danh sách đánh giá.')).finally(() => setLoading(false))
+    void loadData()
+      .catch(() => toast.error('Không thể tải danh sách đánh giá.'))
+      .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (editing === null) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); formRef.current?.requestSubmit() }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [editing])
+  useEscapeAndSave({
+    active: editing !== null,
+    onSave: () => formRef.current?.requestSubmit(),
+    onEscape: () => close(),
+  })
 
   const avatarMap = new Map(images.map((img) => [img.id, img.publicUrl]))
 
@@ -170,7 +205,8 @@ export function TestimonialsManager() {
       .filter((i) => {
         if (filter === 'enabled' && !i.isEnabled) return false
         if (filter === 'disabled' && i.isEnabled) return false
-        if (query && !i.authorName.toLowerCase().includes(query) && !(i.company ?? '').toLowerCase().includes(query)) return false
+        if (query && !i.authorName.toLowerCase().includes(query) && !(i.company ?? '').toLowerCase().includes(query))
+          return false
         return true
       })
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -216,6 +252,11 @@ export function TestimonialsManager() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
+    const validationError = validateTestimonial(form)
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
     setIsSaving(true)
     try {
       if (editing === 'new') await createTestimonial(form)
@@ -250,8 +291,14 @@ export function TestimonialsManager() {
     }
   }
 
-  const avatarUrl = form.avatarMediaId ? avatarMap.get(form.avatarMediaId) ?? null : null
-  const initials = form.authorName.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase() || '?'
+  const avatarUrl = form.avatarMediaId ? (avatarMap.get(form.avatarMediaId) ?? null) : null
+  const initials =
+    form.authorName
+      .split(' ')
+      .slice(-2)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase() || '?'
 
   return (
     <div className="admin-module">
@@ -271,7 +318,9 @@ export function TestimonialsManager() {
         <div className="admin-empty">
           <MessageSquareQuote size={36} />
           <p>Chưa có đánh giá nào.</p>
-          <button type="button" className="btn-primary btn-icon" onClick={openNew}><Plus size={15} /> Thêm đánh giá đầu tiên</button>
+          <button type="button" className="btn-primary btn-icon" onClick={openNew}>
+            <Plus size={15} /> Thêm đánh giá đầu tiên
+          </button>
         </div>
       )}
 
@@ -280,14 +329,25 @@ export function TestimonialsManager() {
           <div className="toolbar">
             <span className="toolbar-search-wrap">
               <Search size={15} className="toolbar-search-icon" aria-hidden="true" />
-              <input className="toolbar-search" type="search" placeholder="Tìm theo tên, công ty…" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input
+                className="toolbar-search"
+                type="search"
+                placeholder="Tìm theo tên, công ty…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </span>
           </div>
           <div className="status-pills">
             {(['all', 'enabled', 'disabled'] as const).map((key) => {
               const LABELS = { all: 'Tất cả', enabled: 'Hiển thị', disabled: 'Đã ẩn' }
               return (
-                <button key={key} type="button" className={`status-pill${filter === key ? ' is-active' : ''}`} onClick={() => setFilter(key)}>
+                <button
+                  key={key}
+                  type="button"
+                  className={`status-pill${filter === key ? ' is-active' : ''}`}
+                  onClick={() => setFilter(key)}
+                >
                   {LABELS[key]}
                 </button>
               )
@@ -301,12 +361,14 @@ export function TestimonialsManager() {
                 <TestimonialCard
                   key={item.id}
                   item={item}
-                  avatarUrl={item.avatarMediaId ? avatarMap.get(item.avatarMediaId) ?? null : null}
+                  avatarUrl={item.avatarMediaId ? (avatarMap.get(item.avatarMediaId) ?? null) : null}
                   onEdit={() => openEdit(item)}
                   onDelete={async () => remove(item.id)}
                   onToggle={async () => toggleEnabled(item)}
                   onMoveUp={isReorderable && idx > 0 ? async () => moveItem(item.id, 'up') : null}
-                  onMoveDown={isReorderable && idx < displayItems.length - 1 ? async () => moveItem(item.id, 'down') : null}
+                  onMoveDown={
+                    isReorderable && idx < displayItems.length - 1 ? async () => moveItem(item.id, 'down') : null
+                  }
                 />
               ))}
             </div>
@@ -315,97 +377,152 @@ export function TestimonialsManager() {
       )}
 
       {editing !== null && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" onClick={close}>
-          <form ref={formRef} className="modal-card" onClick={(e) => e.stopPropagation()} onSubmit={save}>
-            <div className="modal-head">
-              <button type="button" className="modal-back" onClick={close}>← Trở về</button>
+        <ModalShell
+          as="form"
+          formRef={formRef}
+          onSubmit={save}
+          onOverlayClick={close}
+          header={
+            <>
+              <button type="button" className="modal-back" onClick={close}>
+                ← Trở về
+              </button>
               <h2>{editing === 'new' ? 'Thêm đánh giá' : 'Sửa đánh giá'}</h2>
-            </div>
-
-            <div className="modal-body">
-              {/* Avatar picker */}
-              <div className="testimonial-avatar-row">
-                <div className="testimonial-avatar testimonial-avatar--lg">
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt={form.authorName} />
-                    : <span>{initials}</span>}
-                </div>
-                <div className="testimonial-avatar-actions">
-                  <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAvatarPicker((v) => !v)}>
-                    {showAvatarPicker ? 'Ẩn chọn ảnh' : 'Chọn ảnh đại diện'}
-                  </button>
-                  {form.avatarMediaId && (
-                    <button type="button" className="btn-ghost-danger btn-sm" onClick={() => { patchForm('avatarMediaId', null); setShowAvatarPicker(false) }}>
-                      Xóa ảnh
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {showAvatarPicker && (
-                <ImagePicker
-                  label="Ảnh đại diện"
-                  ariaLabel="Chọn ảnh đại diện"
-                  images={images}
-                  value={form.avatarMediaId}
-                  onChange={(id) => { patchForm('avatarMediaId', id); setShowAvatarPicker(false) }}
-                  onUploaded={(asset) => { setImages((prev) => [asset, ...prev]); patchForm('avatarMediaId', asset.id); setShowAvatarPicker(false) }}
-                />
-              )}
-
-              <div className="form-row">
-                <label>Nội dung đánh giá *
-                  <textarea required maxLength={2000} rows={4} value={form.quote} onChange={(e) => patchForm('quote', e.target.value)} placeholder="Viết lời nhận xét của khách hàng..." />
-                </label>
-              </div>
-
-              <div className="form-row-2col">
-                <div className="form-row">
-                  <label>Tên khách hàng *
-                    <input required maxLength={180} value={form.authorName} onChange={(e) => patchForm('authorName', e.target.value)} />
-                  </label>
-                </div>
-                <div className="form-row">
-                  <label>Chức vụ
-                    <input maxLength={180} placeholder="Chủ chuỗi cafe..." value={form.authorRole ?? ''} onChange={(e) => patchForm('authorRole', e.target.value || null)} />
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-row-2col">
-                <div className="form-row">
-                  <label>Công ty
-                    <input maxLength={180} value={form.company ?? ''} onChange={(e) => patchForm('company', e.target.value || null)} />
-                  </label>
-                </div>
-                <div className="form-row">
-                  <label>Thứ tự
-                    <input type="number" min={0} value={form.sortOrder} onChange={(e) => patchForm('sortOrder', Number(e.target.value))} />
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <label className="form-label">Đánh giá sao</label>
-                <StarPicker value={form.rating} onChange={(v) => patchForm('rating', v)} />
-              </div>
-
-              <ToggleSwitch
-                checked={form.isEnabled}
-                onChange={(next) => patchForm('isEnabled', next)}
-                label="Hiển thị trên website"
-                hint="Tắt để ẩn khỏi trang chủ"
-              />
-            </div>
-
-            <div className="modal-foot">
-              <button type="button" className="btn-secondary" onClick={close} disabled={isSaving}>Hủy</button>
-              <button type="submit" className="btn-primary" disabled={isSaving || !form.authorName || !form.quote}>
+            </>
+          }
+          footer={
+            <>
+              <button type="button" className="btn-secondary" onClick={close} disabled={isSaving}>
+                Hủy
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={isSaving || Boolean(validateTestimonial(form))}
+                title={validateTestimonial(form) ?? undefined}
+              >
                 {isSaving ? 'Đang lưu...' : 'Lưu đánh giá'}
               </button>
+            </>
+          }
+        >
+          {/* Avatar picker */}
+          <div className="testimonial-avatar-row">
+            <div className="testimonial-avatar testimonial-avatar--lg">
+              {avatarUrl ? <img src={avatarUrl} alt={form.authorName} /> : <span>{initials}</span>}
             </div>
-          </form>
-        </div>
+            <div className="testimonial-avatar-actions">
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setShowAvatarPicker((v) => !v)}>
+                {showAvatarPicker ? 'Ẩn chọn ảnh' : 'Chọn ảnh đại diện'}
+              </button>
+              {form.avatarMediaId && (
+                <button
+                  type="button"
+                  className="btn-ghost-danger btn-sm"
+                  onClick={() => {
+                    patchForm('avatarMediaId', null)
+                    setShowAvatarPicker(false)
+                  }}
+                >
+                  Xóa ảnh
+                </button>
+              )}
+            </div>
+          </div>
+
+          {showAvatarPicker && (
+            <ImagePicker
+              label="Ảnh đại diện"
+              ariaLabel="Chọn ảnh đại diện"
+              images={images}
+              value={form.avatarMediaId}
+              onChange={(id) => {
+                patchForm('avatarMediaId', id)
+                setShowAvatarPicker(false)
+              }}
+              onUploaded={(asset) => {
+                setImages((prev) => [asset, ...prev])
+                patchForm('avatarMediaId', asset.id)
+                setShowAvatarPicker(false)
+              }}
+            />
+          )}
+
+          <div className="form-row">
+            <label>
+              Nội dung đánh giá *
+              <textarea
+                required
+                maxLength={2000}
+                rows={4}
+                value={form.quote}
+                onChange={(e) => patchForm('quote', e.target.value)}
+                placeholder="Viết lời nhận xét của khách hàng..."
+              />
+            </label>
+          </div>
+
+          <div className="form-row-2col">
+            <div className="form-row">
+              <label>
+                Tên khách hàng *
+                <input
+                  required
+                  maxLength={180}
+                  value={form.authorName}
+                  onChange={(e) => patchForm('authorName', e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="form-row">
+              <label>
+                Chức vụ
+                <input
+                  maxLength={180}
+                  placeholder="Chủ chuỗi cafe..."
+                  value={form.authorRole ?? ''}
+                  onChange={(e) => patchForm('authorRole', e.target.value || null)}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="form-row-2col">
+            <div className="form-row">
+              <label>
+                Công ty
+                <input
+                  maxLength={180}
+                  value={form.company ?? ''}
+                  onChange={(e) => patchForm('company', e.target.value || null)}
+                />
+              </label>
+            </div>
+            <div className="form-row">
+              <label>
+                Thứ tự
+                <input
+                  type="number"
+                  min={0}
+                  value={form.sortOrder}
+                  onChange={(e) => patchForm('sortOrder', Number(e.target.value))}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <label className="form-label">Đánh giá sao</label>
+            <StarPicker value={form.rating} onChange={(v) => patchForm('rating', v)} />
+          </div>
+
+          <ToggleSwitch
+            checked={form.isEnabled}
+            onChange={(next) => patchForm('isEnabled', next)}
+            label="Hiển thị trên website"
+            hint="Tắt để ẩn khỏi trang chủ"
+          />
+        </ModalShell>
       )}
     </div>
   )

@@ -52,11 +52,11 @@ pnpm dev:all
 
 Lệnh này khởi động đồng thời **web (5173)** + **api (4000)** + **admin (5174)**. Nhờ proxy, truy cập tất cả qua **một cổng 5173** giống production:
 
-| URL | Phục vụ |
-|-----|---------|
-| http://127.0.0.1:5173/ | Website (trang người dùng) |
-| http://127.0.0.1:5173/admin | CMS quản trị |
-| http://127.0.0.1:5173/api | API |
+| URL                         | Phục vụ                    |
+| --------------------------- | -------------------------- |
+| http://127.0.0.1:5173/      | Website (trang người dùng) |
+| http://127.0.0.1:5173/admin | CMS quản trị               |
+| http://127.0.0.1:5173/api   | API                        |
 
 > Đăng nhập CMS bằng `CMS_ADMIN_USERNAME` / `CMS_ADMIN_PASSWORD` đã đặt ở `.env`.
 

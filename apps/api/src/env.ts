@@ -13,7 +13,10 @@ const envSchema = z.object({
   MEDIA_STORAGE_PATH: z.string().min(1).default('../../storage/media'),
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://127.0.0.1:4000/media'),
   MEDIA_MAX_FILE_SIZE_MB: z.coerce.number().int().min(1).max(100).default(20),
-  HOMEPAGE_SLUG: z.string().regex(/^[a-z0-9-]+$/).default('home'),
+  HOMEPAGE_SLUG: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .default('home'),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_ENVIRONMENT: z.string().min(1).optional(),
   SENTRY_RELEASE: z.string().min(1).optional(),
@@ -23,6 +26,12 @@ const envSchema = z.object({
   TRUST_PROXY: z.string().default('false'),
   // Tùy chọn: danh sách URL DB iOrder app (cách nhau dấu phẩy) để đếm số cửa hàng thực tế
   IORDER_APP_DB_URLS: z.string().optional(),
+  // Scheduler tự động publish bài viết hẹn giờ (Posts.scheduledAt).
+  POST_SCHEDULER_ENABLED: z
+    .string()
+    .default('true')
+    .transform((value) => value.trim().toLowerCase() !== 'false'),
+  POST_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(1000).default(60_000),
 })
 
 export type ApiEnv = z.infer<typeof envSchema>

@@ -38,9 +38,8 @@ function multipartBody(options: {
   caption?: string
 }) {
   const boundary = `iorder-${randomUUID()}`
-  const field = (name: string, value: string) => Buffer.from(
-    `--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`,
-  )
+  const field = (name: string, value: string) =>
+    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`)
   const body = Buffer.concat([
     field('altText', options.altText ?? ''),
     field('caption', options.caption ?? ''),
@@ -58,11 +57,7 @@ function multipartBody(options: {
 }
 
 try {
-  const [adminRole] = await database.db
-    .select({ id: roles.id })
-    .from(roles)
-    .where(eq(roles.code, 'admin'))
-    .limit(1)
+  const [adminRole] = await database.db.select({ id: roles.id }).from(roles).where(eq(roles.code, 'admin')).limit(1)
 
   if (!adminRole) {
     throw new Error('Admin role is missing. Run the core database seed first.')
@@ -129,7 +124,8 @@ try {
     throw new Error(`Valid media upload returned ${uploadResponse.statusCode}: ${uploadResponse.body}`)
   }
 
-  const uploaded = uploadResponse.json<{ item: { id: string; publicUrl: string; width: number; height: number } }>().item
+  const uploaded = uploadResponse.json<{ item: { id: string; publicUrl: string; width: number; height: number } }>()
+    .item
   assetId = uploaded.id
 
   if (uploaded.width !== 1 || uploaded.height !== 1) {

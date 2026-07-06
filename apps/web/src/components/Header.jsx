@@ -1,16 +1,35 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { useEffect, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import {
-  externalLinks,
   servicePages as defaultServicePages,
   softwareProducts as defaultSoftwareMenu,
   solutionPages as defaultSolutionPages,
-} from "../data/siteContent";
-import { fetchNavOfferings } from "../utils/contentApi";
+} from '../data/siteContent'
+import { fetchMenu, fetchNavOfferings } from '../utils/contentApi'
+import HeaderActions from './header/HeaderActions'
+import MobileNav from './header/MobileNav'
+import ServicesMenu from './header/ServicesMenu'
+import SoftwareMenu from './header/SoftwareMenu'
+import SolutionsMenu from './header/SolutionsMenu'
+import SupportMenu, { SUPPORT_ITEMS } from './header/SupportMenu'
+
+// Cấu trúc header mặc định — dùng khi CMS chưa có menu main-nav (offline/DB trống).
+const FALLBACK_NAV = [
+  { id: 'home', label: 'Trang chủ', url: '/', children: [] },
+  { id: 'software', label: 'Phần mềm', url: '/phan-mem', children: [] },
+  { id: 'solutions', label: 'Giải pháp', url: '/giai-phap', children: [] },
+  { id: 'services', label: 'Dịch vụ', url: '/dich-vu', children: [] },
+  { id: 'news', label: 'Tin tức', url: '/tin-tuc', children: [] },
+  {
+    id: 'support',
+    label: 'Hỗ trợ',
+    url: '/ho-tro',
+    children: SUPPORT_ITEMS.map((item) => ({ id: item.slug, label: item.title, url: item.href })),
+  },
+]
 
 export default function Header({
-  activeDropdown,
   setActiveDropdown,
   mobileOpen,
   setMobileOpen,
@@ -20,269 +39,149 @@ export default function Header({
   solutionPages,
   servicePages,
 }) {
-  const [scrolled, setScrolled] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [cmsNav, setCmsNav] = useState(null);
+  const [scrolled, setScrolled] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState(null)
+  const [cmsNav, setCmsNav] = useState(null)
+  const [cmsMenu, setCmsMenu] = useState(null)
 
   useEffect(() => {
-    fetchNavOfferings().then(setCmsNav).catch(() => {});
-  }, []);
+    fetchNavOfferings()
+      .then(setCmsNav)
+      .catch(() => {})
+    // Menu main-nav do admin quản lý (Menu điều hướng): nhãn, thứ tự, ẩn/hiện từng mục.
+    fetchMenu('main-nav')
+      .then(setCmsMenu)
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const updateHeaderState = () => {
-      setScrolled(window.scrollY > 18);
-    };
+      setScrolled(window.scrollY > 18)
+    }
 
-    updateHeaderState();
-    window.addEventListener("scroll", updateHeaderState, { passive: true });
+    updateHeaderState()
+    window.addEventListener('scroll', updateHeaderState, { passive: true })
 
-    return () => window.removeEventListener("scroll", updateHeaderState);
-  }, []);
+    return () => window.removeEventListener('scroll', updateHeaderState)
+  }, [])
 
   const flattenMenu = (pages, parentPath) => {
-    if (!Array.isArray(pages) || pages.length === 0) return [];
+    if (!Array.isArray(pages) || pages.length === 0) return []
 
     return pages.flatMap((page) => {
       if (Array.isArray(page.items) && page.items.length > 0) {
         return page.items.map((child, index) => ({
           slug: child.slug ?? `${page.slug}-${index}`,
-          title: typeof child === "string" ? child : child.title,
+          title: typeof child === 'string' ? child : child.title,
           href:
-            typeof child === "string"
+            typeof child === 'string'
               ? `${parentPath}/${page.slug}`
-              : child.href ?? `${parentPath}/${page.slug}/${child.slug}`,
-        }));
+              : (child.href ?? `${parentPath}/${page.slug}/${child.slug}`),
+        }))
       }
 
       return {
         slug: page.slug,
         title: page.title,
         href: page.href ?? `${parentPath}/${page.slug}`,
-      };
-    });
-  };
+      }
+    })
+  }
 
-  const effectiveSoftware = cmsNav?.software ?? (Array.isArray(softwareProducts) && softwareProducts.length > 0 ? softwareProducts : null)
-  const effectiveSolutions = cmsNav?.solutions ?? (Array.isArray(solutionPages) && solutionPages.length > 0 ? solutionPages : null)
-  const effectiveServices = cmsNav?.services ?? (Array.isArray(servicePages) && servicePages.length > 0 ? servicePages : null)
+  const effectiveSoftware =
+    cmsNav?.software ?? (Array.isArray(softwareProducts) && softwareProducts.length > 0 ? softwareProducts : null)
+  const effectiveSolutions =
+    cmsNav?.solutions ?? (Array.isArray(solutionPages) && solutionPages.length > 0 ? solutionPages : null)
+  const effectiveServices =
+    cmsNav?.services ?? (Array.isArray(servicePages) && servicePages.length > 0 ? servicePages : null)
 
-  const softwareMenu = effectiveSoftware ? flattenMenu(effectiveSoftware, "/phan-mem") : defaultSoftwareMenu;
-  const solutionsMenu = effectiveSolutions ? flattenMenu(effectiveSolutions, "/giai-phap") : defaultSolutionPages;
-  const servicesMenu = effectiveServices ? flattenMenu(effectiveServices, "/dich-vu") : defaultServicePages;
+  const softwareMenu = effectiveSoftware ? flattenMenu(effectiveSoftware, '/phan-mem') : defaultSoftwareMenu
+  const solutionsMenu = effectiveSolutions ? flattenMenu(effectiveSolutions, '/giai-phap') : defaultSolutionPages
+  const servicesMenu = effectiveServices ? flattenMenu(effectiveServices, '/dich-vu') : defaultServicePages
+
+  // Danh sách mục header: ưu tiên menu CMS (đã lọc mục ẩn, đúng thứ tự), fallback cấu trúc tĩnh.
+  const navItems = cmsMenu?.items?.length ? cmsMenu.items : FALLBACK_NAV
 
   const closeMenu = () => {
-    setOpenDropdown(null);
-    setActiveDropdown(null);
-    setMobileOpen(false);
-  };
+    setOpenDropdown(null)
+    setActiveDropdown(null)
+    setMobileOpen(false)
+  }
 
-  const toggleDropdown = (name) => {
-    setOpenDropdown(openDropdown === name ? null : name);
-  };
+  const openDropdownFor = (name) => setOpenDropdown(name)
+
+  // Mỗi mục menu render theo URL: 3 mục Offerings dùng dropdown dữ liệu riêng,
+  // mục có con (Hỗ trợ) dùng dropdown thường, còn lại là link phẳng.
+  const renderNavItem = (item) => {
+    const dropdownProps = {
+      key: item.id,
+      label: item.label,
+      isOpen: false,
+      isActive: location.pathname.startsWith(item.url),
+      onClose: closeMenu,
+    }
+
+    switch (item.url) {
+      case '/phan-mem':
+        return (
+          <SoftwareMenu
+            {...dropdownProps}
+            items={softwareMenu}
+            isOpen={openDropdown === 'software'}
+            onOpen={() => openDropdownFor('software')}
+          />
+        )
+      case '/giai-phap':
+        return (
+          <SolutionsMenu
+            {...dropdownProps}
+            items={solutionsMenu}
+            isOpen={openDropdown === 'solutions'}
+            onOpen={() => openDropdownFor('solutions')}
+          />
+        )
+      case '/dich-vu':
+        return (
+          <ServicesMenu
+            {...dropdownProps}
+            items={servicesMenu}
+            isOpen={openDropdown === 'services'}
+            onOpen={() => openDropdownFor('services')}
+          />
+        )
+      default:
+        if (item.children?.length) {
+          return (
+            <SupportMenu
+              key={item.id}
+              label={item.label}
+              items={item.children.map((child) => ({ slug: child.id, title: child.label, href: child.url }))}
+              isOpen={openDropdown === item.url}
+              onOpen={() => openDropdownFor(item.url)}
+              onClose={closeMenu}
+            />
+          )
+        }
+        return (
+          <NavLink key={item.id} className="nav-link" to={item.url} end={item.url === '/'}>
+            {item.label}
+          </NavLink>
+        )
+    }
+  }
 
   return (
-    <header className={`header ${scrolled ? "scrolled" : ""}`} onMouseLeave={() => setOpenDropdown(null)}>
+    <header className={`header ${scrolled ? 'scrolled' : ''}`} onMouseLeave={() => setOpenDropdown(null)}>
       <div className="header-container">
         <Link to="/" className="logo" onClick={closeMenu}>
           <img src={logoMain} alt="iOrder" loading="eager" decoding="sync" fetchPriority="high" />
         </Link>
 
         <nav className="nav" aria-label="Menu chính">
-          <NavLink className="nav-link" to="/" end>
-            Trang chủ
-          </NavLink>
-
-          <div
-            className={`nav-item has-dropdown ${
-              openDropdown === "software" ? "open" : ""
-            }`}
-            onMouseEnter={() => setOpenDropdown("software")}
-            onFocusCapture={() => setOpenDropdown("software")}
-          >
-            <Link
-              to="/phan-mem"
-              className={`nav-trigger ${
-                location.pathname.startsWith("/phan-mem") ||
-                openDropdown === "software"
-                  ? "active"
-                  : ""
-              }`}
-              onClick={closeMenu}
-            >
-              Phần mềm
-            </Link>
-
-            {openDropdown === "software" ? (
-              <div className="dropdown-menu dropdown-menu-software">
-                <div className="dropdown-grid dropdown-grid-2">
-                  {softwareMenu.map((item) => (
-                    <Link
-                      key={item.slug}
-                      to={item.href}
-                      className="dropdown-item"
-                      onClick={closeMenu}
-                    >
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div
-            className={`nav-item has-dropdown ${
-              openDropdown === "solutions" ? "open" : ""
-            }`}
-            onMouseEnter={() => setOpenDropdown("solutions")}
-            onFocusCapture={() => setOpenDropdown("solutions")}
-          >
-            <Link
-              to="/giai-phap"
-              className={`nav-trigger ${
-                location.pathname.startsWith("/giai-phap") ||
-                openDropdown === "solutions"
-                  ? "active"
-                  : ""
-              }`}
-              onClick={closeMenu}
-            >
-              Giải pháp
-            </Link>
-
-            {openDropdown === "solutions" ? (
-              <div className="dropdown-menu dropdown-menu-solutions">
-                <div className="dropdown-grid dropdown-grid-2">
-                  {solutionsMenu.map((item) => (
-                    <Link
-                      key={item.slug}
-                      to={item.href}
-                      className="dropdown-item"
-                      onClick={closeMenu}
-                    >
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div
-            className={`nav-item has-dropdown ${
-              openDropdown === "services" ? "open" : ""
-            }`}
-            onMouseEnter={() => setOpenDropdown("services")}
-            onFocusCapture={() => setOpenDropdown("services")}
-          >
-            <Link
-              to="/dich-vu"
-              className={`nav-trigger ${
-                location.pathname.startsWith("/dich-vu") ||
-                openDropdown === "services"
-                  ? "active"
-                  : ""
-              }`}
-              onClick={closeMenu}
-            >
-              Dịch vụ
-            </Link>
-
-            {openDropdown === "services" ? (
-              <div className="dropdown-menu dropdown-menu-services">
-                <div className="dropdown-grid dropdown-grid-2">
-                  {servicesMenu.map((item) => (
-                    <Link
-                      key={item.slug}
-                      to={item.href}
-                      className="dropdown-item"
-                      onClick={closeMenu}
-                    >
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <NavLink className="nav-link" to="/tin-tuc">
-            Tin tức
-          </NavLink>
-
-          <div
-            className={`nav-item has-dropdown ${
-              openDropdown === "support" ? "open" : ""
-            }`}
-            onMouseEnter={() => setOpenDropdown("support")}
-            onFocusCapture={() => setOpenDropdown("support")}
-          >
-            <button
-              type="button"
-              className={`nav-trigger ${
-                openDropdown === "support" ? "active" : ""
-              }`}
-              onClick={() => toggleDropdown("support")}
-            >
-              Hỗ trợ
-            </button>
-
-            {openDropdown === "support" ? (
-              <div className="dropdown-menu dropdown-menu-support">
-                <div className="dropdown-grid dropdown-grid-single">
-                  <Link
-                    to="/ho-tro/cai-dat"
-                    className="dropdown-item"
-                    onClick={closeMenu}
-                  >
-                    Hỗ trợ cài đặt
-                  </Link>
-                  <Link
-                    to="/ho-tro/faq"
-                    className="dropdown-item"
-                    onClick={closeMenu}
-                  >
-                    FAQ
-                  </Link>
-                  <Link
-                    to="/ho-tro/video"
-                    className="dropdown-item"
-                    onClick={closeMenu}
-                  >
-                    Video hướng dẫn
-                  </Link>
-                  <Link
-                    to="/lien-he"
-                    className="dropdown-item"
-                    onClick={closeMenu}
-                  >
-                    Liên hệ hỗ trợ
-                  </Link>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          {navItems.map(renderNavItem)}
         </nav>
 
-        <div className="nav-actions">
-          <a
-            className="btn outline"
-            href={externalLinks.appLogin}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Đăng nhập
-          </a>
-
-          <a
-            className="btn primary"
-            href={externalLinks.trial}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Đăng ký dùng thử
-          </a>
-        </div>
+        <HeaderActions />
 
         <button
           className="menu-btn"
@@ -295,117 +194,14 @@ export default function Header({
       </div>
 
       {mobileOpen ? (
-        <div className="mobile-nav">
-          <div className="container mobile-nav-panel">
-            <NavLink to="/" end onClick={closeMenu}>
-              Trang chủ
-            </NavLink>
-
-            <NavLink to="/tin-tuc" onClick={closeMenu}>
-              Tin tức
-            </NavLink>
-
-            <div className="mobile-menu-group">
-              <Link
-                to="/phan-mem"
-                className="mobile-menu-title"
-                onClick={closeMenu}
-              >
-                Phần mềm
-              </Link>
-
-              <div className="mobile-menu-links">
-                {softwareMenu.map((item) => (
-                  <Link
-                    key={item.slug}
-                    to={item.href}
-                    onClick={closeMenu}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="mobile-menu-group">
-              <Link
-                to="/giai-phap"
-                className="mobile-menu-title"
-                onClick={closeMenu}
-              >
-                Giải pháp
-              </Link>
-
-              <div className="mobile-menu-links">
-                {solutionsMenu.map((item) => (
-                  <Link key={item.slug} to={item.href} onClick={closeMenu}>
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="mobile-menu-group">
-              <Link
-                to="/dich-vu"
-                className="mobile-menu-title"
-                onClick={closeMenu}
-              >
-                Dịch vụ
-              </Link>
-
-              <div className="mobile-menu-links">
-                {servicesMenu.map((item) => (
-                  <Link key={item.slug} to={item.href} onClick={closeMenu}>
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="mobile-menu-group">
-              <div className="mobile-menu-title mobile-menu-title-icon">
-                Hỗ trợ
-              </div>
-
-              <div className="mobile-menu-links">
-                <Link to="/ho-tro/cai-dat" onClick={closeMenu}>
-                  Hỗ trợ cài đặt
-                </Link>
-                <Link to="/ho-tro/faq" onClick={closeMenu}>
-                  FAQ
-                </Link>
-                <Link to="/ho-tro/video" onClick={closeMenu}>
-                  Video hướng dẫn
-                </Link>
-                <Link to="/lien-he" onClick={closeMenu}>
-                  Liên hệ hỗ trợ
-                </Link>
-              </div>
-            </div>
-
-            <div className="mobile-nav-actions">
-              <a
-                className="btn outline"
-                href={externalLinks.appLogin}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Đăng nhập
-              </a>
-
-              <a
-                className="btn primary"
-                href={externalLinks.trial}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Dùng thử miễn phí
-              </a>
-            </div>
-          </div>
-        </div>
+        <MobileNav
+          navItems={navItems}
+          softwareMenu={softwareMenu}
+          solutionsMenu={solutionsMenu}
+          servicesMenu={servicesMenu}
+          onNavigate={closeMenu}
+        />
       ) : null}
     </header>
-  );
+  )
 }

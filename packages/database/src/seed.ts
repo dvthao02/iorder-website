@@ -11,10 +11,7 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL is required to seed the CMS database')
 }
 
-const seedSql = await readFile(
-  resolve(import.meta.dirname, '../scripts/01-seed-core.sql'),
-  'utf8',
-)
+const seedSql = await readFile(resolve(import.meta.dirname, '../scripts/01-seed-core.sql'), 'utf8')
 
 const sql = postgres(databaseUrl, {
   max: 1,
@@ -26,4 +23,3 @@ try {
 } finally {
   await sql.end()
 }
-

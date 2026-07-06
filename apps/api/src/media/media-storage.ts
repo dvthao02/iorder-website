@@ -1,5 +1,5 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises'
-import { dirname, extname, resolve, sep } from 'node:path'
+import { dirname, resolve, sep } from 'node:path'
 import { randomUUID } from 'node:crypto'
 
 export interface StoredMedia {

@@ -3,13 +3,10 @@ import { z } from 'zod'
 import { contentIdSchema, offeringTypeSchema, slugSchema } from './content.js'
 
 const optText = (max: number) => z.string().trim().max(max).nullable().default(null)
-const faqPairSchema = z.tuple([
-  z.string().trim().min(1).max(500),
-  z.string().trim().min(1).max(2000),
-])
+const faqPairSchema = z.tuple([z.string().trim().min(1).max(500), z.string().trim().min(1).max(2000)])
 
 export const offeringContentSchema = z.object({
-  description: z.string().trim().min(1).max(1000),
+  description: z.string().trim().min(1).max(4000),
   tags: z.array(z.string().trim().min(1).max(120)).max(20).default([]),
   bestFor: z.string().trim().max(300).nullable().default(null),
   keyValue: z.string().trim().max(300).nullable().default(null),
@@ -17,10 +14,15 @@ export const offeringContentSchema = z.object({
   features: z.array(z.string().trim().min(1).max(500)).max(30).default([]),
   benefits: z.array(z.string().trim().min(1).max(500)).max(20).default([]),
   faq: z.array(faqPairSchema).max(20).default([]),
-  items: z.array(z.object({
-    title: z.string().trim().min(1).max(220),
-    href: z.string().trim().min(1).max(500),
-  })).max(30).default([]),
+  items: z
+    .array(
+      z.object({
+        title: z.string().trim().min(1).max(220),
+        href: z.string().trim().min(1).max(500),
+      }),
+    )
+    .max(30)
+    .default([]),
   category: z.string().trim().max(120).nullable().default(null),
 })
 

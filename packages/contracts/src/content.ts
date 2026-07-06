@@ -1,26 +1,10 @@
 import { z } from 'zod'
 
-export const contentStatusSchema = z.enum([
-  'draft',
-  'review',
-  'scheduled',
-  'published',
-  'archived',
-])
+export const contentStatusSchema = z.enum(['draft', 'review', 'scheduled', 'published', 'archived'])
 
-export const postTypeSchema = z.enum([
-  'news',
-  'promotion',
-  'case_study',
-  'announcement',
-])
+export const postTypeSchema = z.enum(['news', 'promotion', 'case_study', 'announcement'])
 
-export const offeringTypeSchema = z.enum([
-  'software',
-  'solution',
-  'service',
-  'industry',
-])
+export const offeringTypeSchema = z.enum(['software', 'solution', 'service', 'industry'])
 
 export const pageBlockTypeSchema = z.enum([
   'hero',

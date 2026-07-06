@@ -10,9 +10,16 @@ if (!databaseUrl) throw new Error('DATABASE_URL is required')
 const sql = postgres(databaseUrl)
 
 const newValues = [
-  'home_hero', 'home_stats', 'home_features', 'home_industries',
-  'home_ecosystem_services', 'home_process', 'home_testimonials',
-  'home_featured_posts', 'home_faq', 'home_cta',
+  'home_hero',
+  'home_stats',
+  'home_features',
+  'home_industries',
+  'home_ecosystem_services',
+  'home_process',
+  'home_testimonials',
+  'home_featured_posts',
+  'home_faq',
+  'home_cta',
 ]
 
 // Step 1: ADD VALUE outside any transaction (auto-commit each)
@@ -30,13 +37,13 @@ for (const value of newValues) {
 console.log('\nStep 2: Migrating existing block data...')
 await sql.begin(async (tx) => {
   const renames: [string, string][] = [
-    ['hero',          'home_hero'],
-    ['feature_grid',  'home_features'],
+    ['hero', 'home_hero'],
+    ['feature_grid', 'home_features'],
     ['industry_grid', 'home_industries'],
-    ['deployment',    'home_process'],
-    ['ecosystem',     'home_ecosystem_services'],
-    ['article_list',  'home_featured_posts'],
-    ['cta',           'home_cta'],
+    ['deployment', 'home_process'],
+    ['ecosystem', 'home_ecosystem_services'],
+    ['article_list', 'home_featured_posts'],
+    ['cta', 'home_cta'],
   ]
   for (const [from, to] of renames) {
     const result = await tx.unsafe(`UPDATE "public"."page_blocks" SET "type" = '${to}' WHERE "type" = '${from}'`)
