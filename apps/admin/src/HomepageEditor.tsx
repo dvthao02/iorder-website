@@ -15,6 +15,7 @@ import {
   EyeOff,
   GripVertical,
   History,
+  Image as ImageIcon,
   LayoutGrid,
   List,
   Maximize2,
@@ -41,7 +42,16 @@ import {
 } from './api'
 import { slugByKey } from './sidebar/navigation'
 import { toast } from './toast'
-import { EditorFooter, ModalShell, PageHeader, StatusDot, ToggleSwitch, useDragReorder, useEscapeAndSave } from './ui'
+import {
+  EditorFooter,
+  ImagePicker,
+  ModalShell,
+  PageHeader,
+  StatusDot,
+  ToggleSwitch,
+  useDragReorder,
+  useEscapeAndSave,
+} from './ui'
 
 const defaultInput: HomepageInput = {
   title: 'Trang chủ',
@@ -315,6 +325,72 @@ function ListItemRow({
   )
 }
 
+/**
+ * Trường chọn ảnh dùng chung cho các block trang chủ: thay cho <select> liệt kê tên file.
+ * Hiển thị thumbnail ảnh đang chọn + nút mở thư viện (ModalShell + ImagePicker có sẵn trong ./ui,
+ * ImagePicker tự xử lý cả chọn ảnh có sẵn lẫn upload ảnh mới từ máy).
+ */
+function MediaPickerField({
+  images,
+  value,
+  onChange,
+  onUploaded,
+  label,
+}: {
+  images: MediaAsset[]
+  value: string | null
+  onChange: (id: string | null) => void
+  onUploaded: (asset: MediaAsset) => void
+  label?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const selected = value ? images.find((image) => image.id === value) : undefined
+
+  return (
+    <div className="media-picker-field">
+      {label ? <span className="field-label">{label}</span> : null}
+      <div className="media-picker-field-row">
+        <div className="media-picker-field-thumb">
+          {selected ? (
+            <img src={selected.publicUrl} alt={selected.originalName} />
+          ) : (
+            <span className="media-picker-field-empty">
+              <ImageIcon size={20} />
+            </span>
+          )}
+        </div>
+        <div className="media-picker-field-info">
+          <span className="media-picker-field-name">{selected ? selected.originalName : 'Chưa chọn ảnh'}</span>
+          <div className="media-picker-field-actions">
+            <button type="button" className="secondary-button" onClick={() => setOpen(true)}>
+              Chọn ảnh
+            </button>
+            {value ? (
+              <button type="button" className="secondary-button" onClick={() => onChange(null)}>
+                Bỏ chọn
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+      {open ? (
+        <ModalShell size="lg" onOverlayClick={() => setOpen(false)} header={<h3>{label ?? 'Chọn ảnh'}</h3>}>
+          <ImagePicker
+            label="Thư viện ảnh"
+            images={images}
+            value={value}
+            onChange={(id) => {
+              onChange(id)
+              setOpen(false)
+            }}
+            onUploaded={onUploaded}
+          />
+        </ModalShell>
+      ) : null}
+    </div>
+  )
+}
+
 export function HomepageEditor() {
   const [form, setForm] = useState<HomepageInput>(defaultInput)
   const [status, setStatus] = useState('draft')
@@ -453,6 +529,10 @@ export function HomepageEditor() {
       ),
     }))
   const updateItems = (index: number, items: unknown[]) => updateBlock(index, { items })
+
+  /** Thêm ảnh vừa upload từ MediaPickerField vào danh sách media chung để mọi picker khác thấy ngay. */
+  const handleMediaUploaded = (asset: MediaAsset) =>
+    setImages((current) => (current.some((image) => image.id === asset.id) ? current : [asset, ...current]))
 
   useEffect(() => {
     if (!loaded || !hasUnsavedChanges || autosaveInFlight.current) return undefined
@@ -914,36 +994,20 @@ export function HomepageEditor() {
                       <fieldset className="appearance-editor">
                         <legend>Background của section</legend>
                         <div className="form-row">
-                          <label>
-                            Ảnh nền desktop
-                            <select
-                              value={block.appearance.backgroundMediaId ?? ''}
-                              onChange={(e) => updateAppearance(index, { backgroundMediaId: e.target.value || null })}
-                            >
-                              <option value="">Dùng giao diện mặc định</option>
-                              {images.map((image) => (
-                                <option key={image.id} value={image.id}>
-                                  {image.originalName}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                          <label>
-                            Ảnh nền mobile
-                            <select
-                              value={block.appearance.mobileBackgroundMediaId ?? ''}
-                              onChange={(e) =>
-                                updateAppearance(index, { mobileBackgroundMediaId: e.target.value || null })
-                              }
-                            >
-                              <option value="">Dùng ảnh desktop</option>
-                              {images.map((image) => (
-                                <option key={image.id} value={image.id}>
-                                  {image.originalName}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
+                          <MediaPickerField
+                            label="Ảnh nền desktop"
+                            images={images}
+                            value={block.appearance.backgroundMediaId ?? null}
+                            onChange={(id) => updateAppearance(index, { backgroundMediaId: id })}
+                            onUploaded={handleMediaUploaded}
+                          />
+                          <MediaPickerField
+                            label="Ảnh nền mobile"
+                            images={images}
+                            value={block.appearance.mobileBackgroundMediaId ?? null}
+                            onChange={(id) => updateAppearance(index, { mobileBackgroundMediaId: id })}
+                            onUploaded={handleMediaUploaded}
+                          />
                         </div>
                         <div className="form-row appearance-options">
                           <label>
@@ -1075,7 +1139,7 @@ export function HomepageEditor() {
                           <label>
                             <span className="field-label">Đoạn giới thiệu</span>
                             <textarea
-                              value={block.data.intro ?? ''}
+                              value={String(block.data.intro ?? '')}
                               onChange={(e) => updateBlock(index, { intro: e.target.value || null })}
                             />
                           </label>
@@ -1183,23 +1247,19 @@ export function HomepageEditor() {
                                   })
                                 }
                               />
-                              <select
-                                aria-label="Ảnh slide"
-                                value={slide.imageMediaId}
-                                onChange={(e) =>
+                              <MediaPickerField
+                                label="Ảnh slide"
+                                images={images}
+                                value={slide.imageMediaId || null}
+                                onChange={(id) =>
                                   updateBlock(index, {
                                     slides: block.data.slides.map((item, i) =>
-                                      i === itemIndex ? { ...item, imageMediaId: e.target.value } : item,
+                                      i === itemIndex ? { ...item, imageMediaId: id ?? '' } : item,
                                     ),
                                   })
                                 }
-                              >
-                                {images.map((image) => (
-                                  <option key={image.id} value={image.id}>
-                                    {image.originalName}
-                                  </option>
-                                ))}
-                              </select>
+                                onUploaded={handleMediaUploaded}
+                              />
                             </ListItemRow>
                           ))}
                           <button
@@ -1364,24 +1424,20 @@ export function HomepageEditor() {
                                 )
                               }
                             />
-                            <select
-                              value={item.mediaId ?? ''}
-                              onChange={(e) =>
+                            <MediaPickerField
+                              label="Ảnh (bỏ trống dùng icon mặc định)"
+                              images={images}
+                              value={item.mediaId ?? null}
+                              onChange={(id) =>
                                 updateItems(
                                   index,
                                   block.data.items.map((value, i) =>
-                                    i === itemIndex ? { ...value, mediaId: e.target.value || null } : value,
+                                    i === itemIndex ? { ...value, mediaId: id } : value,
                                   ),
                                 )
                               }
-                            >
-                              <option value="">— Dùng icon mặc định —</option>
-                              {images.map((img) => (
-                                <option key={img.id} value={img.id}>
-                                  {img.originalName}
-                                </option>
-                              ))}
-                            </select>
+                              onUploaded={handleMediaUploaded}
+                            />
                           </ListItemRow>
                         ))}
                         <button
@@ -1715,19 +1771,13 @@ export function HomepageEditor() {
                                 />
                               </label>
                             </div>
-                            <label>
-                              <span className="field-label">Ảnh nổi bật</span>
-                              <select
-                                value={block.data.featureMediaId}
-                                onChange={(e) => updateBlock(index, { featureMediaId: e.target.value })}
-                              >
-                                {images.map((image) => (
-                                  <option key={image.id} value={image.id}>
-                                    {image.originalName}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                            <MediaPickerField
+                              label="Ảnh nổi bật"
+                              images={images}
+                              value={block.data.featureMediaId || null}
+                              onChange={(id) => updateBlock(index, { featureMediaId: id ?? '' })}
+                              onUploaded={handleMediaUploaded}
+                            />
                           </div>
                         </FieldGroup>
                         <FieldGroup title="Các bước triển khai">
@@ -1801,22 +1851,19 @@ export function HomepageEditor() {
                                   })
                                 }
                               />
-                              <select
-                                value={model.mediaId}
-                                onChange={(e) =>
+                              <MediaPickerField
+                                label="Ảnh mô hình"
+                                images={images}
+                                value={model.mediaId || null}
+                                onChange={(id) =>
                                   updateBlock(index, {
                                     models: block.data.models.map((item, i) =>
-                                      i === itemIndex ? { ...item, mediaId: e.target.value } : item,
+                                      i === itemIndex ? { ...item, mediaId: id ?? '' } : item,
                                     ),
                                   })
                                 }
-                              >
-                                {images.map((image) => (
-                                  <option key={image.id} value={image.id}>
-                                    {image.originalName}
-                                  </option>
-                                ))}
-                              </select>
+                                onUploaded={handleMediaUploaded}
+                              />
                             </ListItemRow>
                           ))}
                           <button

@@ -4367,6 +4367,62 @@ a.row-action {
   color: #b91c1c;
 }
 
+/* ── MediaPickerField (chọn ảnh có thumbnail, thay <select> tên file) ──────── */
+.media-picker-field {
+  display: grid;
+  gap: 6px;
+}
+.media-picker-field-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid #dbe7f1;
+  border-radius: 12px;
+  background: #f7fafd;
+}
+.media-picker-field-thumb {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #dbe7f1;
+  background: #eef3f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.media-picker-field-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-picker-field-empty {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.media-picker-field-info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.media-picker-field-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.media-picker-field-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ── File picker (Hỗ trợ cài đặt: chọn/tải file tài liệu) ────────────────────── */
 .file-picker {
   display: flex;
