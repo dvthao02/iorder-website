@@ -408,6 +408,42 @@ export default function Home() {
     }
   }, [previewToken])
 
+  // Live preview: nhận bản nháp CMS đang gõ qua postMessage — CHỈ khi đang ở chế độ cmsPreview
+  // (đã có token) và đã load xong dữ liệu preview lần đầu (mới có sẵn { media } để merge).
+  // Media mới upload chưa có trong danh sách vẫn giữ ảnh cũ/bỏ qua — sẽ hiện đúng sau nhịp autosave + refresh.
+  useEffect(() => {
+    if (!previewToken || !cmsHomepage) return undefined
+    const allowedOrigin = (origin) => {
+      const adminOrigin = import.meta.env.VITE_ADMIN_ORIGIN
+      if (adminOrigin && origin === adminOrigin) return true
+      try {
+        const hostname = new URL(origin).hostname
+        return hostname === 'localhost' || hostname === '127.0.0.1'
+      } catch {
+        return false
+      }
+    }
+    const onMessage = (event) => {
+      if (event.data?.type !== 'iorder-cms-draft') return
+      if (!allowedOrigin(event.origin)) return
+      const payload = event.data.payload
+      if (!payload || !Array.isArray(payload.blocks)) return
+      setCmsHomepage((current) => ({
+        ...current,
+        item: {
+          ...current?.item,
+          title: payload.title,
+          seoTitle: payload.seoTitle,
+          seoDescription: payload.seoDescription,
+          canonicalUrl: payload.canonicalUrl,
+          blocks: payload.blocks,
+        },
+      }))
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [previewToken, Boolean(cmsHomepage)])
+
   const cmsMedia = useMemo(() => new Map((cmsHomepage?.media ?? []).map((asset) => [asset.id, asset])), [cmsHomepage])
   const cmsBlock = (type) => cmsHomepage?.item?.blocks?.find((block) => block.type === type && block.isEnabled)
   const cmsHero = cmsBlock('home_hero')

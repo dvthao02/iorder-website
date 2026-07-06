@@ -1652,6 +1652,110 @@ a.row-action {
   min-height: 90px;
 }
 
+/* ── Fieldset nhóm trường trong block editor (Homepage) ──────────────────── */
+.block-fieldset {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+.block-fieldset-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.block-fieldset-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .block-fieldset-2col {
+    grid-template-columns: 1fr;
+  }
+}
+.block-fieldset-pair {
+  display: grid;
+  gap: 8px;
+}
+
+/* ── Header một dòng cho từng block (tên + badge ..... toggle) ───────────── */
+.block-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.block-header-row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.block-header-row-title strong {
+  font-size: 16px;
+  color: #1f3147;
+}
+
+/* ── Nút icon nhỏ (vd: xoá 1 dòng trong danh sách) ────────────────────────── */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1.5px solid #c8dce9;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+.icon-button:hover {
+  border-color: var(--brand);
+  background: #f0f9ff;
+  color: var(--brand);
+}
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.icon-button.danger {
+  border-color: #f3c6c6;
+  color: #b91c1c;
+}
+.icon-button.danger:hover {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ── Danh sách item dạng 1 dòng: input(s) + icon-button ở cuối ───────────── */
+.list-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.list-item-row > input,
+.list-item-row > select,
+.list-item-row > textarea {
+  flex: 1;
+  min-width: 0;
+}
+.list-add-button {
+  justify-self: start;
+}
+
 @media (max-width: 640px) {
   .admin-workspace {
     grid-template-columns: 1fr;

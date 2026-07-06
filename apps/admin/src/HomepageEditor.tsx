@@ -22,9 +22,10 @@ import {
   Pencil,
   RefreshCw,
   Save,
+  Trash2,
   UploadCloud,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -276,6 +277,44 @@ function fixedBlocks(blocks: HomepageBlock[], mediaId = '') {
   return [...presentTypes, ...missingTypes].map((type) => byType.get(type) ?? newBlock(type, mediaId))
 }
 
+/** Nhóm các trường liên quan trong một khung viền nhẹ, có tiêu đề nhỏ in hoa. */
+function FieldGroup({ title, hint, children }: { title: string; hint?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="block-fieldset">
+      <p className="block-fieldset-title">{title}</p>
+      {hint ? <small className="field-hint">{hint}</small> : null}
+      {children}
+    </div>
+  )
+}
+
+/** Một dòng trong danh sách lặp lại: input(s)/select(s) truyền qua children + nút xoá icon ở cuối. */
+function ListItemRow({
+  children,
+  onRemove,
+  disabled = false,
+}: {
+  children: ReactNode
+  onRemove: () => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="list-item-row">
+      {children}
+      <button
+        type="button"
+        className="icon-button danger"
+        title="Xóa"
+        aria-label="Xóa"
+        disabled={disabled}
+        onClick={onRemove}
+      >
+        <Trash2 size={16} />
+      </button>
+    </div>
+  )
+}
+
 export function HomepageEditor() {
   const [form, setForm] = useState<HomepageInput>(defaultInput)
   const [status, setStatus] = useState('draft')
@@ -313,6 +352,7 @@ export function HomepageEditor() {
   const dragRef = useRef<{ dx: number; dy: number } | null>(null)
   const resizeRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null)
   const autosaveInFlight = useRef(false)
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null)
 
   useEffect(() => {
     Promise.all([getHomepage(), listMedia('image'), listHomepageRevisions()])
@@ -476,6 +516,17 @@ export function HomepageEditor() {
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [hasUnsavedChanges])
+
+  // Live preview: gửi bản nháp đang gõ cho iframe preview qua postMessage, debounce ~300ms.
+  // Đây chỉ là lớp "nhìn tức thì" — autosave + đổi refresh param vẫn là lưới an toàn (ảnh mới
+  // upload cần server resolve URL nên chỉ hiện sau khi autosave xong và iframe reload).
+  useEffect(() => {
+    if (!showPreview || !previewUrl) return undefined
+    const timer = window.setTimeout(() => {
+      previewIframeRef.current?.contentWindow?.postMessage({ type: 'iorder-cms-draft', payload: form }, '*')
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [form, showPreview, previewUrl])
 
   const ensureAutosaved = async () => {
     const validationError = validateHomepage(form)
@@ -836,23 +887,24 @@ export function HomepageEditor() {
               {form.blocks.map((block, index) =>
                 block.type !== selectedType ? null : (
                   <article className="block-card" key={block.type}>
-                    <div className="block-card-heading">
-                      <strong>
-                        {index + 1}. {labels[block.type]}
-                      </strong>
-                      <span className="fixed-structure-badge">Section cố định</span>
+                    <div className="block-header-row">
+                      <div className="block-header-row-title">
+                        <strong>
+                          {index + 1}. {labels[block.type]}
+                        </strong>
+                        <span className="fixed-structure-badge">Section cố định</span>
+                      </div>
+                      <ToggleSwitch
+                        checked={block.isEnabled}
+                        onChange={(next) =>
+                          setForm({
+                            ...form,
+                            blocks: form.blocks.map((item, i) => (i === index ? { ...item, isEnabled: next } : item)),
+                          })
+                        }
+                        hint="Hiển thị"
+                      />
                     </div>
-                    <ToggleSwitch
-                      checked={block.isEnabled}
-                      onChange={(next) =>
-                        setForm({
-                          ...form,
-                          blocks: form.blocks.map((item, i) => (i === index ? { ...item, isEnabled: next } : item)),
-                        })
-                      }
-                      label="Hiển thị block"
-                      hint="Tắt để ẩn khu vực này khỏi trang chủ"
-                    />
                     {block.type === 'home_hero' ? (
                       <p className="editor-hint">
                         🎞️ Banner dùng <strong>ảnh carousel</strong> bên dưới làm hình nền — thêm/sửa/xóa ảnh banner tại
@@ -977,99 +1029,107 @@ export function HomepageEditor() {
                         </div>
                       </fieldset>
                     )}
-                    {'eyebrow' in block.data ? (
-                      <label>
-                        Nhãn nhỏ / eyebrow
-                        <input
-                          value={block.data.eyebrow ?? ''}
-                          onChange={(e) => updateBlock(index, { eyebrow: e.target.value || null })}
-                        />
-                      </label>
-                    ) : null}
-                    {'heading' in block.data ? (
-                      <label>
-                        Tiêu đề
-                        <input
-                          value={String(block.data.heading)}
-                          onChange={(e) => updateBlock(index, { heading: e.target.value })}
-                        />
-                      </label>
-                    ) : null}
-                    {'title' in block.data ? (
-                      <label>
-                        Tiêu đề
-                        <input
-                          value={String(block.data.title)}
-                          onChange={(e) => updateBlock(index, { title: e.target.value })}
-                        />
-                      </label>
-                    ) : null}
-                    {'description' in block.data ? (
-                      <label>
-                        Mô tả
-                        <textarea
-                          value={String(block.data.description)}
-                          onChange={(e) => updateBlock(index, { description: e.target.value })}
-                        />
-                      </label>
-                    ) : null}
-                    {'intro' in block.data ? (
-                      <label>
-                        Đoạn giới thiệu
-                        <textarea
-                          value={block.data.intro ?? ''}
-                          onChange={(e) => updateBlock(index, { intro: e.target.value || null })}
-                        />
-                      </label>
+                    {'eyebrow' in block.data ||
+                    'heading' in block.data ||
+                    'title' in block.data ||
+                    'description' in block.data ||
+                    'intro' in block.data ? (
+                      <FieldGroup title="Nội dung">
+                        {'eyebrow' in block.data ? (
+                          <label>
+                            <span className="field-label">Nhãn nhỏ / eyebrow</span>
+                            <input
+                              value={block.data.eyebrow ?? ''}
+                              onChange={(e) => updateBlock(index, { eyebrow: e.target.value || null })}
+                            />
+                          </label>
+                        ) : null}
+                        {'heading' in block.data ? (
+                          <label>
+                            <span className="field-label">Tiêu đề</span>
+                            <input
+                              value={String(block.data.heading)}
+                              onChange={(e) => updateBlock(index, { heading: e.target.value })}
+                            />
+                          </label>
+                        ) : null}
+                        {'title' in block.data ? (
+                          <label>
+                            <span className="field-label">Tiêu đề</span>
+                            <input
+                              value={String(block.data.title)}
+                              onChange={(e) => updateBlock(index, { title: e.target.value })}
+                            />
+                          </label>
+                        ) : null}
+                        {'description' in block.data ? (
+                          <label>
+                            <span className="field-label">Mô tả</span>
+                            <textarea
+                              value={String(block.data.description)}
+                              onChange={(e) => updateBlock(index, { description: e.target.value })}
+                            />
+                          </label>
+                        ) : null}
+                        {'intro' in block.data ? (
+                          <label>
+                            <span className="field-label">Đoạn giới thiệu</span>
+                            <textarea
+                              value={block.data.intro ?? ''}
+                              onChange={(e) => updateBlock(index, { intro: e.target.value || null })}
+                            />
+                          </label>
+                        ) : null}
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_hero */}
                     {block.type === 'home_hero' ? (
                       <>
-                        <div className="form-row">
-                          <label>
-                            Nút chính
-                            <input
-                              value={block.data.primaryLabel}
-                              onChange={(e) => updateBlock(index, { primaryLabel: e.target.value })}
-                            />
-                          </label>
-                          <label>
-                            Liên kết
-                            <input
-                              value={block.data.primaryUrl}
-                              onChange={(e) => updateBlock(index, { primaryUrl: e.target.value })}
-                            />
-                          </label>
-                        </div>
-                        <div className="form-row">
-                          <label>
-                            Nút phụ
-                            <input
-                              value={block.data.secondaryLabel ?? ''}
-                              onChange={(e) => updateBlock(index, { secondaryLabel: e.target.value || null })}
-                            />
-                          </label>
-                          <label>
-                            Liên kết nút phụ
-                            <input
-                              value={block.data.secondaryUrl ?? ''}
-                              onChange={(e) => updateBlock(index, { secondaryUrl: e.target.value || null })}
-                            />
-                          </label>
-                        </div>
-                        <div className="nested-editor">
-                          <div className="nested-heading">
-                            <strong>Điểm nổi bật</strong>
-                            <button
-                              type="button"
-                              onClick={() => updateBlock(index, { points: [...block.data.points, 'Điểm nổi bật mới'] })}
-                            >
-                              + Thêm điểm
-                            </button>
+                        <FieldGroup title="Nút kêu gọi">
+                          <div className="block-fieldset-2col">
+                            <div className="block-fieldset-pair">
+                              <label>
+                                <span className="field-label">Nút chính</span>
+                                <input
+                                  value={block.data.primaryLabel}
+                                  onChange={(e) => updateBlock(index, { primaryLabel: e.target.value })}
+                                />
+                              </label>
+                              <label>
+                                <span className="field-label">Liên kết</span>
+                                <input
+                                  value={block.data.primaryUrl}
+                                  onChange={(e) => updateBlock(index, { primaryUrl: e.target.value })}
+                                />
+                              </label>
+                            </div>
+                            <div className="block-fieldset-pair">
+                              <label>
+                                <span className="field-label">Nút phụ</span>
+                                <input
+                                  value={block.data.secondaryLabel ?? ''}
+                                  onChange={(e) => updateBlock(index, { secondaryLabel: e.target.value || null })}
+                                />
+                              </label>
+                              <label>
+                                <span className="field-label">Liên kết nút phụ</span>
+                                <input
+                                  value={block.data.secondaryUrl ?? ''}
+                                  onChange={(e) => updateBlock(index, { secondaryUrl: e.target.value || null })}
+                                />
+                              </label>
+                            </div>
                           </div>
+                        </FieldGroup>
+                        <FieldGroup title="Điểm nổi bật">
                           {block.data.points.map((point, itemIndex) => (
-                            <div className="nested-row compact" key={itemIndex}>
+                            <ListItemRow
+                              key={itemIndex}
+                              onRemove={() =>
+                                updateBlock(index, { points: block.data.points.filter((_, i) => i !== itemIndex) })
+                              }
+                            >
                               <input
                                 value={point}
                                 onChange={(e) =>
@@ -1080,41 +1140,27 @@ export function HomepageEditor() {
                                   })
                                 }
                               />
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateBlock(index, { points: block.data.points.filter((_, i) => i !== itemIndex) })
-                                }
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                            </ListItemRow>
                           ))}
-                        </div>
-                        <div className="nested-editor">
-                          <div className="nested-heading">
-                            <strong>Ảnh carousel</strong>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateBlock(index, {
-                                  slides: [
-                                    ...block.data.slides,
-                                    {
-                                      title: 'Slide mới',
-                                      description: 'Mô tả slide',
-                                      imageMediaId: images[0]?.id ?? '',
-                                    },
-                                  ],
-                                })
-                              }
-                              disabled={images.length === 0}
-                            >
-                              + Thêm slide
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="secondary-button list-add-button"
+                            onClick={() => updateBlock(index, { points: [...block.data.points, 'Điểm nổi bật mới'] })}
+                          >
+                            + Thêm điểm
+                          </button>
+                        </FieldGroup>
+                        <FieldGroup
+                          title="Ảnh carousel"
+                          hint="Ảnh nền dùng cho banner — không dùng ảnh nền section riêng."
+                        >
                           {block.data.slides.map((slide, itemIndex) => (
-                            <div className="nested-row" key={`${slide.imageMediaId}-${itemIndex}`}>
+                            <ListItemRow
+                              key={`${slide.imageMediaId}-${itemIndex}`}
+                              onRemove={() =>
+                                updateBlock(index, { slides: block.data.slides.filter((_, i) => i !== itemIndex) })
+                              }
+                            >
                               <input
                                 aria-label="Tiêu đề slide"
                                 value={slide.title}
@@ -1154,39 +1200,42 @@ export function HomepageEditor() {
                                   </option>
                                 ))}
                               </select>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateBlock(index, { slides: block.data.slides.filter((_, i) => i !== itemIndex) })
-                                }
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                            </ListItemRow>
                           ))}
-                        </div>
+                          <button
+                            type="button"
+                            className="secondary-button list-add-button"
+                            disabled={images.length === 0}
+                            onClick={() =>
+                              updateBlock(index, {
+                                slides: [
+                                  ...block.data.slides,
+                                  {
+                                    title: 'Slide mới',
+                                    description: 'Mô tả slide',
+                                    imageMediaId: images[0]?.id ?? '',
+                                  },
+                                ],
+                              })
+                            }
+                          >
+                            + Thêm slide
+                          </button>
+                        </FieldGroup>
                       </>
                     ) : null}
 
                     {/* home_stats */}
                     {block.type === 'home_stats' ? (
                       <>
-                        <div className="nested-editor">
-                          <div className="nested-heading">
-                            <strong>Số liệu thống kê</strong>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateBlock(index, {
-                                  stats: [...block.data.stats, { value: '100+', label: 'Nhãn mới', note: null }],
-                                })
+                        <FieldGroup title="Số liệu thống kê">
+                          {block.data.stats.map((stat, itemIndex) => (
+                            <ListItemRow
+                              key={itemIndex}
+                              onRemove={() =>
+                                updateBlock(index, { stats: block.data.stats.filter((_, i) => i !== itemIndex) })
                               }
                             >
-                              + Thêm số liệu
-                            </button>
-                          </div>
-                          {block.data.stats.map((stat, itemIndex) => (
-                            <div className="nested-row" key={itemIndex}>
                               <input
                                 placeholder="Giá trị (vd: 500+)"
                                 value={stat.value}
@@ -1220,67 +1269,67 @@ export function HomepageEditor() {
                                   })
                                 }
                               />
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateBlock(index, { stats: block.data.stats.filter((_, i) => i !== itemIndex) })
-                                }
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                            </ListItemRow>
                           ))}
-                        </div>
-                        <label>
-                          Nhãn phần đối tác
-                          <input
-                            value={block.data.partnersHeading ?? ''}
-                            onChange={(e) => updateBlock(index, { partnersHeading: e.target.value || null })}
-                          />
-                          <small>Dòng chữ phía trên dải logo đối tác.</small>
-                        </label>
-                        <label>
-                          Số lượng logo hiển thị
-                          <input
-                            type="number"
-                            min={1}
-                            max={40}
-                            value={block.data.partnersLimit}
-                            onChange={(e) =>
+                          <button
+                            type="button"
+                            className="secondary-button list-add-button"
+                            onClick={() =>
                               updateBlock(index, {
-                                partnersLimit: Math.min(40, Math.max(1, Number(e.target.value) || 1)),
+                                stats: [...block.data.stats, { value: '100+', label: 'Nhãn mới', note: null }],
                               })
                             }
-                          />
-                          <small>Số logo đối tác lấy từ kho dùng chung để hiển thị trên trang chủ.</small>
-                        </label>
-                        <p className="editor-hint">
-                          🏷️ Logo đối tác được quản lý tại mục <strong>“Đối tác &amp; Khách hàng”</strong> trong menu
-                          bên trái — thêm/sửa/xóa logo ở đó, block này chỉ cấu hình nhãn và số lượng hiển thị.{' '}
-                          <Link to={`/${slugByKey.partners ?? 'doi-tac'}`}>Đi tới trang Đối tác &amp; Khách hàng</Link>
-                        </p>
+                          >
+                            + Thêm số liệu
+                          </button>
+                        </FieldGroup>
+                        <FieldGroup
+                          title="Đối tác"
+                          hint={
+                            <>
+                              Logo đối tác quản lý tại mục <strong>“Đối tác &amp; Khách hàng”</strong> —{' '}
+                              <Link to={`/${slugByKey.partners ?? 'doi-tac'}`}>đi tới trang đó</Link>.
+                            </>
+                          }
+                        >
+                          <label>
+                            <span className="field-label">Nhãn phần đối tác</span>
+                            <input
+                              value={block.data.partnersHeading ?? ''}
+                              onChange={(e) => updateBlock(index, { partnersHeading: e.target.value || null })}
+                            />
+                          </label>
+                          <label>
+                            <span className="field-label">Số lượng logo hiển thị</span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={40}
+                              value={block.data.partnersLimit}
+                              onChange={(e) =>
+                                updateBlock(index, {
+                                  partnersLimit: Math.min(40, Math.max(1, Number(e.target.value) || 1)),
+                                })
+                              }
+                            />
+                          </label>
+                        </FieldGroup>
                       </>
                     ) : null}
 
                     {/* home_features */}
                     {block.type === 'home_features' ? (
-                      <div className="nested-editor">
-                        <div className="nested-heading">
-                          <strong>Các tính năng</strong>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateItems(index, [
-                                ...block.data.items,
-                                { title: 'Mục mới', description: 'Mô tả', href: null, mediaId: null },
-                              ])
+                      <FieldGroup title="Các tính năng">
+                        {block.data.items.map((item, itemIndex) => (
+                          <ListItemRow
+                            key={itemIndex}
+                            onRemove={() =>
+                              updateItems(
+                                index,
+                                block.data.items.filter((_, i) => i !== itemIndex),
+                              )
                             }
                           >
-                            + Thêm mục
-                          </button>
-                        </div>
-                        {block.data.items.map((item, itemIndex) => (
-                          <div className="nested-row" key={itemIndex}>
                             <input
                               value={item.title}
                               onChange={(e) =>
@@ -1333,48 +1382,34 @@ export function HomepageEditor() {
                                 </option>
                               ))}
                             </select>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateItems(
-                                  index,
-                                  block.data.items.filter((_, i) => i !== itemIndex),
-                                )
-                              }
-                            >
-                              Xóa
-                            </button>
-                          </div>
+                          </ListItemRow>
                         ))}
-                      </div>
+                        <button
+                          type="button"
+                          className="secondary-button list-add-button"
+                          onClick={() =>
+                            updateItems(index, [
+                              ...block.data.items,
+                              { title: 'Mục mới', description: 'Mô tả', href: null, mediaId: null },
+                            ])
+                          }
+                        >
+                          + Thêm mục
+                        </button>
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_industries */}
                     {block.type === 'home_industries' ? (
-                      <div className="nested-editor">
-                        <div className="nested-heading">
-                          <strong>Nhóm ngành hàng</strong>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateBlock(index, {
-                                groups: [
-                                  ...block.data.groups,
-                                  {
-                                    title: 'Nhóm ngành mới',
-                                    iconKey: 'store',
-                                    items: [{ title: 'Ngành mới', description: 'Mô tả ngành', href: '/nganh-hang' }],
-                                  },
-                                ],
-                              })
-                            }
-                          >
-                            + Thêm nhóm
-                          </button>
-                        </div>
+                      <FieldGroup title="Nhóm ngành hàng">
                         {block.data.groups.map((group, groupIndex) => (
                           <div className="nested-group" key={groupIndex}>
-                            <div className="nested-row">
+                            <ListItemRow
+                              disabled={block.data.groups.length === 1}
+                              onRemove={() =>
+                                updateBlock(index, { groups: block.data.groups.filter((_, i) => i !== groupIndex) })
+                              }
+                            >
                               <input
                                 value={group.title}
                                 onChange={(e) =>
@@ -1402,18 +1437,21 @@ export function HomepageEditor() {
                                 <option value="server">Hạ tầng</option>
                                 <option value="headphones">Hỗ trợ</option>
                               </select>
-                              <button
-                                type="button"
-                                disabled={block.data.groups.length === 1}
-                                onClick={() =>
-                                  updateBlock(index, { groups: block.data.groups.filter((_, i) => i !== groupIndex) })
+                            </ListItemRow>
+                            {group.items.map((item, itemIndex) => (
+                              <ListItemRow
+                                key={itemIndex}
+                                disabled={group.items.length === 1}
+                                onRemove={() =>
+                                  updateBlock(index, {
+                                    groups: block.data.groups.map((value, i) =>
+                                      i === groupIndex
+                                        ? { ...value, items: value.items.filter((_, j) => j !== itemIndex) }
+                                        : value,
+                                    ),
+                                  })
                                 }
                               >
-                                Xóa nhóm
-                              </button>
-                            </div>
-                            {group.items.map((item, itemIndex) => (
-                              <div className="nested-row" key={itemIndex}>
                                 <input
                                   value={item.title}
                                   onChange={(e) =>
@@ -1465,25 +1503,10 @@ export function HomepageEditor() {
                                     })
                                   }
                                 />
-                                <button
-                                  type="button"
-                                  disabled={group.items.length === 1}
-                                  onClick={() =>
-                                    updateBlock(index, {
-                                      groups: block.data.groups.map((value, i) =>
-                                        i === groupIndex
-                                          ? { ...value, items: value.items.filter((_, j) => j !== itemIndex) }
-                                          : value,
-                                      ),
-                                    })
-                                  }
-                                >
-                                  Xóa
-                                </button>
-                              </div>
+                              </ListItemRow>
                             ))}
                             <button
-                              className="secondary-button"
+                              className="secondary-button list-add-button"
                               type="button"
                               onClick={() =>
                                 updateBlock(index, {
@@ -1505,38 +1528,38 @@ export function HomepageEditor() {
                             </button>
                           </div>
                         ))}
-                      </div>
+                        <button
+                          type="button"
+                          className="secondary-button list-add-button"
+                          onClick={() =>
+                            updateBlock(index, {
+                              groups: [
+                                ...block.data.groups,
+                                {
+                                  title: 'Nhóm ngành mới',
+                                  iconKey: 'store',
+                                  items: [{ title: 'Ngành mới', description: 'Mô tả ngành', href: '/nganh-hang' }],
+                                },
+                              ],
+                            })
+                          }
+                        >
+                          + Thêm nhóm
+                        </button>
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_ecosystem_services */}
                     {block.type === 'home_ecosystem_services' ? (
-                      <div className="nested-editor">
-                        <div className="nested-heading">
-                          <strong>Nhóm dịch vụ</strong>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateBlock(index, {
-                                groups: [
-                                  ...block.data.groups,
-                                  {
-                                    iconKey: 'check',
-                                    label: 'Nhóm',
-                                    title: 'Nội dung mới',
-                                    description: 'Mô tả nội dung',
-                                    href: '/',
-                                    items: [],
-                                  },
-                                ],
-                              })
-                            }
-                          >
-                            + Thêm nhóm
-                          </button>
-                        </div>
+                      <FieldGroup title="Nhóm dịch vụ">
                         {block.data.groups.map((group, groupIndex) => (
                           <div className="nested-group" key={groupIndex}>
-                            <div className="nested-row">
+                            <ListItemRow
+                              disabled={block.data.groups.length === 1}
+                              onRemove={() =>
+                                updateBlock(index, { groups: block.data.groups.filter((_, i) => i !== groupIndex) })
+                              }
+                            >
                               <input
                                 placeholder="Nhãn"
                                 value={group.label}
@@ -1570,16 +1593,7 @@ export function HomepageEditor() {
                                   })
                                 }
                               />
-                              <button
-                                type="button"
-                                disabled={block.data.groups.length === 1}
-                                onClick={() =>
-                                  updateBlock(index, { groups: block.data.groups.filter((_, i) => i !== groupIndex) })
-                                }
-                              >
-                                Xóa nhóm
-                              </button>
-                            </div>
+                            </ListItemRow>
                             <textarea
                               value={group.description}
                               onChange={(e) =>
@@ -1591,7 +1605,18 @@ export function HomepageEditor() {
                               }
                             />
                             {group.items.map((item, itemIndex) => (
-                              <div className="nested-row compact" key={itemIndex}>
+                              <ListItemRow
+                                key={itemIndex}
+                                onRemove={() =>
+                                  updateBlock(index, {
+                                    groups: block.data.groups.map((value, i) =>
+                                      i === groupIndex
+                                        ? { ...value, items: value.items.filter((_, j) => j !== itemIndex) }
+                                        : value,
+                                    ),
+                                  })
+                                }
+                              >
                                 <input
                                   value={item.title}
                                   onChange={(e) =>
@@ -1626,24 +1651,10 @@ export function HomepageEditor() {
                                     })
                                   }
                                 />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    updateBlock(index, {
-                                      groups: block.data.groups.map((value, i) =>
-                                        i === groupIndex
-                                          ? { ...value, items: value.items.filter((_, j) => j !== itemIndex) }
-                                          : value,
-                                      ),
-                                    })
-                                  }
-                                >
-                                  Xóa
-                                </button>
-                              </div>
+                              </ListItemRow>
                             ))}
                             <button
-                              className="secondary-button"
+                              className="secondary-button list-add-button"
                               type="button"
                               onClick={() =>
                                 updateBlock(index, {
@@ -1659,57 +1670,75 @@ export function HomepageEditor() {
                             </button>
                           </div>
                         ))}
-                      </div>
+                        <button
+                          type="button"
+                          className="secondary-button list-add-button"
+                          onClick={() =>
+                            updateBlock(index, {
+                              groups: [
+                                ...block.data.groups,
+                                {
+                                  iconKey: 'check',
+                                  label: 'Nhóm',
+                                  title: 'Nội dung mới',
+                                  description: 'Mô tả nội dung',
+                                  href: '/',
+                                  items: [],
+                                },
+                              ],
+                            })
+                          }
+                        >
+                          + Thêm nhóm
+                        </button>
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_process */}
                     {block.type === 'home_process' ? (
                       <>
-                        <div className="form-row">
-                          <label>
-                            Nhãn nút
-                            <input
-                              value={block.data.buttonLabel}
-                              onChange={(e) => updateBlock(index, { buttonLabel: e.target.value })}
-                            />
-                          </label>
-                          <label>
-                            Liên kết nút
-                            <input
-                              value={block.data.buttonUrl}
-                              onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })}
-                            />
-                          </label>
-                        </div>
-                        <label>
-                          Ảnh nổi bật
-                          <select
-                            value={block.data.featureMediaId}
-                            onChange={(e) => updateBlock(index, { featureMediaId: e.target.value })}
-                          >
-                            {images.map((image) => (
-                              <option key={image.id} value={image.id}>
-                                {image.originalName}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <div className="nested-editor">
-                          <div className="nested-heading">
-                            <strong>Các bước triển khai</strong>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateBlock(index, {
-                                  steps: [...block.data.steps, { title: 'Bước mới', description: 'Mô tả bước' }],
-                                })
+                        <FieldGroup title="Nút kêu gọi &amp; ảnh nổi bật">
+                          <div className="block-fieldset-2col">
+                            <div className="block-fieldset-pair">
+                              <label>
+                                <span className="field-label">Nhãn nút</span>
+                                <input
+                                  value={block.data.buttonLabel}
+                                  onChange={(e) => updateBlock(index, { buttonLabel: e.target.value })}
+                                />
+                              </label>
+                              <label>
+                                <span className="field-label">Liên kết nút</span>
+                                <input
+                                  value={block.data.buttonUrl}
+                                  onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })}
+                                />
+                              </label>
+                            </div>
+                            <label>
+                              <span className="field-label">Ảnh nổi bật</span>
+                              <select
+                                value={block.data.featureMediaId}
+                                onChange={(e) => updateBlock(index, { featureMediaId: e.target.value })}
+                              >
+                                {images.map((image) => (
+                                  <option key={image.id} value={image.id}>
+                                    {image.originalName}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                        </FieldGroup>
+                        <FieldGroup title="Các bước triển khai">
+                          {block.data.steps.map((step, itemIndex) => (
+                            <ListItemRow
+                              key={itemIndex}
+                              disabled={block.data.steps.length === 1}
+                              onRemove={() =>
+                                updateBlock(index, { steps: block.data.steps.filter((_, i) => i !== itemIndex) })
                               }
                             >
-                              + Thêm bước
-                            </button>
-                          </div>
-                          {block.data.steps.map((step, itemIndex) => (
-                            <div className="nested-row" key={itemIndex}>
                               <input
                                 value={step.title}
                                 onChange={(e) =>
@@ -1730,42 +1759,28 @@ export function HomepageEditor() {
                                   })
                                 }
                               />
-                              <button
-                                type="button"
-                                disabled={block.data.steps.length === 1}
-                                onClick={() =>
-                                  updateBlock(index, { steps: block.data.steps.filter((_, i) => i !== itemIndex) })
-                                }
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                            </ListItemRow>
                           ))}
-                        </div>
-                        <div className="nested-editor">
-                          <div className="nested-heading">
-                            <strong>Mô hình triển khai</strong>
-                            <button
-                              type="button"
-                              disabled={images.length === 0}
-                              onClick={() =>
-                                updateBlock(index, {
-                                  models: [
-                                    ...block.data.models,
-                                    {
-                                      title: 'Mô hình mới',
-                                      description: 'Mô tả mô hình',
-                                      mediaId: images[0]?.id ?? '',
-                                    },
-                                  ],
-                                })
+                          <button
+                            type="button"
+                            className="secondary-button list-add-button"
+                            onClick={() =>
+                              updateBlock(index, {
+                                steps: [...block.data.steps, { title: 'Bước mới', description: 'Mô tả bước' }],
+                              })
+                            }
+                          >
+                            + Thêm bước
+                          </button>
+                        </FieldGroup>
+                        <FieldGroup title="Mô hình triển khai">
+                          {block.data.models.map((model, itemIndex) => (
+                            <ListItemRow
+                              key={itemIndex}
+                              onRemove={() =>
+                                updateBlock(index, { models: block.data.models.filter((_, i) => i !== itemIndex) })
                               }
                             >
-                              + Thêm mô hình
-                            </button>
-                          </div>
-                          {block.data.models.map((model, itemIndex) => (
-                            <div className="nested-row" key={itemIndex}>
                               <input
                                 value={model.title}
                                 onChange={(e) =>
@@ -1802,25 +1817,44 @@ export function HomepageEditor() {
                                   </option>
                                 ))}
                               </select>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateBlock(index, { models: block.data.models.filter((_, i) => i !== itemIndex) })
-                                }
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                            </ListItemRow>
                           ))}
-                        </div>
+                          <button
+                            type="button"
+                            className="secondary-button list-add-button"
+                            disabled={images.length === 0}
+                            onClick={() =>
+                              updateBlock(index, {
+                                models: [
+                                  ...block.data.models,
+                                  {
+                                    title: 'Mô hình mới',
+                                    description: 'Mô tả mô hình',
+                                    mediaId: images[0]?.id ?? '',
+                                  },
+                                ],
+                              })
+                            }
+                          >
+                            + Thêm mô hình
+                          </button>
+                        </FieldGroup>
                       </>
                     ) : null}
 
                     {/* home_testimonials */}
                     {block.type === 'home_testimonials' ? (
-                      <div className="nested-editor">
+                      <FieldGroup
+                        title="Hiển thị đánh giá"
+                        hint={
+                          <>
+                            Nội dung đánh giá quản lý tại mục <strong>“Đánh giá khách hàng”</strong> —{' '}
+                            <Link to={`/${slugByKey.testimonials ?? 'danh-gia'}`}>đi tới trang đó</Link>.
+                          </>
+                        }
+                      >
                         <label>
-                          Số lượng đánh giá hiển thị
+                          <span className="field-label">Số lượng đánh giá hiển thị</span>
                           <input
                             type="number"
                             min={1}
@@ -1830,23 +1864,16 @@ export function HomepageEditor() {
                               updateBlock(index, { limit: Math.min(12, Math.max(1, Number(e.target.value) || 1)) })
                             }
                           />
-                          <small>Số đánh giá lấy từ kho dùng chung để hiển thị trên trang chủ.</small>
                         </label>
-                        <p className="editor-hint">
-                          💬 Nội dung đánh giá được quản lý tại mục <strong>“Đánh giá khách hàng”</strong> trong menu
-                          bên trái — thêm/sửa/xóa đánh giá ở đó, block này chỉ cấu hình nhãn, tiêu đề và số lượng hiển
-                          thị.{' '}
-                          <Link to={`/${slugByKey.testimonials ?? 'danh-gia'}`}>Đi tới trang Đánh giá khách hàng</Link>
-                        </p>
-                      </div>
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_featured_posts */}
                     {block.type === 'home_featured_posts' ? (
-                      <>
-                        <div className="form-row">
+                      <FieldGroup title="Cấu hình bài viết">
+                        <div className="block-fieldset-2col">
                           <label>
-                            Loại bài
+                            <span className="field-label">Loại bài</span>
                             <select
                               value={block.data.postType}
                               onChange={(e) => updateBlock(index, { postType: e.target.value })}
@@ -1857,7 +1884,7 @@ export function HomepageEditor() {
                             </select>
                           </label>
                           <label>
-                            Số bài
+                            <span className="field-label">Số bài</span>
                             <input
                               min={1}
                               max={12}
@@ -1866,45 +1893,38 @@ export function HomepageEditor() {
                               onChange={(e) => updateBlock(index, { limit: Number(e.target.value) })}
                             />
                           </label>
-                        </div>
-                        <div className="form-row">
                           <label>
-                            Nhãn xem tất cả
+                            <span className="field-label">Nhãn xem tất cả</span>
                             <input
                               value={block.data.allLabel}
                               onChange={(e) => updateBlock(index, { allLabel: e.target.value })}
                             />
                           </label>
                           <label>
-                            Link xem tất cả
+                            <span className="field-label">Link xem tất cả</span>
                             <input
                               value={block.data.allUrl}
                               onChange={(e) => updateBlock(index, { allUrl: e.target.value })}
                             />
                           </label>
                         </div>
-                      </>
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_faq */}
                     {block.type === 'home_faq' ? (
-                      <div className="nested-editor">
-                        <div className="nested-heading">
-                          <strong>Câu hỏi thường gặp</strong>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateItems(index, [
-                                ...block.data.items,
-                                { question: 'Câu hỏi mới?', answer: 'Câu trả lời' },
-                              ])
+                      <FieldGroup title="Câu hỏi thường gặp">
+                        {block.data.items.map((item, itemIndex) => (
+                          <ListItemRow
+                            key={itemIndex}
+                            disabled={block.data.items.length === 1}
+                            onRemove={() =>
+                              updateItems(
+                                index,
+                                block.data.items.filter((_, i) => i !== itemIndex),
+                              )
                             }
                           >
-                            + Thêm câu hỏi
-                          </button>
-                        </div>
-                        {block.data.items.map((item, itemIndex) => (
-                          <div className="nested-row" key={itemIndex}>
                             <input
                               placeholder="Câu hỏi"
                               value={item.question}
@@ -1929,41 +1949,43 @@ export function HomepageEditor() {
                                 )
                               }
                             />
-                            <button
-                              type="button"
-                              disabled={block.data.items.length === 1}
-                              onClick={() =>
-                                updateItems(
-                                  index,
-                                  block.data.items.filter((_, i) => i !== itemIndex),
-                                )
-                              }
-                            >
-                              Xóa
-                            </button>
-                          </div>
+                          </ListItemRow>
                         ))}
-                      </div>
+                        <button
+                          type="button"
+                          className="secondary-button list-add-button"
+                          onClick={() =>
+                            updateItems(index, [
+                              ...block.data.items,
+                              { question: 'Câu hỏi mới?', answer: 'Câu trả lời' },
+                            ])
+                          }
+                        >
+                          + Thêm câu hỏi
+                        </button>
+                      </FieldGroup>
                     ) : null}
 
                     {/* home_cta */}
                     {block.type === 'home_cta' ? (
-                      <div className="form-row">
-                        <label>
-                          Nhãn nút
-                          <input
-                            value={block.data.buttonLabel}
-                            onChange={(e) => updateBlock(index, { buttonLabel: e.target.value })}
-                          />
-                        </label>
-                        <label>
-                          Liên kết
-                          <input
-                            value={block.data.buttonUrl}
-                            onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })}
-                          />
-                        </label>
-                      </div>
+                      <FieldGroup title="Nút kêu gọi">
+                        <div className="block-fieldset-2col">
+                          <label>
+                            <span className="field-label">Nhãn nút</span>
+                            <input
+                              value={block.data.buttonLabel}
+                              onChange={(e) => updateBlock(index, { buttonLabel: e.target.value })}
+                            />
+                          </label>
+                          <label>
+                            <span className="field-label">Liên kết</span>
+                            <input
+                              value={block.data.buttonUrl}
+                              onChange={(e) => updateBlock(index, { buttonUrl: e.target.value })}
+                            />
+                          </label>
+                        </div>
+                      </FieldGroup>
                     ) : null}
                   </article>
                 ),
@@ -2055,6 +2077,7 @@ export function HomepageEditor() {
             {previewUrl ? (
               <div className={`preview-frame-wrap is-${previewMode}`}>
                 <iframe
+                  ref={previewIframeRef}
                   key={`${previewUrl}-${previewTheme}`}
                   src={`${previewUrl.split('&cmsTheme=')[0]}&cmsTheme=${previewTheme}`}
                   title="Xem trước bản nháp trang chủ"
