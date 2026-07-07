@@ -68,6 +68,7 @@ try {
     const source = resolve(repositoryRoot, relativeSource)
     const extension = extname(source).toLowerCase()
     const storageKey = `seed/home/${key}${extension}`
+    const publicUrl = `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`
     const destination = resolve(storageRoot, storageKey)
     const buffer = await readFile(source)
     const dimensions = imageSize(buffer)
@@ -78,7 +79,7 @@ try {
       .insert(mediaAssets)
       .values({
         storageKey,
-        publicUrl: `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`,
+        publicUrl,
         originalName: relativeSource.split('/').at(-1)!,
         mimeType,
         fileSize: buffer.length,
@@ -89,6 +90,7 @@ try {
       .onConflictDoUpdate({
         target: mediaAssets.storageKey,
         set: {
+          publicUrl,
           fileSize: buffer.length,
           width: dimensions.width ?? null,
           height: dimensions.height ?? null,

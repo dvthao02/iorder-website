@@ -1,7 +1,9 @@
 import { copyFile, mkdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createDatabase, mediaAssets } from '@iorder/database'
 import { config } from 'dotenv'
+import { eq } from 'drizzle-orm'
 
 import { readEnv } from '../env.js'
 
@@ -12,6 +14,8 @@ config({ path: resolve(repositoryRoot, '.env') })
 
 const env = readEnv()
 const storageRoot = resolve(env.MEDIA_STORAGE_PATH)
+const publicBaseUrl = env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')
+const database = createDatabase(env.DATABASE_URL)
 
 const seedMediaFiles = [
   ['seed/home/hero-1.png', 'frontend/web/src/assets/products/hero-img.png'],
@@ -41,14 +45,28 @@ const seedMediaFiles = [
   ['seed/posts/news3.jpg', 'frontend/web/src/assets/news/news3.jpg'],
 ] as const
 
-let copied = 0
+try {
+  let copied = 0
+  let urlsUpdated = 0
 
-for (const [storageKey, sourcePath] of seedMediaFiles) {
-  const source = resolve(repositoryRoot, sourcePath)
-  const destination = resolve(storageRoot, storageKey)
-  await mkdir(dirname(destination), { recursive: true })
-  await copyFile(source, destination)
-  copied += 1
+  for (const [storageKey, sourcePath] of seedMediaFiles) {
+    const source = resolve(repositoryRoot, sourcePath)
+    const destination = resolve(storageRoot, storageKey)
+    const publicUrl = `${publicBaseUrl}/${storageKey}`
+
+    await mkdir(dirname(destination), { recursive: true })
+    await copyFile(source, destination)
+    copied += 1
+
+    const updated = await database.db
+      .update(mediaAssets)
+      .set({ publicUrl, updatedAt: new Date() })
+      .where(eq(mediaAssets.storageKey, storageKey))
+      .returning({ id: mediaAssets.id })
+    urlsUpdated += updated.length
+  }
+
+  process.stdout.write(`Synced ${copied} seed media files to ${storageRoot}; repaired ${urlsUpdated} media URLs.\n`)
+} finally {
+  await database.close()
 }
-
-process.stdout.write(`Synced ${copied} seed media files to ${storageRoot}.\n`)

@@ -48,6 +48,7 @@ try {
   for (let index = 1; index <= 3; index += 1) {
     const sourcePath = resolve(repositoryRoot, `frontend/web/src/assets/news/news${index}.jpg`)
     const storageKey = `seed/posts/news${index}.jpg`
+    const publicUrl = `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`
     const destination = resolve(storageRoot, storageKey)
     const buffer = await readFile(sourcePath)
     const dimensions = imageSize(buffer)
@@ -57,7 +58,7 @@ try {
       .insert(mediaAssets)
       .values({
         storageKey,
-        publicUrl: `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`,
+        publicUrl,
         originalName: `news${index}.jpg`,
         mimeType: 'image/jpeg',
         fileSize: buffer.length,
@@ -68,6 +69,7 @@ try {
       .onConflictDoUpdate({
         target: mediaAssets.storageKey,
         set: {
+          publicUrl,
           fileSize: buffer.length,
           width: dimensions.width ?? null,
           height: dimensions.height ?? null,
