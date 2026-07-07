@@ -6,7 +6,7 @@
   },
   "deploy": {
     "preDeployCommand": "pnpm railway:bootstrap",
-    "startCommand": "node backend/api/dist/server.js",
+    "startCommand": "node backend/api/dist/scripts/sync-seed-media.js && node backend/api/dist/server.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ALWAYS",
