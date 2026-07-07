@@ -12,7 +12,7 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL is required to seed industries')
 }
 
-// Nguồn: apps/web/src/data/industrySolutions.js — đổ vào CMS để admin quản lý.
+// Nguồn: frontend/web/src/data/industrySolutions.js — đổ vào CMS để admin quản lý.
 // Sau khi seed + kiểm tra parity, file tĩnh chỉ còn là fallback chờ xóa.
 const BENEFITS = [
   'Thao tác bán hàng nhanh, dễ đào tạo nhân viên mới',

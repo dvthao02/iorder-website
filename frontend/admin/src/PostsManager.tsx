@@ -366,7 +366,7 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
   }
 
   // Đặt lịch đăng: lưu nháp kèm mốc thời gian scheduledAt — hệ thống tự động quét mỗi 60 giây
-  // và xuất bản bài viết khi đến hạn (xem apps/api/src/shared/scheduler/post-scheduler.ts).
+  // và xuất bản bài viết khi đến hạn (xem backend/api/src/shared/scheduler/post-scheduler.ts).
   const schedule = async () => {
     if (!form.scheduledAt) return
     await savePost()

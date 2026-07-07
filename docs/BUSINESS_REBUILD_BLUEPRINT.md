@@ -6,11 +6,11 @@ Last updated: 2026-07-05
 
 iOrder started as a mostly static company website. The current codebase is now closer to a website CMS product:
 
-- `apps/web`: public company website.
-- `apps/admin`: internal CMS for company staff.
-- `apps/api`: Fastify API for public reads and admin writes.
-- `packages/contracts`: shared Zod contracts.
-- `packages/database`: Drizzle schema and migrations.
+- `frontend/web`: public company website.
+- `frontend/admin`: internal CMS for company staff.
+- `backend/api`: Fastify API for public reads and admin writes.
+- `backend/contracts`: shared Zod contracts.
+- `backend/database`: Drizzle schema and migrations.
 
 The correct rebuild direction is not to turn this repository into a POS, CRM, customer portal, or order-management product. Those domains should stay outside this repo unless the business explicitly creates a separate product boundary. This repo should become a complete source-of-truth system for the public iOrder website: content, media, navigation, contact leads, SEO, and publishing workflow.
 
@@ -106,7 +106,7 @@ Acceptance:
 
 Acceptance:
 
-- Homepage blocks are validated by `packages/contracts/src/pages.ts`.
+- Homepage blocks are validated by `backend/contracts/src/pages.ts`.
 - A block type appears at most once.
 - Public homepage reads the published snapshot, not the current draft.
 
@@ -269,17 +269,17 @@ Decisions needed:
 Every new or rebuilt module should follow this order:
 
 1. Business use case and state transitions.
-2. Shared contract in `packages/contracts`.
-3. Database schema and migration in `packages/database`.
-4. API module under `apps/api/src/modules/<name>`:
+2. Shared contract in `backend/contracts`.
+3. Database schema and migration in `backend/database`.
+4. API module under `backend/api/src/modules/<name>`:
    - `<name>.repository.ts`
    - `<name>.service.ts`
    - `<name>.errors.ts`
    - `<name>-routes.ts`
    - `index.ts`
    - `<name>.service.test.ts`
-5. Admin UI in `apps/admin`.
-6. Public read integration in `apps/web` when the module affects the public site.
+5. Admin UI in `frontend/admin`.
+6. Public read integration in `frontend/web` when the module affects the public site.
 7. Smoke/unit/e2e validation.
 8. Documentation update.
 

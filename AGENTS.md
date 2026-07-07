@@ -2,15 +2,15 @@
 
 ## Architecture
 
-Monorepo (pnpm workspaces):
+Monorepo (pnpm workspaces), split by ownership:
 
 ```
-apps/
+frontend/
   web/     — Public frontend (React 19 + Vite, port 5173)
   admin/   — Admin panel (React 19 + Vite, port 5174)
-  api/     — REST API (Fastify 5 + TypeScript, port 3000)
-packages/
-  contracts/  — Shared Zod schemas & TypeScript types
+backend/
+  api/        — REST API (Fastify 5 + TypeScript, port 3000)
+  contracts/  — API Zod schemas & TypeScript types
   database/   — Drizzle ORM client + migrations
 ```
 
@@ -40,9 +40,9 @@ pnpm --filter @iorder/web dev
 
 ## Module standard (bắt buộc cho mọi domain)
 
-Một module trong `apps/api/src/modules/<name>/` đạt chuẩn khi có đủ:
+Một module trong `backend/api/src/modules/<name>/` đạt chuẩn khi có đủ:
 
-- [ ] Schema trong `packages/contracts` trước khi viết API/UI (contracts-first)
+- [ ] Schema trong `backend/contracts` trước khi viết API/UI (contracts-first)
 - [ ] `repository / service / errors / routes / index` theo backend module pattern
 - [ ] Audit log (`insertAuditLog`) cho MỌI mutation (create/update/delete/publish/…)
 - [ ] Vòng đời nội dung: draft → publish → unpublish → archive (module nội dung)
@@ -59,7 +59,7 @@ Nội dung chỉ sống trong CMS. Data tĩnh ở web chỉ được là fallbac
 
 ## Key patterns
 
-- **Contracts first**: All API shapes live in `packages/contracts/src/`. Add a Zod schema there before touching API or frontend.
+- **Contracts first**: All API shapes live in `backend/contracts/src/`. Add a Zod schema there before touching API or frontend.
 - **No barrel files for routes**: each Fastify route file registers itself and imports from `@iorder/contracts` + `@iorder/database`.
 - **Admin uses toast for feedback**: import from `./toast`, call `toast.success()` / `toast.error()` / `toast.warning()`.
 - **All admin forms**: use inline save (no separate save page), show loading state on submit button.
@@ -81,7 +81,7 @@ import { XSchema } from '@iorder/contracts'
 import { db } from '@iorder/database'
 ```
 
-## Backend module pattern (apps/api/src/modules/&lt;name&gt;/)
+## Backend module pattern (backend/api/src/modules/&lt;name&gt;/)
 
 Each domain (homepage, posts, offerings, media, partners, testimonials, navigation, categories, settings) is a self-contained module:
 
@@ -95,7 +95,7 @@ modules/<name>/
   index.ts                 — re-exports the above
 ```
 
-- Shared infra lives in `apps/api/src/shared/`: `ApplicationError` (+ subclasses) in `shared/errors/`, `HookManager` in `shared/hooks/`.
+- Shared infra lives in `backend/api/src/shared/`: `ApplicationError` (+ subclasses) in `shared/errors/`, `HookManager` in `shared/hooks/`.
 - Routes never touch Drizzle directly — always through the module's Service → Repository.
 - Only add a `.hooks.ts` file when something in the system needs to react to that domain's events (cache invalidation, notifications). Plain CRUD modules with no su
 

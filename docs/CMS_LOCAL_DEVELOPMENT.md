@@ -36,7 +36,7 @@ pnpm.cmd test:homepage
 
 ## Database workflow
 
-Edit schema files under `packages/database/src/schema`, then generate a migration:
+Edit schema files under `backend/database/src/schema`, then generate a migration:
 
 ```powershell
 pnpm.cmd db:generate
@@ -47,9 +47,9 @@ Review the generated SQL before applying it. Never edit an already-applied migra
 The database creation and seed SQL files are located at:
 
 ```text
-packages/database/scripts/00-create-database.sql
-packages/database/scripts/01-seed-core.sql
-packages/database/scripts/02-normalize-ownership.sql
+backend/database/scripts/00-create-database.sql
+backend/database/scripts/01-seed-core.sql
+backend/database/scripts/02-normalize-ownership.sql
 ```
 
 ## Authentication

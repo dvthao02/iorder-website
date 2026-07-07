@@ -2,6 +2,12 @@ import { z } from 'zod'
 
 export const contentStatusSchema = z.enum(['draft', 'review', 'scheduled', 'published', 'archived'])
 
+// Tập status mà workflow hiện tại THỰC SỰ vận hành (Phase 1 — docs/PHASE1_PLAN.md, Quyết định 1).
+// 'review' và 'scheduled' trong enum DB là reserved, chưa dùng: hẹn giờ chạy bằng scheduledAt + draft.
+// Mọi module publishable (posts, offerings, content-pages) dùng chung schema này.
+export const managedContentStatusSchema = z.enum(['draft', 'published', 'archived'])
+export type ManagedContentStatus = z.infer<typeof managedContentStatusSchema>
+
 export const postTypeSchema = z.enum(['news', 'promotion', 'case_study', 'announcement'])
 
 export const offeringTypeSchema = z.enum(['software', 'solution', 'service', 'industry'])

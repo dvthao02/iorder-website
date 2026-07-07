@@ -5,11 +5,11 @@ Monorepo gồm **website công khai** (React + Vite), **CMS quản trị nội d
 ## Cấu trúc
 
 ```text
-apps/web          Website công khai (trang người dùng)
-apps/admin        CMS quản trị nội dung
-apps/api          API (Fastify)
-packages/database Schema + migration (Drizzle ORM)
-packages/contracts Kiểu dữ liệu dùng chung (Zod)
+frontend/web       Website công khai (trang người dùng)
+frontend/admin     CMS quản trị nội dung
+backend/api        API (Fastify)
+backend/contracts  API contract dùng chung qua @iorder/contracts (Zod)
+backend/database   Schema + migration (Drizzle ORM)
 ```
 
 ## Yêu cầu
@@ -71,7 +71,7 @@ pnpm dev:admin    # chỉ admin       → http://127.0.0.1:5174/admin
 ## 5. Build production
 
 ```powershell
-pnpm build        # build website  → apps/web/dist/
+pnpm build        # build website  → frontend/web/dist/
 pnpm build:cms    # build contracts + database + api + admin
 pnpm build:all    # build full production artifacts
 pnpm verify       # lint + typecheck + production build + API smoke tests
@@ -80,7 +80,7 @@ pnpm verify       # lint + typecheck + production build + API smoke tests
 ## Lệnh hữu ích
 
 ```powershell
-pnpm lint                 # kiểm tra code website (apps/web/src/)
+pnpm lint                 # kiểm tra code frontend/backend
 pnpm cms:create-admin     # tạo / đổi mật khẩu admin (theo .env)
 pnpm cms:import-homepage  # nhập nội dung trang chủ vào CMS
 pnpm cms:import-posts     # nhập bài viết
@@ -105,5 +105,5 @@ pnpm verify               # production gate chạy giống CI
 ## Tài khoản & ghi chú
 
 - Ảnh upload lưu ở `storage/media/` (không commit vào git).
-- Ảnh chia sẻ mạng xã hội: `apps/web/public/og-image.png`; favicon: `apps/web/public/favicon.png`.
+- Ảnh chia sẻ mạng xã hội: `frontend/web/public/og-image.png`; favicon: `frontend/web/public/favicon.png`.
 - Tạo lại ảnh OG: `pnpm make-og-image`.

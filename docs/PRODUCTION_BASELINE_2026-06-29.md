@@ -11,24 +11,24 @@ Tài liệu này ghi lại các thay đổi đã thực hiện để đưa repo 
 
 ## 1. Cấu Trúc Repo
 
-Đã chuyển public website khỏi root vào `apps/web`.
+Đã chuyển public website khỏi root vào `frontend/web`.
 
 ```text
-apps/web          Public website React/Vite
-apps/admin        Internal CMS React/Vite/TypeScript
-apps/api          Fastify API
-packages/contracts Shared Zod schemas/types
-packages/database  Drizzle schema, migration, seed, backup/restore
+frontend/web       Public website React/Vite
+frontend/admin     Internal CMS React/Vite/TypeScript
+backend/api        Fastify API
+backend/contracts  Shared Zod schemas/types
+backend/database   Drizzle schema, migration, seed, backup/restore
 ```
 
 Các thay đổi chính:
 
 - Root `package.json` đổi thành workspace orchestrator `@iorder/workspace`.
-- Thêm `apps/web/package.json`.
+- Thêm `frontend/web/package.json`.
 - Root không còn giữ `src/`, `public/`, `dist/`, `scripts/` của web.
-- API static serving đổi sang `apps/web/dist` và `apps/admin/dist`.
-- CMS import scripts đổi path asset/static data sang `apps/web/src`.
-- `apps/web/dist/`, `apps/admin/dist/`, `backups/` được ignore.
+- API static serving đổi sang `frontend/web/dist` và `frontend/admin/dist`.
+- CMS import scripts đổi path asset/static data sang `frontend/web/src`.
+- `frontend/web/dist/`, `frontend/admin/dist/`, `backups/` được ignore.
 
 ## 2. Production Build Gate
 
@@ -49,11 +49,11 @@ pnpm test:api
 
 `build:production` build đủ:
 
-- `packages/contracts`
-- `packages/database`
-- `apps/api`
-- `apps/web`
-- `apps/admin`
+- `backend/contracts`
+- `backend/database`
+- `backend/api`
+- `frontend/web`
+- `frontend/admin`
 
 ## 3. CI/CD
 
@@ -123,18 +123,18 @@ pnpm build:production
 
 Đã thêm Sentry optional-by-env cho:
 
-- `apps/api`
-- `apps/web`
-- `apps/admin`
+- `backend/api`
+- `frontend/web`
+- `frontend/admin`
 
 Các file chính:
 
 ```text
-apps/api/src/observability/sentry.ts
-apps/web/src/observability/sentry.jsx
-apps/admin/src/observability/sentry.tsx
-apps/web/vite.config.js
-apps/admin/vite.config.ts
+backend/api/src/observability/sentry.ts
+frontend/web/src/observability/sentry.jsx
+frontend/admin/src/observability/sentry.tsx
+frontend/web/vite.config.js
+frontend/admin/vite.config.ts
 ```
 
 API:
@@ -178,8 +178,8 @@ pnpm db:restore
 Các file chính:
 
 ```text
-packages/database/src/backup.ts
-packages/database/src/restore.ts
+backend/database/src/backup.ts
+backend/database/src/restore.ts
 docs/PRODUCTION_RUNBOOK.md
 ```
 
@@ -197,7 +197,7 @@ Restore:
 
 ## 7. Homepage Smoke Test
 
-Đã sửa `apps/api/src/homepage-smoke.ts` theo contract CMS hiện tại:
+Đã sửa `backend/api/src/homepage-smoke.ts` theo contract CMS hiện tại:
 
 - `home_hero`
 - `home_featured_posts`
@@ -228,15 +228,15 @@ Kết quả:
 
 Warning còn lại:
 
-- `apps/web/src/components/Header.jsx`: unused `activeDropdown`.
-- `apps/web/src/pages/Home.jsx`: missing hook dependency `cmsFeaturedPosts`.
-- `apps/web/src/pages/IndustryDetail.jsx`: hook dependency/useMemo warning.
+- `frontend/web/src/components/Header.jsx`: unused `activeDropdown`.
+- `frontend/web/src/pages/Home.jsx`: missing hook dependency `cmsFeaturedPosts`.
+- `frontend/web/src/pages/IndustryDetail.jsx`: hook dependency/useMemo warning.
 - Vite cảnh báo chunk lớn ở admin và web sau khi thêm Sentry.
 
 ## 9. Việc Cần Làm Trước Production Thật
 
-- Stage toàn bộ move từ root sang `apps/web` cẩn thận để Git nhận rename.
-- Không stage build output trong `apps/web/dist`, `apps/admin/dist`, `backups`.
+- Stage toàn bộ move từ root sang `frontend/web` cẩn thận để Git nhận rename.
+- Không stage build output trong `frontend/web/dist`, `frontend/admin/dist`, `backups`.
 - Cấu hình GitHub Environments `staging` và `production`.
 - Thêm Railway tokens và service id vào GitHub secrets/vars.
 - Cấu hình Sentry DSN, release, auth token, org, project.

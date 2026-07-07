@@ -1,8 +1,6 @@
 node_modules/
-packages/*/dist/
-apps/api/dist/
-apps/web/dist/
-apps/admin/dist/
+backend/*/dist/
+frontend/*/dist/
 *.tsbuildinfo
 .codex-qa/
 .env

@@ -89,7 +89,7 @@ Căn cứ: trang public `/nganh-hang/:slug` ĐÃ ưu tiên đọc CMS (`fetchOff
 | Users, Activity                                                    | ❌     | ❌     | ✅    |
 
 - `author` = vai "cộng tác viên viết bài": chỉ soạn nháp + upload media, không đụng nút publish. Nếu business chưa cần vai này, ma trận vẫn đứng — chỉ là chưa cấp user author nào.
-- Kỹ thuật: guard hiện tại là route-level → đủ cho hàng Navigation/Settings/Users; các hàng phân biệt **hành động** (draft vs publish vs delete) cần guard theo route con (publish/delete routes nhận mảng role hẹp hơn). Không cần bảng permission trong DB — 3 role cố định, hardcode ma trận trong 1 file `apps/api/src/auth/permissions.ts` làm nguồn duy nhất, guard đọc từ đó.
+- Kỹ thuật: guard hiện tại là route-level → đủ cho hàng Navigation/Settings/Users; các hàng phân biệt **hành động** (draft vs publish vs delete) cần guard theo route con (publish/delete routes nhận mảng role hẹp hơn). Không cần bảng permission trong DB — 3 role cố định, hardcode ma trận trong 1 file `backend/api/src/auth/permissions.ts` làm nguồn duy nhất, guard đọc từ đó.
 
 **Lát thi công:**
 

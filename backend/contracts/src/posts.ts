@@ -1,9 +1,10 @@
 import { z } from 'zod'
 
-import { contentIdSchema, slugSchema } from './content.js'
+import { contentIdSchema, managedContentStatusSchema, slugSchema } from './content.js'
 
 export const managedPostTypeSchema = z.enum(['news', 'promotion'])
-export const managedPostStatusSchema = z.enum(['draft', 'published', 'archived'])
+// Giữ tên export cũ để không phá import hiện có — nguồn duy nhất ở content.ts.
+export const managedPostStatusSchema = managedContentStatusSchema
 
 export const postInputSchema = z.object({
   type: managedPostTypeSchema,

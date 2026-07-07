@@ -25,7 +25,7 @@ function listModuleNames(): string[] {
 
 const MUTATION_METHOD_REGEX = /async\s+(create|update|delete|publish|unpublish|archive|restore)\w*\s*\(/
 
-describe('module structure standard (CLAUDE.md: apps/api/src/modules/<name>/)', () => {
+describe('module structure standard (CLAUDE.md: backend/api/src/modules/<name>/)', () => {
   const moduleNames = listModuleNames()
 
   it('finds at least one module to check', () => {

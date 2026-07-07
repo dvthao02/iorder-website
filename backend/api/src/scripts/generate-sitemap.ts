@@ -8,13 +8,13 @@ import { config } from 'dotenv'
 import { buildRobotsTxt, buildSitemapXml } from '../seo/seo-routes.js'
 
 // Sinh sitemap.xml + robots.txt tĩnh (fallback) từ DB → luôn khớp dữ liệu thật.
-// Ghi vào apps/web/dist (build output), KHÔNG đụng file seed đã commit.
+// Ghi vào frontend/web/dist (build output), KHÔNG đụng file seed đã commit.
 // Không làm vỡ build: thiếu DB / chưa build web → bỏ qua, giữ bản tĩnh sẵn có.
 const currentDirectory = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(currentDirectory, '../../../../.env') })
 
 const repoRoot = resolve(currentDirectory, '../../../..')
-const outDir = resolve(repoRoot, 'apps/web/dist')
+const outDir = resolve(repoRoot, 'frontend/web/dist')
 const publicOrigin = process.env.PUBLIC_ORIGIN ?? 'https://iorder.vn'
 const databaseUrl = process.env.DATABASE_URL
 

@@ -7,14 +7,30 @@ import tseslint from 'typescript-eslint'
 
 const unusedVarsOptions = { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }
 
-// Lint cho toàn bộ workspace: apps/web (JS thuần) + apps/admin, apps/api, packages/* (TypeScript).
+// Lint cho toàn bộ workspace: frontend/web (JS thuần) + frontend/admin, backend/* (TypeScript).
 // tsc (typecheck/build) đã bắt lỗi type; ESLint bắt thêm unused import/var, react-hooks rules, code smell.
 export default [
   {
-    ignores: ['**/dist/**', '**/build/**', 'node_modules/**', '*.config.*', 'packages/database/migrations/**'],
+    ignores: [
+      '**/dist/**',
+      '**/build/**',
+      'node_modules/**',
+      '.pnpm-store/**',
+      '.agents/**',
+      '.claude/**',
+      '.codex/**',
+      '.codex-qa/**',
+      'backups/**',
+      'storage/**',
+      'test-results/**',
+      'backend/api/storage/**',
+      'backend/database/migrations/**',
+      'frontend/web/public/**',
+      '*.config.*',
+    ],
   },
   {
-    files: ['apps/web/src/**/*.{js,jsx}'],
+    files: ['frontend/web/src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -35,13 +51,13 @@ export default [
       'no-unused-vars': ['warn', unusedVarsOptions],
     },
   },
-  // ── apps/admin (React + TypeScript) ─────────────────────────────────────────
+  // ── frontend/admin (React + TypeScript) ─────────────────────────────────────
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ['apps/admin/src/**/*.{ts,tsx}'],
+    files: ['frontend/admin/src/**/*.{ts,tsx}'],
   })),
   {
-    files: ['apps/admin/src/**/*.{ts,tsx}'],
+    files: ['frontend/admin/src/**/*.{ts,tsx}'],
     languageOptions: {
       globals: { ...globals.browser },
     },
@@ -57,9 +73,9 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
-  // ── apps/admin: cấm dùng confirm()/window.confirm() — dùng toast.warning từ ./toast thay thế ──
+  // ── frontend/admin: cấm dùng confirm()/window.confirm() — dùng toast.warning từ ./toast thay thế ──
   {
-    files: ['apps/admin/src/**/*.{ts,tsx}'],
+    files: ['frontend/admin/src/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-globals': [
         'error',
@@ -78,13 +94,23 @@ export default [
       ],
     },
   },
-  // ── apps/api + packages/* (TypeScript, no React) ────────────────────────────
+  // ── backend/* (TypeScript, no React) ────────────────────────────────────────
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ['apps/api/src/**/*.ts', 'packages/*/src/**/*.ts', 'packages/database/scripts/**/*.ts'],
+    files: [
+      'backend/api/src/**/*.ts',
+      'backend/contracts/src/**/*.ts',
+      'backend/database/src/**/*.ts',
+      'backend/database/scripts/**/*.ts',
+    ],
   })),
   {
-    files: ['apps/api/src/**/*.ts', 'packages/*/src/**/*.ts', 'packages/database/scripts/**/*.ts'],
+    files: [
+      'backend/api/src/**/*.ts',
+      'backend/contracts/src/**/*.ts',
+      'backend/database/src/**/*.ts',
+      'backend/database/scripts/**/*.ts',
+    ],
     languageOptions: {
       globals: { ...globals.node },
     },

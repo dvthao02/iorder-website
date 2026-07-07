@@ -7,7 +7,7 @@ import { toast } from './toast'
 import { ModalShell, PageHeader } from './ui'
 
 // Nhãn tiếng Việt cho từng action code thực tế đang được ghi log qua insertAuditLog
-// trong apps/api/src/modules/**. Action lạ (chưa có trong map) hiển thị nguyên chuỗi gốc.
+// trong backend/api/src/modules/**. Action lạ (chưa có trong map) hiển thị nguyên chuỗi gốc.
 const ACTION_LABELS: Record<string, string> = {
   'category.create': 'Tạo chuyên mục',
   'category.update': 'Cập nhật chuyên mục',

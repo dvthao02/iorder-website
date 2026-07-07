@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { contentIdSchema, offeringTypeSchema, slugSchema } from './content.js'
+import { contentIdSchema, managedContentStatusSchema, offeringTypeSchema, slugSchema } from './content.js'
 
 const optText = (max: number) => z.string().trim().max(max).nullable().default(null)
 const faqPairSchema = z.tuple([z.string().trim().min(1).max(500), z.string().trim().min(1).max(2000)])
@@ -43,7 +43,7 @@ export const offeringInputSchema = z.object({
 
 export const offeringListQuerySchema = z.object({
   type: offeringTypeSchema.optional(),
-  status: z.enum(['draft', 'published', 'archived']).optional(),
+  status: managedContentStatusSchema.optional(),
   search: z.string().trim().max(120).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -60,7 +60,7 @@ export const offeringResponseSchema = z.object({
   coverUrl: z.string().url().nullable(),
   sortOrder: z.number().int(),
   isFeatured: z.boolean(),
-  status: z.enum(['draft', 'published', 'archived']),
+  status: managedContentStatusSchema,
   seoTitle: z.string().nullable(),
   seoDescription: z.string().nullable(),
   canonicalUrl: z.string().nullable(),

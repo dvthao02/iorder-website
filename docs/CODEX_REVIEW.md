@@ -18,7 +18,7 @@ This review is written to make structural problems obvious to a code-reading age
 
 ### 1. Public website is still mostly static and duplicated
 
-The public site is not yet fully driven by CMS data. Core pages still rely on hardcoded content in [apps/web/src/data/siteContent.js](../apps/web/src/data/siteContent.js), [apps/web/src/data/newsArticles.js](../apps/web/src/data/newsArticles.js), and route-driven fallback content in [apps/web/src/pages/StaticPage.jsx](../apps/web/src/pages/StaticPage.jsx). Even though [apps/web/src/pages/Home.jsx](../apps/web/src/pages/Home.jsx) and [apps/web/src/utils/contentApi.js](../apps/web/src/utils/contentApi.js) already consume the CMS for part of the homepage and posts, the product still has two sources of truth.
+The public site is not yet fully driven by CMS data. Core pages still rely on hardcoded content in [frontend/web/src/data/siteContent.js](../frontend/web/src/data/siteContent.js), [frontend/web/src/data/newsArticles.js](../frontend/web/src/data/newsArticles.js), and route-driven fallback content in [frontend/web/src/pages/StaticPage.jsx](../frontend/web/src/pages/StaticPage.jsx). Even though [frontend/web/src/pages/Home.jsx](../frontend/web/src/pages/Home.jsx) and [frontend/web/src/utils/contentApi.js](../frontend/web/src/utils/contentApi.js) already consume the CMS for part of the homepage and posts, the product still has two sources of truth.
 
 Why this matters:
 
@@ -39,7 +39,7 @@ Recommended fix:
 
 ### 2. Admin app only covers a subset of the promised CMS surface
 
-The admin UI currently exposes dashboard, homepage, posts, and media only in [apps/admin/src/AdminApp.tsx](../apps/admin/src/AdminApp.tsx). The API layer matches that limited scope in [apps/api/src/app.ts](../apps/api/src/app.ts), which registers auth, media, posts, and homepage routes only.
+The admin UI currently exposes dashboard, homepage, posts, and media only in [frontend/admin/src/AdminApp.tsx](../frontend/admin/src/AdminApp.tsx). The API layer matches that limited scope in [backend/api/src/app.ts](../backend/api/src/app.ts), which registers auth, media, posts, and homepage routes only.
 
 Why this matters:
 
@@ -59,7 +59,7 @@ Recommended fix:
 
 ### 3. API boundary is narrower than the documented domain model
 
-The repository documentation names menus, menu items, link groups, content links, site profile, site settings, redirects, and offerings as part of the CMS domain in [CMS_IMPLEMENTATION_PLAN.md](../CMS_IMPLEMENTATION_PLAN.md), but the API entrypoint [apps/api/src/app.ts](../apps/api/src/app.ts) does not expose routes for those domains yet.
+The repository documentation names menus, menu items, link groups, content links, site profile, site settings, redirects, and offerings as part of the CMS domain in [CMS_IMPLEMENTATION_PLAN.md](../CMS_IMPLEMENTATION_PLAN.md), but the API entrypoint [backend/api/src/app.ts](../backend/api/src/app.ts) does not expose routes for those domains yet.
 
 Why this matters:
 
@@ -79,7 +79,7 @@ Recommended fix:
 
 ### 4. Homepage editor is validated but still narrow in scope
 
-The homepage editor in [apps/admin/src/HomepageEditor.tsx](../apps/admin/src/HomepageEditor.tsx) supports a useful set of blocks, but it is still intentionally limited and does not yet cover the broader content model described in the plan, such as contact information, more reusable link blocks, or richer page composition.
+The homepage editor in [frontend/admin/src/HomepageEditor.tsx](../frontend/admin/src/HomepageEditor.tsx) supports a useful set of blocks, but it is still intentionally limited and does not yet cover the broader content model described in the plan, such as contact information, more reusable link blocks, or richer page composition.
 
 Why this matters:
 

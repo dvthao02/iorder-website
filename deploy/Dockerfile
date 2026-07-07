@@ -29,4 +29,4 @@ ENV SENTRY_RELEASE=$SENTRY_RELEASE
 RUN pnpm build:production
 
 EXPOSE 8080
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["node", "backend/api/dist/server.js"]
