@@ -16,7 +16,7 @@
     "serve:all": "concurrently --kill-others --names web,api,admin --prefix-colors cyan,magenta,yellow \"pnpm preview:local\" \"pnpm serve:api\" \"pnpm serve:admin\"",
     "build:all": "pnpm build:production",
     "build:production": "pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api build && pnpm --filter @iorder/web build && pnpm --filter @iorder/admin build && pnpm --filter @iorder/api gen:sitemap",
-    "railway:bootstrap": "pnpm --filter @iorder/database db:migrate && pnpm --filter @iorder/database db:seed && pnpm --filter @iorder/api import:testimonials && pnpm --filter @iorder/api create-admin",
+    "railway:bootstrap": "pnpm --filter @iorder/database db:migrate && pnpm --filter @iorder/database db:seed && pnpm --filter @iorder/api import:homepage && pnpm --filter @iorder/api import:posts && pnpm --filter @iorder/api import:offerings && pnpm --filter @iorder/api import:testimonials && pnpm --filter @iorder/api create-admin",
     "gen:sitemap": "pnpm --filter @iorder/api gen:sitemap",
     "build": "pnpm --filter @iorder/web build",
     "preview": "pnpm --filter @iorder/web preview",

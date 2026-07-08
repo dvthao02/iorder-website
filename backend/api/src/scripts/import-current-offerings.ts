@@ -647,7 +647,7 @@ type OfferingType = 'software' | 'solution' | 'service' | 'industry'
 
 async function importOfferings(type: OfferingType, items: any[]) {
   let created = 0
-  let skipped = 0
+  let updated = 0
 
   for (const item of items) {
     const [existing] = await db
@@ -656,28 +656,34 @@ async function importOfferings(type: OfferingType, items: any[]) {
       .where(and(eq(offerings.type, type), eq(offerings.slug, item.slug), isNull(offerings.deletedAt)))
       .limit(1)
 
-    if (existing) {
-      skipped++
-      continue
-    }
-
-    await db.insert(offerings).values({
+    const values = {
       type,
       title: item.title,
       slug: item.slug,
       summary: item.summary,
       icon: item.icon,
-      coverMediaId: null,
       sortOrder: item.sortOrder,
       isFeatured: item.isFeatured,
-      status: 'published',
+      status: 'published' as const,
       publishedAt: new Date(),
       contentJson: item.contentJson as any,
+      updatedAt: new Date(),
+    }
+
+    if (existing) {
+      await db.update(offerings).set(values).where(eq(offerings.id, existing.id))
+      updated++
+      continue
+    }
+
+    await db.insert(offerings).values({
+      coverMediaId: null,
+      ...values,
     })
     created++
   }
 
-  console.log(`[${type}] created=${created} skipped=${skipped}`)
+  console.log(`[${type}] created=${created} updated=${updated}`)
 }
 
 async function main() {
