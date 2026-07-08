@@ -19,7 +19,7 @@ const emptyTestimonial: TestimonialInput = {
 
 function validateTestimonial(form: TestimonialInput): string | null {
   if (form.authorName.trim().length < 2) return 'Tên khách hàng phải có ít nhất 2 ký tự.'
-  if (form.quote.trim().length < 10) return 'Nội dung đánh giá phải có ít nhất 10 ký tự.'
+  if (form.quote.trim().length < 1) return 'Nội dung đánh giá là bắt buộc.'
   return null
 }
 
@@ -292,6 +292,7 @@ export function TestimonialsManager() {
   }
 
   const avatarUrl = form.avatarMediaId ? (avatarMap.get(form.avatarMediaId) ?? null) : null
+  const validationError = editing !== null ? validateTestimonial(form) : null
   const initials =
     form.authorName
       .split(' ')
@@ -398,8 +399,8 @@ export function TestimonialsManager() {
               <button
                 type="submit"
                 className="btn-primary"
-                disabled={isSaving || Boolean(validateTestimonial(form))}
-                title={validateTestimonial(form) ?? undefined}
+                disabled={isSaving || Boolean(validationError)}
+                title={validationError ?? undefined}
               >
                 {isSaving ? 'Đang lưu...' : 'Lưu đánh giá'}
               </button>
@@ -522,6 +523,7 @@ export function TestimonialsManager() {
             label="Hiển thị trên website"
             hint="Tắt để ẩn khỏi trang chủ"
           />
+          {validationError ? <small className="field-hint is-error">{validationError}</small> : null}
         </ModalShell>
       )}
     </div>

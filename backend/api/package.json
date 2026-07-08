@@ -12,6 +12,7 @@
     "import:homepage": "tsx src/scripts/import-current-homepage.ts",
     "import:posts": "tsx src/scripts/import-current-posts.ts",
     "import:offerings": "tsx src/scripts/import-current-offerings.ts",
+    "import:testimonials": "tsx src/scripts/import-current-testimonials.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:smoke": "tsx src/smoke.ts",
     "test:auth": "tsx src/auth-smoke.ts",
