@@ -2,8 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 /* Component and page stylesheet imports - single entrypoint */
-@import './components/header.css';
-@import './components/footer.css';
 @import './components/floating-actions.css';
 
 @import './pages/home.css';
