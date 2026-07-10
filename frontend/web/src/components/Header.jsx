@@ -29,7 +29,6 @@ const FALLBACK_NAV = [
   },
 ]
 
-
 const HEADER_STYLES = `
 /* =========================
    iOrder Premium Header
@@ -826,36 +825,36 @@ export default function Header({
     <>
       <style>{HEADER_STYLES}</style>
       <header className={`header ${scrolled ? 'scrolled' : ''}`} onMouseLeave={() => setOpenDropdown(null)}>
-      <div className="header-container">
-        <Link to="/" className="logo" onClick={closeMenu}>
-          <img src={logoMain} alt="iOrder" loading="eager" decoding="sync" fetchPriority="high" />
-        </Link>
+        <div className="header-container">
+          <Link to="/" className="logo" onClick={closeMenu}>
+            <img src={logoMain} alt="iOrder" loading="eager" decoding="sync" fetchPriority="high" />
+          </Link>
 
-        <nav className="nav" aria-label="Menu chính">
-          {navItems.map(renderNavItem)}
-        </nav>
+          <nav className="nav" aria-label="Menu chính">
+            {navItems.map(renderNavItem)}
+          </nav>
 
-        <HeaderActions />
+          <HeaderActions />
 
-        <button
-          className="menu-btn"
-          type="button"
-          aria-label="Mở menu"
-          onClick={() => setMobileOpen((value) => !value)}
-        >
-          <Menu size={22} />
-        </button>
-      </div>
+          <button
+            className="menu-btn"
+            type="button"
+            aria-label="Mở menu"
+            onClick={() => setMobileOpen((value) => !value)}
+          >
+            <Menu size={22} />
+          </button>
+        </div>
 
-      {mobileOpen ? (
-        <MobileNav
-          navItems={navItems}
-          softwareMenu={softwareMenu}
-          solutionsMenu={solutionsMenu}
-          servicesMenu={servicesMenu}
-          onNavigate={closeMenu}
-        />
-      ) : null}
+        {mobileOpen ? (
+          <MobileNav
+            navItems={navItems}
+            softwareMenu={softwareMenu}
+            solutionsMenu={solutionsMenu}
+            servicesMenu={servicesMenu}
+            onNavigate={closeMenu}
+          />
+        ) : null}
       </header>
     </>
   )

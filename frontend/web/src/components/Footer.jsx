@@ -89,7 +89,7 @@ export default function Footer({ logoFooter }) {
     { title: 'V\u1ec1 iOrder', path: '/gioi-thieu' },
     { title: 'Tin t\u1ee9c', path: '/tin-tuc' },
   ]
-const FOOTER_STYLES = `
+  const FOOTER_STYLES = `
 /* =========================
    iOrder Compact Premium Footer
 ========================= */
@@ -632,103 +632,102 @@ main {
 }
 `
 
-
   return (
     <>
       <style>{FOOTER_STYLES}</style>
       <footer className="footer">
-      <div className="footer-main">
-        <div className="container footer-container">
-          <div className="footer-brand">
-            <Link to="/" className="footer-logo">
-              <img src={logoFooter} alt="iOrder Logo" loading="lazy" decoding="async" />
-            </Link>
+        <div className="footer-main">
+          <div className="container footer-container">
+            <div className="footer-brand">
+              <Link to="/" className="footer-logo">
+                <img src={logoFooter} alt="iOrder Logo" loading="lazy" decoding="async" />
+              </Link>
 
-            <div className="footer-contact-list">
-              <a href={contactInfo.addressMapUrl} target="_blank" rel="noreferrer" className="footer-contact-item">
-                <MapPin size={17} />
-                <span>{contactInfo.address}</span>
-              </a>
+              <div className="footer-contact-list">
+                <a href={contactInfo.addressMapUrl} target="_blank" rel="noreferrer" className="footer-contact-item">
+                  <MapPin size={17} />
+                  <span>{contactInfo.address}</span>
+                </a>
 
-              <a href={contactInfo.phoneHref} className="footer-contact-item">
-                <Phone size={17} />
-                <span>{contactInfo.phoneDisplay}</span>
-              </a>
+                <a href={contactInfo.phoneHref} className="footer-contact-item">
+                  <Phone size={17} />
+                  <span>{contactInfo.phoneDisplay}</span>
+                </a>
 
-              <a href={`mailto:${contactInfo.supportEmail}`} className="footer-contact-item">
-                <Mail size={17} />
-                <span>{contactInfo.supportEmail}</span>
-              </a>
+                <a href={`mailto:${contactInfo.supportEmail}`} className="footer-contact-item">
+                  <Mail size={17} />
+                  <span>{contactInfo.supportEmail}</span>
+                </a>
 
-              <div className="footer-contact-item">
-                <Clock size={17} />
-                <span>{contactInfo.workingHours}</span>
+                <div className="footer-contact-item">
+                  <Clock size={17} />
+                  <span>{contactInfo.workingHours}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="footer-column">
+              <h3>{'S\u1ea3n ph\u1ea9m'}</h3>
+              <div className="footer-links">
+                {productLinks.map((item) => (
+                  <Link key={item.title} to={item.path}>
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="footer-column">
+              <h3>{'Gi\u1ea3i ph\u00e1p'}</h3>
+              <div className="footer-links">
+                {solutionLinks.map((item) => (
+                  <Link key={item.title} to={item.path}>
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="footer-column">
+              <h3>{'D\u1ecbch v\u1ee5'}</h3>
+              <div className="footer-links">
+                {serviceLinks.map((item) => (
+                  <Link key={item.title} to={item.path}>
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="footer-column footer-company">
+              <h3>{'H\u1ed7 tr\u1ee3'}</h3>
+              <div className="footer-links">
+                {[...supportLinks, ...companyLinks].map((item) => (
+                  <Link key={item.title} to={item.path}>
+                    {item.title}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
-
-          <div className="footer-column">
-            <h3>{'S\u1ea3n ph\u1ea9m'}</h3>
-            <div className="footer-links">
-              {productLinks.map((item) => (
-                <Link key={item.title} to={item.path}>
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="footer-column">
-            <h3>{'Gi\u1ea3i ph\u00e1p'}</h3>
-            <div className="footer-links">
-              {solutionLinks.map((item) => (
-                <Link key={item.title} to={item.path}>
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="footer-column">
-            <h3>{'D\u1ecbch v\u1ee5'}</h3>
-            <div className="footer-links">
-              {serviceLinks.map((item) => (
-                <Link key={item.title} to={item.path}>
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="footer-column footer-company">
-            <h3>{'H\u1ed7 tr\u1ee3'}</h3>
-            <div className="footer-links">
-              {[...supportLinks, ...companyLinks].map((item) => (
-                <Link key={item.title} to={item.path}>
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-          </div>
         </div>
-      </div>
 
-      <div className="footer-bottom-wrap">
-        <div className="container footer-bottom">
-          <p>
-            {'\u00a9 2026 S\u1ea3n ph\u1ea9m ph\u00e1t tri\u1ec3n b\u1edfi '}
-            <a href="https://iorder.vn" target="_blank" rel="noreferrer">
-              iOrder.vn
+        <div className="footer-bottom-wrap">
+          <div className="container footer-bottom">
+            <p>
+              {'\u00a9 2026 S\u1ea3n ph\u1ea9m ph\u00e1t tri\u1ec3n b\u1edfi '}
+              <a href="https://iorder.vn" target="_blank" rel="noreferrer">
+                iOrder.vn
+              </a>
+            </p>
+
+            <a className="dmca-badge" href={dmcaUrl} target="_blank" rel="noreferrer">
+              DMCA Protected
             </a>
-          </p>
-
-          <a className="dmca-badge" href={dmcaUrl} target="_blank" rel="noreferrer">
-            DMCA Protected
-          </a>
+          </div>
         </div>
-      </div>
 
-      <FloatingActions />
+        <FloatingActions />
       </footer>
     </>
   )
