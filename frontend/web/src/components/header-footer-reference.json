@@ -1,0 +1,62 @@
+{
+  "header": {
+    "sourceComponent": "/frontend/web/src/components/Header.jsx",
+    "relatedSubcomponents": [
+      "/frontend/web/src/components/header/HeaderActions.jsx",
+      "/frontend/web/src/components/header/MobileNav.jsx",
+      "/frontend/web/src/components/header/NavDropdown.jsx",
+      "/frontend/web/src/components/header/SoftwareMenu.jsx",
+      "/frontend/web/src/components/header/SolutionsMenu.jsx",
+      "/frontend/web/src/components/header/ServicesMenu.jsx",
+      "/frontend/web/src/components/header/SupportMenu.jsx"
+    ],
+    "tagStructure": [
+      "header.header",
+      "div.header-container",
+      "Link.logo > img",
+      "nav.nav[aria-label='Menu chính']",
+      "HeaderActions",
+      "button.menu-btn[aria-label='Mở menu'] > Menu",
+      "MobileNav (conditional)"
+    ],
+    "contentGroups": [
+      "Fallback menu items: Trang chủ, Phần mềm, Giải pháp, Dịch vụ, Tin tức, Hỗ trợ",
+      "CMS menu source: fetchMenu('main-nav')",
+      "CMS offering dropdown source: fetchNavOfferings()",
+      "Desktop actions: Đăng nhập, Đăng ký dùng thử",
+      "Mobile actions: Đăng nhập, Dùng thử miễn phí"
+    ],
+    "css": {
+      "file": "/frontend/web/src/styles/components/header.css",
+      "importedFrom": "/frontend/web/src/styles/main.css"
+    }
+  },
+  "footer": {
+    "sourceComponent": "/frontend/web/src/components/Footer.jsx",
+    "relatedSubcomponents": ["/frontend/web/src/components/FloatingActions.jsx"],
+    "tagStructure": [
+      "footer.footer",
+      "div.footer-main > div.container.footer-container",
+      "div.footer-brand",
+      "div.footer-column (Sản phẩm)",
+      "div.footer-column (Giải pháp)",
+      "div.footer-column (Dịch vụ)",
+      "div.footer-column.footer-company (Hỗ trợ)",
+      "div.footer-bottom-wrap > div.container.footer-bottom",
+      "a.dmca-badge",
+      "FloatingActions"
+    ],
+    "contentGroups": [
+      "CMS contact info: address, phone, support email, working hours",
+      "Product links list",
+      "Solution links list",
+      "Service links list",
+      "Support + company links list",
+      "DMCA badge + copyright"
+    ],
+    "css": {
+      "file": "/frontend/web/src/styles/components/footer.css",
+      "importedFrom": "/frontend/web/src/styles/main.css"
+    }
+  }
+}
