@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+const optionalNonEmptyString = z.preprocess(
+  (value) => (value === '' ? undefined : value),
+  z.string().min(1).optional(),
+)
+
+const optionalSecret = z.preprocess(
+  (value) => (value === '' ? undefined : value),
+  z.string().min(32).optional(),
+)
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_HOST: z.string().min(1).default('127.0.0.1'),
@@ -8,7 +18,7 @@ const envSchema = z.object({
   PUBLIC_ORIGIN: z.string().url().default('http://127.0.0.1:5173'),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
-  CMS_PREVIEW_SECRET: z.string().min(32).optional(),
+  CMS_PREVIEW_SECRET: optionalSecret,
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
   MEDIA_STORAGE_PATH: z.string().min(1).default('../../storage/media'),
   MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://127.0.0.1:4000/media'),
@@ -17,9 +27,9 @@ const envSchema = z.object({
     .string()
     .regex(/^[a-z0-9-]+$/)
     .default('home'),
-  SENTRY_DSN: z.string().url().optional(),
-  SENTRY_ENVIRONMENT: z.string().min(1).optional(),
-  SENTRY_RELEASE: z.string().min(1).optional(),
+  SENTRY_DSN: z.preprocess((value) => (value === '' ? undefined : value), z.string().url().optional()),
+  SENTRY_ENVIRONMENT: optionalNonEmptyString,
+  SENTRY_RELEASE: optionalNonEmptyString,
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
   // Tin cậy proxy phía trước (nginx) để lấy IP thật từ X-Forwarded-For.
   // Giá trị: 'true' | 'false' | số hop | danh sách IP/subnet cách nhau dấu phẩy.
