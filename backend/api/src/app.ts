@@ -64,7 +64,11 @@ export async function buildApp(env: ApiEnv) {
     },
   })
 
-  await app.register(helmet)
+  const publicOriginUsesHttps = env.PUBLIC_ORIGIN.startsWith('https://')
+  await app.register(helmet, {
+    contentSecurityPolicy: publicOriginUsesHttps,
+    hsts: publicOriginUsesHttps,
+  })
   await app.register(cookie, {
     secret: env.SESSION_SECRET,
     hook: 'onRequest',
@@ -84,7 +88,7 @@ export async function buildApp(env: ApiEnv) {
   const adminDist = resolve(repositoryRoot, 'frontend/admin/dist')
   await app.register(staticFiles, {
     root: adminDist,
-    prefix: '/admin',
+    prefix: '/admin/',
     decorateReply: false,
   })
   app.get('/admin', async (_req, reply) => reply.sendFile('index.html', adminDist))
