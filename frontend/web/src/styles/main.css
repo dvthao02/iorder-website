@@ -10,6 +10,7 @@
 @import './pages/listing.css';
 @import './pages/detail.css';
 @import './pages/contact.css';
+@import './pages/privacy-policy.css';
 
 :root {
   --primary: #1588e3;

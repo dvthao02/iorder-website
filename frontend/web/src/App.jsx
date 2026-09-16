@@ -36,6 +36,7 @@ import NewsPage from './pages/NewsPage'
 import NewsDetail from './pages/NewsDetail'
 import ContactPage from './pages/ContactPage'
 import ToolsDownloadPage from './pages/ToolsDownloadPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import StaticPage from './pages/StaticPage'
 import NotFound from './pages/NotFound'
 
@@ -65,6 +66,7 @@ export default function App() {
       <Route path="/ho-tro-tu-xa" element={<StaticPage />} />
       <Route path="/gioi-thieu" element={<StaticPage />} />
       <Route path="/terms" element={<StaticPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/tin-tuc" element={<NewsPage />} />
       <Route path="/tin-tuc/:slug" element={<NewsDetail />} />
       <Route path="/lien-he" element={<ContactPage />} />

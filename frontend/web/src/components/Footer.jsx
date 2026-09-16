@@ -88,6 +88,7 @@ export default function Footer({ logoFooter }) {
   const companyLinks = [
     { title: 'V\u1ec1 iOrder', path: '/gioi-thieu' },
     { title: 'Tin t\u1ee9c', path: '/tin-tuc' },
+    { title: 'Ch\u00ednh s\u00e1ch b\u1ea3o m\u1eadt', path: '/privacy-policy' },
   ]
 
   return (
