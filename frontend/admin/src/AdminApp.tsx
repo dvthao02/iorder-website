@@ -1,27 +1,29 @@
 import type { AuthUser } from '@iorder/contracts'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Bell, ChevronDown, KeyRound, LogOut, UserCircle } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import logoIorder from './assets/logo.png'
 import { changePassword, getLeads, getSession, listOfferings, listPosts, login, logout } from './api'
-import { ContentPagesManager } from './ContentPagesManager'
-import { Dashboard } from './Dashboard'
-import { DownloadsManager } from './DownloadsManager'
-import { HomepageEditor } from './HomepageEditor'
-import { LeadsManager } from './LeadsManager'
 import { LoginForm } from './LoginForm'
-import { MediaLibrary } from './MediaLibrary'
-import { NavigationEditor } from './NavigationEditor'
-import { OfferingsManager } from './OfferingsManager'
-import { PartnersManager } from './PartnersManager'
-import { PostsManager } from './PostsManager'
 import { Sidebar } from './sidebar/Sidebar'
 import { keyBySlug, slugByKey } from './sidebar/navigation'
-import { type SettingsTab, SettingsPage } from './SettingsPage'
-import { TestimonialsManager } from './TestimonialsManager'
+import type { SettingsTab } from './SettingsPage'
 import { ToastHost, toast } from './toast'
 import { ModalShell } from './ui'
+
+const ContentPagesManager = lazy(async () => ({ default: (await import('./ContentPagesManager')).ContentPagesManager }))
+const Dashboard = lazy(async () => ({ default: (await import('./Dashboard')).Dashboard }))
+const DownloadsManager = lazy(async () => ({ default: (await import('./DownloadsManager')).DownloadsManager }))
+const HomepageEditor = lazy(async () => ({ default: (await import('./HomepageEditor')).HomepageEditor }))
+const LeadsManager = lazy(async () => ({ default: (await import('./LeadsManager')).LeadsManager }))
+const MediaLibrary = lazy(async () => ({ default: (await import('./MediaLibrary')).MediaLibrary }))
+const NavigationEditor = lazy(async () => ({ default: (await import('./NavigationEditor')).NavigationEditor }))
+const OfferingsManager = lazy(async () => ({ default: (await import('./OfferingsManager')).OfferingsManager }))
+const PartnersManager = lazy(async () => ({ default: (await import('./PartnersManager')).PartnersManager }))
+const PostsManager = lazy(async () => ({ default: (await import('./PostsManager')).PostsManager }))
+const SettingsPage = lazy(async () => ({ default: (await import('./SettingsPage')).SettingsPage }))
+const TestimonialsManager = lazy(async () => ({ default: (await import('./TestimonialsManager')).TestimonialsManager }))
 
 // Slug con của trang Cài đặt — 'cai-dat' (tab mặc định), 'cai-dat/nguoi-dung', 'cai-dat/hoat-dong'.
 // Vì AdminApp dùng 1 param route ':section' (không phải React Router lồng nhau thật), ta
@@ -329,7 +331,7 @@ export function AdminApp() {
           user={user}
           onLogout={() => void handleLogout()}
         />
-        {content}
+        <Suspense fallback={<p className="admin-info">Đang tải...</p>}>{content}</Suspense>
       </main>
       <ToastHost />
     </div>

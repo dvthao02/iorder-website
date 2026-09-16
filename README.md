@@ -40,8 +40,9 @@ CMS_ADMIN_NAME=Administrator
 ## 3. Chuẩn bị database (lần đầu)
 
 ```powershell
-pnpm db:migrate          # tạo bảng
-pnpm cms:create-admin    # tạo tài khoản admin từ biến CMS_ADMIN_* trong .env
+pnpm db:migrate               # tạo/cập nhật schema
+pnpm bootstrap:core            # tạo roles và tài khoản admin đầu tiên
+pnpm content:import:legacy     # tùy chọn: nhập nội dung tĩnh cũ vào CMS một lần
 ```
 
 ## 4. Chạy local — chạy cả 3 cùng lúc
@@ -71,7 +72,7 @@ pnpm dev:admin    # chỉ admin       → http://127.0.0.1:5174/admin
 ## 5. Build production
 
 ```powershell
-pnpm build        # build website  → frontend/web/dist/
+pnpm build        # build API, website và CMS
 pnpm build:cms    # build contracts + database + api + admin
 pnpm build:all    # build full production artifacts
 pnpm verify       # lint + typecheck + production build + API smoke tests
@@ -85,6 +86,8 @@ pnpm cms:create-admin     # tạo / đổi mật khẩu admin (theo .env)
 pnpm cms:import-homepage  # nhập nội dung trang chủ vào CMS
 pnpm cms:import-posts     # nhập bài viết
 pnpm cms:import-offerings # nhập phần mềm/giải pháp/dịch vụ
+pnpm bootstrap:core       # setup roles + admin cho môi trường mới
+pnpm content:import:legacy # import nội dung legacy, chỉ chạy thủ công một lần
 pnpm db:generate          # sinh migration từ thay đổi schema
 pnpm db:migrate           # áp dụng migration
 pnpm typecheck:cms        # type-check toàn bộ package CMS
@@ -93,17 +96,28 @@ pnpm verify               # production gate chạy giống CI
 
 ## Deploy
 
-- **Railway** (đang dùng): cấu hình ở `railway.json` + `nixpacks.toml` tại gốc. Railway chạy `pnpm build:production` để build API, website và CMS từ source.
+- **Railway**: cấu hình ở `railway.json` + `deploy/Dockerfile`. Mỗi deploy chỉ chạy migration; không seed hoặc import nội dung CMS.
 - **Docker / VPS** (tùy chọn): các file trong `deploy/` (`Dockerfile`, `docker-compose.yml`, `.env.production.example`).
-  ```bash
-  cp deploy/.env.production.example deploy/.env.production   # điền giá trị thật
-  docker compose -f deploy/docker-compose.yml --env-file deploy/.env.production up -d
+  Docker build toàn bộ monorepo, chạy PostgreSQL, MinIO, migrate schema và tạo CMS admin khi khởi động lần đầu:
+  ```powershell
+  Copy-Item deploy/.env.docker.example deploy/.env.docker
+  docker compose --env-file deploy/.env.docker -f deploy/docker-compose.yml up --build -d
   ```
-- Production runbook: `docs/PRODUCTION_RUNBOOK.md`.
-- Production baseline log: `docs/PRODUCTION_BASELINE_2026-06-29.md`.
+  Lệnh này tạo volume local riêng (`iorder_local_*`), không đụng dữ liệu Docker cũ. Muốn dùng lại volume cũ, đặt đúng `POSTGRES_PASSWORD` và `VOLUME_PREFIX` của môi trường đó.
+  Mở website tại `http://127.0.0.1:4000`, CMS tại `http://127.0.0.1:4000/admin`, và MinIO Console tại `http://127.0.0.1:9001`. Ảnh mới được lưu trong bucket `iorder-media`, ở volume `iorder_local_minio_data`. Xem log bằng `docker compose --env-file deploy/.env.docker -f deploy/docker-compose.yml logs -f api minio`.
+  Chỉ khi cần nhập dữ liệu tĩnh cũ vào CMS mới chạy:
+  ```powershell
+  docker compose --env-file deploy/.env.docker -f deploy/docker-compose.yml run --rm api pnpm content:import:legacy
+  ```
+  Để chuyển ảnh đã có trong volume local sang MinIO sau khi đã sao lưu volume:
+  ```powershell
+  docker compose --env-file deploy/.env.docker -f deploy/docker-compose.yml run --rm api pnpm media:migrate-local
+  ```
+- Kiến trúc và quy ước: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- Production runbook: [docs/PRODUCTION_RUNBOOK.md](docs/PRODUCTION_RUNBOOK.md).
 
 ## Tài khoản & ghi chú
 
-- Ảnh upload lưu ở `storage/media/` (không commit vào git).
+- Ảnh upload dùng MinIO/S3-compatible khi `MEDIA_STORAGE_DRIVER=minio`; local storage chỉ là chế độ tương thích tạm thời.
 - Ảnh chia sẻ mạng xã hội: `frontend/web/public/og-image.png`; favicon: `frontend/web/public/favicon.png`.
 - Tạo lại ảnh OG: `pnpm make-og-image`.

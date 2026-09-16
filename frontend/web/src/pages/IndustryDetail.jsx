@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, Printer, ScanBarcode, Smartphone, Wifi } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
@@ -36,20 +36,24 @@ export default function IndustryDetail() {
 
   // Map đủ các trường mà JSX bên dưới dùng (title/group/features/benefits...) —
   // thiếu trường sẽ nổ runtime (vd industry.title.toLowerCase()) → trang trắng.
-  const industry = cmsIndustry
-    ? {
-        // Cùng công thức hero với bản tĩnh để trang không "nghèo" đi khi chuyển sang CMS.
-        hero: `Phần mềm quản lý ${cmsIndustry.title.toLowerCase()} iOrder`,
-        title: cmsIndustry.title,
-        group: cmsIndustry.category ?? 'Ngành hàng',
-        lead:
-          cmsIndustry.description ||
-          cmsIndustry.summary ||
-          `iOrder được cấu hình theo đặc thù ngành ${cmsIndustry.title.toLowerCase()}, giúp quản lý bán hàng, tồn kho, nhân viên, khách hàng và báo cáo trên cùng một nền tảng.`,
-        features: cmsIndustry.features ?? [],
-        benefits: cmsIndustry.benefits ?? [],
-      }
-    : findIndustrySolution(slug)
+  const industry = useMemo(
+    () =>
+      cmsIndustry
+        ? {
+            // Cùng công thức hero với bản tĩnh để trang không "nghèo" đi khi chuyển sang CMS.
+            hero: `Phần mềm quản lý ${cmsIndustry.title.toLowerCase()} iOrder`,
+            title: cmsIndustry.title,
+            group: cmsIndustry.category ?? 'Ngành hàng',
+            lead:
+              cmsIndustry.description ||
+              cmsIndustry.summary ||
+              `iOrder được cấu hình theo đặc thù ngành ${cmsIndustry.title.toLowerCase()}, giúp quản lý bán hàng, tồn kho, nhân viên, khách hàng và báo cáo trên cùng một nền tảng.`,
+            features: cmsIndustry.features ?? [],
+            benefits: cmsIndustry.benefits ?? [],
+          }
+        : findIndustrySolution(slug),
+    [cmsIndustry, slug],
+  )
   const relatedIndustries = industrySolutions.filter((item) => item.slug !== slug).slice(0, 6)
 
   useEffect(() => {

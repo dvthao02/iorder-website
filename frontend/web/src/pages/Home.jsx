@@ -411,8 +411,10 @@ export default function Home() {
   // Live preview: nhận bản nháp CMS đang gõ qua postMessage — CHỈ khi đang ở chế độ cmsPreview
   // (đã có token) và đã load xong dữ liệu preview lần đầu (mới có sẵn { media } để merge).
   // Media mới upload chưa có trong danh sách vẫn giữ ảnh cũ/bỏ qua — sẽ hiện đúng sau nhịp autosave + refresh.
+  const hasCmsHomepage = Boolean(cmsHomepage)
+
   useEffect(() => {
-    if (!previewToken || !cmsHomepage) return undefined
+    if (!previewToken || !hasCmsHomepage) return undefined
     const allowedOrigin = (origin) => {
       const adminOrigin = import.meta.env.VITE_ADMIN_ORIGIN
       if (adminOrigin && origin === adminOrigin) return true
@@ -442,7 +444,7 @@ export default function Home() {
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [previewToken, Boolean(cmsHomepage)])
+  }, [hasCmsHomepage, previewToken])
 
   const cmsMedia = useMemo(() => new Map((cmsHomepage?.media ?? []).map((asset) => [asset.id, asset])), [cmsHomepage])
   const cmsBlock = (type) => cmsHomepage?.item?.blocks?.find((block) => block.type === type && block.isEnabled)
@@ -454,9 +456,11 @@ export default function Home() {
   const cmsProcess = cmsBlock('home_process')
   const cmsTestimonials = cmsBlock('home_testimonials')
   const cmsFeaturedPosts = cmsBlock('home_featured_posts')
+  const featuredPostsLimit = cmsFeaturedPosts?.data?.limit
+  const featuredPostsType = cmsFeaturedPosts?.data?.postType
   const cmsFaq = cmsBlock('home_faq')
   const cmsCta = cmsBlock('home_cta')
-  const isCmsMode = Boolean(cmsHomepage)
+  const isCmsMode = hasCmsHomepage
   const shouldShow = (type) => !isCmsMode || Boolean(cmsBlock(type))
   const blockOrder = (type) => {
     const savedIndex = cmsHomepage?.item?.blocks?.findIndex((block) => block.type === type) ?? -1
@@ -531,14 +535,17 @@ export default function Home() {
   const processFeatureImage = isCmsMode ? cmsMedia.get(cmsProcess?.data?.featureMediaId)?.publicUrl : posIotImage
 
   useEffect(() => {
-    if (!cmsFeaturedPosts) return
-    const params = new URLSearchParams({ limit: String(cmsFeaturedPosts.data.limit) })
-    if (cmsFeaturedPosts.data.postType !== 'all') params.set('type', cmsFeaturedPosts.data.postType)
+    if (featuredPostsLimit === undefined || featuredPostsType === undefined) {
+      setCmsPosts([])
+      return
+    }
+    const params = new URLSearchParams({ limit: String(featuredPostsLimit) })
+    if (featuredPostsType !== 'all') params.set('type', featuredPostsType)
     fetch(`${API_URL}/api/public/posts?${params}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Posts unavailable'))))
       .then((payload) => setCmsPosts(payload.items ?? []))
       .catch(() => setCmsPosts([]))
-  }, [cmsFeaturedPosts?.data?.limit, cmsFeaturedPosts?.data?.postType])
+  }, [featuredPostsLimit, featuredPostsType])
 
   const navSoftware = cmsNav?.software ?? softwareProducts
   const navSolutions = cmsNav?.solutions ?? solutionPages

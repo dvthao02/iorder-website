@@ -199,10 +199,15 @@ export class HomepageService {
     if (!revision) return null
 
     const parsedSnapshot = homepageInputSchema.safeParse(revision.snapshot)
-    const snapshot = parsedSnapshot.success
-      ? { ...(revision.snapshot as Record<string, unknown>), blocks: normalizeBlocks(parsedSnapshot.data.blocks) }
-      : (revision.snapshot as ReturnType<typeof serializeHomepage>)
-    const blocks = (snapshot as ReturnType<typeof serializeHomepage>).blocks
+    // A restored production snapshot may predate the current homepage block contract.
+    // Returning null lets the public web use its static fallback instead of emitting a 500.
+    if (!parsedSnapshot.success) return null
+
+    const snapshot = {
+      ...(revision.snapshot as Record<string, unknown>),
+      blocks: normalizeBlocks(parsedSnapshot.data.blocks),
+    }
+    const blocks = snapshot.blocks
     const mediaIds = collectMediaIds(blocks)
     const assets = await this.repository.findAssetsByIds(mediaIds)
 

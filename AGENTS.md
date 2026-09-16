@@ -9,7 +9,7 @@ frontend/
   web/     — Public frontend (React 19 + Vite, port 5173)
   admin/   — Admin panel (React 19 + Vite, port 5174)
 backend/
-  api/        — REST API (Fastify 5 + TypeScript, port 3000)
+  api/        — REST API (Fastify 5 + TypeScript, port 4000)
   contracts/  — API Zod schemas & TypeScript types
   database/   — Drizzle ORM client + migrations
 ```
@@ -28,7 +28,7 @@ backend/
 ## Running the project
 
 ```bash
-# API (port 3000)
+# API (port 4000)
 pnpm --filter @iorder/api dev
 
 # Admin (port 5174)
@@ -97,11 +97,5 @@ modules/<name>/
 
 - Shared infra lives in `backend/api/src/shared/`: `ApplicationError` (+ subclasses) in `shared/errors/`, `HookManager` in `shared/hooks/`.
 - Routes never touch Drizzle directly — always through the module's Service → Repository.
-- Only add a `.hooks.ts` file when something in the system needs to react to that domain's events (cache invalidation, notifications). Plain CRUD modules with no su
-
-## Ghi chú cho agent (Codex và các AI khác)
-
-- File này là bản sao của CLAUDE.md — nguồn chuẩn duy nhất. Khi 2 file lệch nhau, CLAUDE.md thắng.
-- LUÔN chạy `pnpm verify` trước khi kết thúc phiên làm việc; sửa mọi lỗi format/lint/typecheck/test trước khi bàn giao.
-- Repo bật `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`: không destructure `[{x}]` từ query result (dùng `rows[0]?.x ?? fallback`), không đưa key `undefined` vào object literal có type optional.
-- Commit message: câu mệnh lệnh ngắn, KHÔNG kèm attribution AI.
+- Only add a `.hooks.ts` file when something in the system needs to react to that domain's events (cache invalidation, notifications). Plain CRUD modules with no subscribers don't need one.
+  \n

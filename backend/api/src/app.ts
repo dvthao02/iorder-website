@@ -10,10 +10,11 @@ import rateLimit from '@fastify/rate-limit'
 import staticFiles from '@fastify/static'
 import { createDatabase } from '@iorder/database'
 import Fastify from 'fastify'
+import { sql } from 'drizzle-orm'
 
 import { registerAuthRoutes } from './auth/auth-routes.js'
 import type { ApiEnv } from './env.js'
-import { LocalMediaStorage } from './media/media-storage.js'
+import { LocalMediaStorage, MinioMediaStorage, type MediaStorage } from './media/media-storage.js'
 import { registerActivityRoutes } from './modules/activity/activity-routes.js'
 import { registerCategoryRoutes } from './modules/categories/categories-routes.js'
 import { registerContentPageRoutes } from './modules/content-pages/content-pages-routes.js'
@@ -51,7 +52,18 @@ export async function buildApp(env: ApiEnv) {
   initApiObservability(env)
   const database = createDatabase(env.DATABASE_URL)
   const mediaRoot = resolve(env.MEDIA_STORAGE_PATH)
-  const mediaStorage = new LocalMediaStorage(mediaRoot, env.MEDIA_PUBLIC_BASE_URL)
+  const mediaStorage: MediaStorage =
+    env.MEDIA_STORAGE_DRIVER === 'minio'
+      ? new MinioMediaStorage({
+          endpoint: env.MEDIA_S3_ENDPOINT!,
+          port: env.MEDIA_S3_PORT!,
+          useSSL: env.MEDIA_S3_USE_SSL,
+          accessKey: env.MEDIA_S3_ACCESS_KEY!,
+          secretKey: env.MEDIA_S3_SECRET_KEY!,
+          bucket: env.MEDIA_S3_BUCKET!,
+          publicBaseUrl: env.MEDIA_PUBLIC_BASE_URL,
+        })
+      : new LocalMediaStorage(mediaRoot, env.MEDIA_PUBLIC_BASE_URL)
   // Shared event bus: modules register lifecycle hooks (e.g. cache invalidation) on the same instance.
   const hooks = new HookManager()
   const app = Fastify({
@@ -77,12 +89,14 @@ export async function buildApp(env: ApiEnv) {
     global: false,
   })
   await app.register(multipart)
-  await mkdir(mediaRoot, { recursive: true })
-  await app.register(staticFiles, {
-    root: mediaRoot,
-    prefix: '/media/',
-    decorateReply: false,
-  })
+  if (env.MEDIA_STORAGE_DRIVER === 'local') {
+    await mkdir(mediaRoot, { recursive: true })
+    await app.register(staticFiles, {
+      root: mediaRoot,
+      prefix: '/media/',
+      decorateReply: false,
+    })
+  }
 
   // Serve admin CMS at /admin
   const adminDist = resolve(repositoryRoot, 'frontend/admin/dist')
@@ -144,6 +158,16 @@ export async function buildApp(env: ApiEnv) {
   app.get('/health', async (_request, reply) => {
     reply.header('Cross-Origin-Resource-Policy', 'cross-origin')
     return { service: 'iorder-cms-api', status: 'ok' }
+  })
+
+  app.get('/ready', async (_request, reply) => {
+    try {
+      await database.db.execute(sql`select 1`)
+      return { service: 'iorder-cms-api', status: 'ready' }
+    } catch (error) {
+      app.log.error(error, 'Database readiness check failed')
+      return reply.code(503).send({ service: 'iorder-cms-api', status: 'unavailable' })
+    }
   })
 
   app.get('/api/public/health', async () => ({

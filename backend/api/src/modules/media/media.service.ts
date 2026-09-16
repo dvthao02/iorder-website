@@ -36,7 +36,7 @@ export class MediaService {
       throw new InvalidMediaFileError(code)
     }
 
-    const stored = await this.storage.put(upload.buffer, validated.extension)
+    const stored = await this.storage.put(upload.buffer, validated.extension, upload.mimeType)
 
     try {
       const asset = await this.repository.create({

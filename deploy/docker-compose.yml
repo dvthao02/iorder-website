@@ -1,3 +1,44 @@
+x-app-build: &app-build
+  context: ..
+  dockerfile: deploy/Dockerfile
+  args:
+    VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+    VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-production}
+    VITE_SENTRY_RELEASE: ${VITE_SENTRY_RELEASE:-}
+    VITE_SENTRY_TRACES_SAMPLE_RATE: ${VITE_SENTRY_TRACES_SAMPLE_RATE:-0.05}
+    SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
+    SENTRY_ORG: ${SENTRY_ORG:-}
+    SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+    SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  API_HOST: 0.0.0.0
+  API_PORT: 8080
+  DATABASE_URL: postgresql://admin_iorder:${POSTGRES_PASSWORD}@postgres:5432/iorderCMS
+  SESSION_SECRET: ${SESSION_SECRET}
+  CMS_PREVIEW_SECRET: ${CMS_PREVIEW_SECRET}
+  ADMIN_ORIGIN: ${SITE_URL}
+  PUBLIC_ORIGIN: ${SITE_URL}
+  MEDIA_STORAGE_DRIVER: ${MEDIA_STORAGE_DRIVER:-minio}
+  MEDIA_STORAGE_PATH: /app/storage/media
+  MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL}
+  MEDIA_S3_ENDPOINT: ${MEDIA_S3_ENDPOINT:-minio}
+  MEDIA_S3_PORT: ${MEDIA_S3_PORT:-9000}
+  MEDIA_S3_USE_SSL: ${MEDIA_S3_USE_SSL:-false}
+  MEDIA_S3_ACCESS_KEY: ${MEDIA_S3_ACCESS_KEY}
+  MEDIA_S3_SECRET_KEY: ${MEDIA_S3_SECRET_KEY}
+  MEDIA_S3_BUCKET: ${MINIO_BUCKET}
+  HOMEPAGE_SLUG: home
+  TRUST_PROXY: 'true'
+  SENTRY_DSN: ${SENTRY_DSN:-}
+  SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
+  SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
+  SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
+  CMS_ADMIN_USERNAME: ${CMS_ADMIN_USERNAME:-admin}
+  CMS_ADMIN_PASSWORD: ${CMS_ADMIN_PASSWORD}
+  CMS_ADMIN_NAME: ${CMS_ADMIN_NAME:-Administrator}
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -14,47 +55,80 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      # Build context là gốc repo (file compose nằm trong deploy/)
-      context: ..
-      dockerfile: deploy/Dockerfile
-      args:
-        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
-        VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-production}
-        VITE_SENTRY_RELEASE: ${VITE_SENTRY_RELEASE:-}
-        VITE_SENTRY_TRACES_SAMPLE_RATE: ${VITE_SENTRY_TRACES_SAMPLE_RATE:-0.05}
-        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
-        SENTRY_ORG: ${SENTRY_ORG:-}
-        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
-        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
-    restart: unless-stopped
+  migrate:
+    build: *app-build
     depends_on:
       postgres:
         condition: service_healthy
+    command: ['sh', '-c', 'pnpm railway:migrate && pnpm bootstrap:core']
+    environment: *app-environment
+    restart: 'no'
+
+  minio:
+    build:
+      context: ..
+      dockerfile: deploy/Minio.Dockerfile
+    image: iorder-minio:local
+    command: server /data --console-address ':9001'
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - '${MINIO_BIND_ADDRESS:-127.0.0.1}:${MINIO_API_PORT:-9000}:9000'
+      - '${MINIO_BIND_ADDRESS:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  minio-init:
+    build: *app-build
+    depends_on:
+      minio:
+        condition: service_healthy
+    command: ['pnpm', '--filter', '@iorder/api', 'ensure:minio-bucket']
+    environment:
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: 'false'
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+    restart: 'no'
+
+  api:
+    build: *app-build
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
     ports:
       - '${APP_PORT:-4000}:8080'
-    environment:
-      NODE_ENV: development
-      API_HOST: 0.0.0.0
-      API_PORT: 8080
-      DATABASE_URL: postgresql://admin_iorder:${POSTGRES_PASSWORD}@postgres:5432/iorderCMS
-      SESSION_SECRET: ${SESSION_SECRET}
-      CMS_PREVIEW_SECRET: ${CMS_PREVIEW_SECRET:-local-preview-secret-change-me-32-chars}
-      ADMIN_ORIGIN: ${SITE_URL}
-      PUBLIC_ORIGIN: ${SITE_URL}
-      MEDIA_STORAGE_PATH: /app/storage/media
-      MEDIA_PUBLIC_BASE_URL: ${SITE_URL}/media
-      HOMEPAGE_SLUG: home
-      TRUST_PROXY: 'true'
-      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.05}
-      CMS_ADMIN_USERNAME: ${CMS_ADMIN_USERNAME:-admin}
-      CMS_ADMIN_PASSWORD: ${CMS_ADMIN_PASSWORD}
-      CMS_ADMIN_NAME: ${CMS_ADMIN_NAME:-Administrator}
+    environment: *app-environment
     volumes:
       - media_data:/app/storage/media
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:8080/ready'').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
 volumes:
   postgres_data:
+    name: ${VOLUME_PREFIX:-iorder_local}_postgres_data
   media_data:
+    name: ${VOLUME_PREFIX:-iorder_local}_media_data
+  minio_data:
+    name: ${VOLUME_PREFIX:-iorder_local}_minio_data

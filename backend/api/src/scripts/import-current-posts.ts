@@ -1,4 +1,4 @@
-import { readFile, copyFile, mkdir } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createDatabase } from '@iorder/database'
@@ -8,6 +8,7 @@ import { eq, max } from 'drizzle-orm'
 import { imageSize } from 'image-size'
 
 import { readEnv } from '../env.js'
+import { LocalMediaStorage, MinioMediaStorage, type KeyedMediaStorage } from '../media/media-storage.js'
 
 interface StaticArticle {
   slug: string
@@ -26,6 +27,18 @@ config({ path: resolve(repositoryRoot, '.env') })
 const env = readEnv()
 const database = createDatabase(env.DATABASE_URL)
 const storageRoot = resolve(repositoryRoot, 'backend/api', env.MEDIA_STORAGE_PATH)
+const mediaStorage: KeyedMediaStorage =
+  env.MEDIA_STORAGE_DRIVER === 'minio'
+    ? new MinioMediaStorage({
+        endpoint: env.MEDIA_S3_ENDPOINT!,
+        port: env.MEDIA_S3_PORT!,
+        useSSL: env.MEDIA_S3_USE_SSL,
+        accessKey: env.MEDIA_S3_ACCESS_KEY!,
+        secretKey: env.MEDIA_S3_SECRET_KEY!,
+        bucket: env.MEDIA_S3_BUCKET!,
+        publicBaseUrl: env.MEDIA_PUBLIC_BASE_URL,
+      })
+    : new LocalMediaStorage(storageRoot, env.MEDIA_PUBLIC_BASE_URL)
 
 function readStaticArticles(source: string): StaticArticle[] {
   const match = source.match(/export const newsArticles = (\[[\s\S]*?\n\])\n\nexport function/)
@@ -48,12 +61,9 @@ try {
   for (let index = 1; index <= 3; index += 1) {
     const sourcePath = resolve(repositoryRoot, `frontend/web/src/assets/news/news${index}.jpg`)
     const storageKey = `seed/posts/news${index}.jpg`
-    const publicUrl = `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`
-    const destination = resolve(storageRoot, storageKey)
     const buffer = await readFile(sourcePath)
     const dimensions = imageSize(buffer)
-    await mkdir(dirname(destination), { recursive: true })
-    await copyFile(sourcePath, destination)
+    const { publicUrl } = await mediaStorage.putAt(storageKey, buffer, 'image/jpeg')
     const [asset] = await database.db
       .insert(mediaAssets)
       .values({

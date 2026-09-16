@@ -7,12 +7,15 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "create-admin": "tsx src/scripts/create-admin.ts",
+    "ensure:minio-bucket": "tsx src/scripts/ensure-minio-bucket.ts",
     "sync:seed-media": "node dist/scripts/sync-seed-media.js",
     "gen:sitemap": "tsx src/scripts/generate-sitemap.ts",
     "import:homepage": "tsx src/scripts/import-current-homepage.ts",
     "import:posts": "tsx src/scripts/import-current-posts.ts",
     "import:offerings": "tsx src/scripts/import-current-offerings.ts",
     "import:testimonials": "tsx src/scripts/import-current-testimonials.ts",
+    "migrate:local-media": "tsx src/scripts/migrate-local-media-to-minio.ts",
+    "migrate:remote-media": "tsx src/scripts/migrate-remote-media-to-minio.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:smoke": "tsx src/smoke.ts",
     "test:auth": "tsx src/auth-smoke.ts",
@@ -37,6 +40,7 @@
     "drizzle-orm": "0.45.2",
     "fastify": "5.8.5",
     "image-size": "2.0.2",
+    "minio": "8.0.7",
     "zod": "4.4.3"
   },
   "devDependencies": {

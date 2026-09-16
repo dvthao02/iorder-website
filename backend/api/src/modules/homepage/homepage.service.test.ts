@@ -155,6 +155,21 @@ describe('HomepageService.publish', () => {
   })
 })
 
+describe('HomepageService.getPublicHomepage', () => {
+  it('returns null for a published snapshot using an obsolete block contract', async () => {
+    const repository = makeRepository({
+      findBySlug: vi.fn().mockResolvedValue({ page: fakePage({ status: 'published' }), blocks: [fakeBlock()] }),
+      findLatestPublishedSnapshot: vi.fn().mockResolvedValue({
+        snapshot: { blocks: [{ type: 'hero', isEnabled: true, data: {} }] },
+      }),
+    })
+    const service = new HomepageService(repository, new HookManager())
+
+    await expect(service.getPublicHomepage()).resolves.toBeNull()
+    expect(repository.findAssetsByIds).not.toHaveBeenCalled()
+  })
+})
+
 describe('HomepageService.restoreRevision', () => {
   it('throws HomepageNotFoundError when the homepage does not exist', async () => {
     const repository = makeRepository({ findBySlug: vi.fn().mockResolvedValue(null) })

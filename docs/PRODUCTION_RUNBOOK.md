@@ -23,8 +23,16 @@ PUBLIC_ORIGIN=https://your-public-origin.example
 DATABASE_URL=postgresql://...
 SESSION_SECRET=replace-with-strong-secret
 CMS_PREVIEW_SECRET=replace-with-strong-secret
-MEDIA_STORAGE_PATH=../../storage/media
-MEDIA_PUBLIC_BASE_URL=https://your-domain.example/media
+# Object storage: the bucket is public-read only for immutable media objects.
+MEDIA_STORAGE_DRIVER=minio
+MEDIA_STORAGE_PATH=/app/storage/media
+MEDIA_PUBLIC_BASE_URL=https://media.your-domain.example/iorder-media
+MEDIA_S3_ENDPOINT=minio.internal
+MEDIA_S3_PORT=9000
+MEDIA_S3_USE_SSL=true
+MEDIA_S3_ACCESS_KEY=replace-with-minio-service-access-key
+MEDIA_S3_SECRET_KEY=replace-with-minio-service-secret-key
+MEDIA_S3_BUCKET=iorder-media
 HOMEPAGE_SLUG=home
 TRUST_PROXY=true
 SENTRY_DSN=https://...
@@ -63,7 +71,7 @@ RAILWAY_SERVICE_ID=...
 1. Merge to `main`.
 2. GitHub Actions runs `CI`.
 3. `Deploy` uploads to Railway `staging`.
-4. Verify staging health, login, homepage, media upload, and post publish/archive.
+4. Verify staging `/ready`, login, homepage, media upload, and post publish/archive.
 5. `Deploy` proceeds to `production` through the GitHub `production` environment.
 
 Configure GitHub Environments:
@@ -73,17 +81,25 @@ Configure GitHub Environments:
 
 ## Database Migration Policy
 
-Run migrations only after a fresh backup:
+Back up the database and media store before a schema change. Railway runs the migration before switching traffic to the new deployment:
 
 ```bash
 pnpm db:backup
-pnpm db:migrate
-pnpm db:seed
 ```
 
-For production, run the backup against the production `DATABASE_URL` and store the generated `backups/*.dump` outside the application container before applying migrations.
+For production, run the backup against the production `DATABASE_URL` and store the generated `backups/*.dump` outside the application container. Do not run `db:seed`, `bootstrap:core`, or `content:import:legacy` during a routine deploy: CMS content is owned by the production database.
 
 Drizzle migrations in this project are forward-only. If a migration is logically wrong, prefer a corrective follow-up migration. Use full restore only for catastrophic migration failures or accidental destructive changes.
+
+## Media Migration
+
+Before changing `MEDIA_PUBLIC_BASE_URL`, back up both the database and old local media volume. Deploy the API with MinIO configured, then run the one-time copy job against the old media path:
+
+```bash
+pnpm media:migrate-local
+```
+
+The job preserves each `storageKey`, uploads it to the configured bucket, and updates only `media_assets.public_url`. Verify representative image URLs and the CMS library before retiring the old volume.
 
 ## Restore Procedure
 
@@ -106,7 +122,7 @@ pnpm test:api
 Application rollback:
 
 1. Roll back to the previous Railway deployment from the Railway dashboard.
-2. Confirm `/health` and `/api/public/health`.
+2. Confirm `/health`, `/ready`, and `/api/public/health`.
 3. Smoke CMS login and homepage.
 
 Database rollback:

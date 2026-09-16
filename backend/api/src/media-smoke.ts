@@ -19,6 +19,7 @@ const storagePath = await mkdtemp(join(tmpdir(), 'iorder-media-smoke-'))
 const env = readEnv({
   ...process.env,
   NODE_ENV: 'test',
+  MEDIA_STORAGE_DRIVER: 'local',
   MEDIA_STORAGE_PATH: storagePath,
   MEDIA_PUBLIC_BASE_URL: 'http://127.0.0.1:4000/media',
   MEDIA_MAX_FILE_SIZE_MB: '1',

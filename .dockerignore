@@ -1,0 +1,16 @@
+.git
+.github
+.claude
+.codex
+.pnpm-store
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+.env
+.env.*
+!.env.example
+backups
+storage
+test-results
+debug.log

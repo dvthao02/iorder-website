@@ -1,4 +1,4 @@
-import { copyFile, mkdir } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createDatabase, mediaAssets } from '@iorder/database'
@@ -6,6 +6,7 @@ import { config } from 'dotenv'
 import { eq } from 'drizzle-orm'
 
 import { readEnv } from '../env.js'
+import { LocalMediaStorage, MinioMediaStorage, type KeyedMediaStorage } from '../media/media-storage.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(here, '../../../../')
@@ -14,8 +15,19 @@ config({ path: resolve(repositoryRoot, '.env') })
 
 const env = readEnv()
 const storageRoot = resolve(env.MEDIA_STORAGE_PATH)
-const publicBaseUrl = env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')
 const database = createDatabase(env.DATABASE_URL)
+const mediaStorage: KeyedMediaStorage =
+  env.MEDIA_STORAGE_DRIVER === 'minio'
+    ? new MinioMediaStorage({
+        endpoint: env.MEDIA_S3_ENDPOINT!,
+        port: env.MEDIA_S3_PORT!,
+        useSSL: env.MEDIA_S3_USE_SSL,
+        accessKey: env.MEDIA_S3_ACCESS_KEY!,
+        secretKey: env.MEDIA_S3_SECRET_KEY!,
+        bucket: env.MEDIA_S3_BUCKET!,
+        publicBaseUrl: env.MEDIA_PUBLIC_BASE_URL,
+      })
+    : new LocalMediaStorage(storageRoot, env.MEDIA_PUBLIC_BASE_URL)
 
 const seedMediaFiles = [
   ['seed/home/hero-1.png', 'frontend/web/src/assets/products/hero-img.png'],
@@ -51,11 +63,8 @@ try {
 
   for (const [storageKey, sourcePath] of seedMediaFiles) {
     const source = resolve(repositoryRoot, sourcePath)
-    const destination = resolve(storageRoot, storageKey)
-    const publicUrl = `${publicBaseUrl}/${storageKey}`
-
-    await mkdir(dirname(destination), { recursive: true })
-    await copyFile(source, destination)
+    const mimeType = storageKey.endsWith('.jpg') ? 'image/jpeg' : 'image/png'
+    const { publicUrl } = await mediaStorage.putAt(storageKey, await readFile(source), mimeType)
     copied += 1
 
     const updated = await database.db
@@ -66,7 +75,9 @@ try {
     urlsUpdated += updated.length
   }
 
-  process.stdout.write(`Synced ${copied} seed media files to ${storageRoot}; repaired ${urlsUpdated} media URLs.\n`)
+  process.stdout.write(
+    `Synced ${copied} seed media files to ${env.MEDIA_STORAGE_DRIVER}; repaired ${urlsUpdated} media URLs.\n`,
+  )
 } finally {
   await database.close()
 }

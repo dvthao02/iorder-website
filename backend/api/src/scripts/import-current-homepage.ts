@@ -1,4 +1,3 @@
-import { copyFile, mkdir } from 'node:fs/promises'
 import { dirname, extname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createDatabase } from '@iorder/database'
@@ -9,6 +8,7 @@ import { imageSize } from 'image-size'
 import { readFile } from 'node:fs/promises'
 
 import { readEnv } from '../env.js'
+import { LocalMediaStorage, MinioMediaStorage, type KeyedMediaStorage } from '../media/media-storage.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(here, '../../../../')
@@ -16,6 +16,18 @@ config({ path: resolve(repositoryRoot, '.env') })
 const env = readEnv()
 const database = createDatabase(env.DATABASE_URL)
 const storageRoot = resolve(repositoryRoot, 'backend/api', env.MEDIA_STORAGE_PATH)
+const mediaStorage: KeyedMediaStorage =
+  env.MEDIA_STORAGE_DRIVER === 'minio'
+    ? new MinioMediaStorage({
+        endpoint: env.MEDIA_S3_ENDPOINT!,
+        port: env.MEDIA_S3_PORT!,
+        useSSL: env.MEDIA_S3_USE_SSL,
+        accessKey: env.MEDIA_S3_ACCESS_KEY!,
+        secretKey: env.MEDIA_S3_SECRET_KEY!,
+        bucket: env.MEDIA_S3_BUCKET!,
+        publicBaseUrl: env.MEDIA_PUBLIC_BASE_URL,
+      })
+    : new LocalMediaStorage(storageRoot, env.MEDIA_PUBLIC_BASE_URL)
 
 const assets = [
   ['hero-1', 'frontend/web/src/assets/products/hero-img.png'],
@@ -68,13 +80,10 @@ try {
     const source = resolve(repositoryRoot, relativeSource)
     const extension = extname(source).toLowerCase()
     const storageKey = `seed/home/${key}${extension}`
-    const publicUrl = `${env.MEDIA_PUBLIC_BASE_URL.replace(/\/$/, '')}/${storageKey}`
-    const destination = resolve(storageRoot, storageKey)
     const buffer = await readFile(source)
     const dimensions = imageSize(buffer)
     const mimeType = extension === '.jpg' || extension === '.jpeg' ? 'image/jpeg' : 'image/png'
-    await mkdir(dirname(destination), { recursive: true })
-    await copyFile(source, destination)
+    const { publicUrl } = await mediaStorage.putAt(storageKey, buffer, mimeType)
     const [asset] = await database.db
       .insert(mediaAssets)
       .values({

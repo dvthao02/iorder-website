@@ -12,7 +12,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { deleteMedia, getMediaUsage, listMedia, updateMedia, uploadMedia } from './api'
 import { toast } from './toast'
@@ -55,7 +55,7 @@ export function MediaLibrary() {
   const [usage, setUsage] = useState<MediaUsage[] | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const loadItems = async (selectedKind = kind, query = search) => {
+  const loadItems = useCallback(async (selectedKind: KindFilter, query: string) => {
     setIsLoading(true)
     try {
       const response = await listMedia(selectedKind === 'all' ? undefined : selectedKind, query)
@@ -65,15 +65,12 @@ export function MediaLibrary() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    void loadItems(kind, search)
-  }, [kind])
-  useEffect(() => {
-    const timer = window.setTimeout(() => void loadItems(kind, search), 300)
+    const timer = window.setTimeout(() => void loadItems(kind, search), search ? 300 : 0)
     return () => window.clearTimeout(timer)
-  }, [search])
+  }, [kind, loadItems, search])
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -89,7 +86,7 @@ export function MediaLibrary() {
       setUploadAlt('')
       setUploadCaption('')
       setUploadOpen(false)
-      await loadItems()
+      await loadItems(kind, search)
       toast.success('Đã tải file lên.')
     } catch (uploadErr) {
       const code = uploadErr instanceof Error ? uploadErr.message : ''
@@ -147,7 +144,7 @@ export function MediaLibrary() {
     try {
       await deleteMedia(asset.id)
       if (editing?.id === asset.id) setEditing(null)
-      await loadItems()
+      await loadItems(kind, search)
       toast.warning('Đã xóa file.')
     } catch (err) {
       const code = err instanceof Error ? err.message : ''
