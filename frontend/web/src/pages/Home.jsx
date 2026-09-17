@@ -61,6 +61,7 @@ import heroPosFnb from '../assets/products/hero-pos-fnb-cutout.png'
 import heroPosRetail from '../assets/products/hero-pos-retail-cutout.png'
 import heroDashboard from '../assets/products/hero-dashboard-cutout.png'
 import posIotImage from '../assets/products/mh-pos-iot.png'
+import dashboardLaptop from '../assets/products/documentation/iorder-laptop-dashboard-front.png'
 import logoCrm from '../assets/partners/crm_online.png'
 import logoHuit from '../assets/partners/huit.png'
 import logoTanAnPhat from '../assets/partners/tan_an_phat.png'
@@ -242,25 +243,24 @@ const partnerItems = [
 
 const staticTestimonials = [
   {
-    quote:
-      'iOrder giúp tôi theo dõi doanh thu từng ca, từng nhân viên mà không cần ngồi đối chiếu sổ sách. Mỗi tháng tiết kiệm được gần chục giờ đồng hồ.',
+    quote: 'Trước mình phải mở sổ rồi đối chiếu từng ca. Giờ cuối ngày mở báo cáo iOrder lên kiểm tra là được.',
     name: 'Anh Minh',
-    role: 'Chủ chuỗi 3 quán cafe tại TP.HCM',
-    initials: 'M',
+    role: 'Chủ cửa hàng',
+    company: 'Cửa hàng đối tác iOrder',
   },
   {
     quote:
-      'Trước đây kho hay bị thất thoát mà không biết lý do. Từ khi dùng iOrder, mỗi lần xuất kho đều có ghi nhận, cuối tháng so khớp rất nhanh.',
+      'Trước đây xuất kho xong đôi lúc phải kiểm tra lại khá nhiều. Giờ mỗi lần xuất đều có lịch sử nên cuối tháng đối chiếu nhanh hơn.',
     name: 'Chị Hà',
-    role: 'Quản lý chuỗi trà sữa 5 chi nhánh',
-    initials: 'H',
+    role: 'Quản lý cửa hàng',
+    company: 'Cửa hàng đối tác iOrder',
   },
   {
     quote:
-      'Nhân viên mới chỉ cần học 30 phút là dùng được. Triển khai xong trong 1 ngày, hôm sau mở cửa bán hàng bình thường.',
+      'Nhân viên mới làm quen khá nhanh. Những thao tác bán hàng cơ bản hướng dẫn một lúc là có thể sử dụng.',
     name: 'Anh Tuấn',
-    role: 'Chủ cửa hàng bán lẻ tại Hà Nội',
-    initials: 'T',
+    role: 'Chủ cửa hàng',
+    company: 'Cửa hàng đối tác iOrder',
   },
 ]
 
@@ -303,6 +303,7 @@ const faqItems = [
 
 export default function Home() {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0)
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
   const [activeNewsIndex, setActiveNewsIndex] = useState(0)
   const previewToken =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('cmsPreview') : null
@@ -486,16 +487,6 @@ export default function Home() {
   const resolvedPartnersRaw =
     tablePartners.length > 0 ? tablePartners : cmsBlockPartners.length > 0 ? cmsBlockPartners : partnerItems
   const resolvedPartners = partnersLimit ? resolvedPartnersRaw.slice(0, partnersLimit) : resolvedPartnersRaw
-  // Số liệu: lấy từ block home_stats (sửa trong CMS là hiện ra) → fallback tĩnh
-  const resolvedStats =
-    isCmsMode && cmsStats?.data?.stats?.length
-      ? cmsStats.data.stats
-      : [
-          { value: '10000+', label: 'Cửa hàng tin dùng' },
-          { value: '5+', label: 'Năm kinh nghiệm' },
-          { value: '24/7', label: 'Hỗ trợ kỹ thuật' },
-          { value: '1–3 ngày', label: 'Triển khai nhanh' },
-        ]
   // Ưu tiên đánh giá quản lý ở CMS (bảng) → block home_testimonials → fallback tĩnh
   // limit (cấu hình hiển thị của block home_testimonials) áp dụng cho cả nguồn kho chung lẫn nguồn nhúng cũ.
   const testimonialsLimit = isCmsMode ? (cmsTestimonials?.data?.limit ?? 6) : undefined
@@ -508,6 +499,7 @@ export default function Home() {
   const resolvedTestimonials = testimonialsLimit
     ? resolvedTestimonialsRaw.slice(0, testimonialsLimit)
     : resolvedTestimonialsRaw
+  const [featuredTestimonial, ...testimonialHighlights] = resolvedTestimonials
   const resolvedFeatures = isCmsMode
     ? (cmsFeatures?.data?.items ?? []).map((item, idx) => {
         const t = (item.title ?? '').toLowerCase()
@@ -529,6 +521,8 @@ export default function Home() {
         return { icon, imgUrl, title: item.title, desc: item.description, href: item.href }
       })
     : featureTabs[0].items
+  const activeFeature = resolvedFeatures[activeFeatureIndex % Math.max(resolvedFeatures.length, 1)]
+  const ActiveFeatureIcon = activeFeature?.icon ?? Boxes
   const resolvedIndustryGroups = buildFallbackIndustryGroups()
   const processFeatureImage = isCmsMode ? cmsMedia.get(cmsProcess?.data?.featureMediaId)?.publicUrl : posIotImage
 
@@ -757,22 +751,19 @@ export default function Home() {
                 Khám phá giải pháp theo mô hình <ArrowRight size={17} />
               </Link>
             </div>
-            <div className="about-company-stats">
-              {resolvedStats.map((stat, idx) => {
-                const numeric = String(stat.value).match(/^(\d+)(\D*)$/)
-                return (
-                  <div className="about-stat" key={`${stat.label}-${idx}`}>
-                    {numeric ? (
-                      <strong data-count-to={numeric[1]} data-count-suffix={numeric[2]}>
-                        {stat.value}
-                      </strong>
-                    ) : (
-                      <strong>{stat.value}</strong>
-                    )}
-                    <span>{stat.label}</span>
-                  </div>
-                )
-              })}
+            <div className="about-workspace" aria-label="Giao diện báo cáo vận hành iOrder">
+              <div className="about-workspace-copy">
+                <span>Vận hành trong tầm tay</span>
+                <strong>Dữ liệu đồng bộ theo thời gian thực</strong>
+              </div>
+              <div className="about-workspace-visual">
+                <img src={dashboardLaptop} alt="Báo cáo vận hành iOrder trên laptop" loading="lazy" decoding="async" />
+              </div>
+              <div className="about-workspace-modules" aria-label="Các mô-đun vận hành">
+                <span><ReceiptText size={16} /> Bán hàng</span>
+                <span><Boxes size={16} /> Tồn kho</span>
+                <span><BarChart3 size={16} /> Báo cáo</span>
+              </div>
             </div>
           </div>
 
@@ -817,6 +808,10 @@ export default function Home() {
               <div>
                 <span className="section-eyebrow">{cmsIndustry?.data?.eyebrow ?? 'THEO NGÀNH HÀNG'}</span>
                 <h2>{cmsIndustry?.data?.heading ?? 'Phù hợp nhiều mô hình kinh doanh'}</h2>
+                <p>
+                  {cmsIndustry?.data?.intro ??
+                    'Chọn mô hình của bạn để khám phá quy trình bán hàng và cách iOrder hỗ trợ vận hành mỗi ngày.'}
+                </p>
               </div>
             </div>
             <div className="industry-row-grid">
@@ -828,7 +823,11 @@ export default function Home() {
                       <div className="industry-card-icon">
                         <GroupIcon size={22} />
                       </div>
-                      <span className="industry-pill-label">{group.title}</span>
+                      <div>
+                        <span className="industry-card-kicker">NHÓM NGÀNH</span>
+                        <span className="industry-pill-label">{group.title}</span>
+                      </div>
+                      <span className="industry-item-count">{group.items.length}</span>
                     </div>
                     <div className="industry-item-list">
                       {group.items.map((item) => {
@@ -840,6 +839,9 @@ export default function Home() {
                           </Link>
                         )
                       })}
+                    </div>
+                    <div className="industry-card-foot">
+                      <Sparkles size={15} /> Tư vấn triển khai theo mô hình
                     </div>
                   </div>
                 )
@@ -853,60 +855,71 @@ export default function Home() {
       {shouldShow('home_features') ? (
         <section
           {...mergeSectionProps(
-            'section feature-showcase-section',
+            'section feature-showcase-section feature-command-section',
             { order: blockOrder('home_features') },
             cmsFeatures,
             cmsMedia,
           )}
         >
           <div className="container">
-            <div className="section-title">
+            <div className="section-title feature-command-heading">
               <span className="section-eyebrow">{cmsFeatures?.data?.eyebrow ?? 'TÍNH NĂNG'}</span>
               <h2>{cmsFeatures?.data?.heading ?? 'Một nền tảng cho toàn bộ vận hành cửa hàng'}</h2>
-              {cmsFeatures?.data?.intro ? <p>{cmsFeatures.data.intro}</p> : null}
+              <p>
+                {cmsFeatures?.data?.intro ??
+                  'Mỗi thao tác ở quầy đều được kết nối với dữ liệu quản lý để bạn vận hành nhanh hơn và kiểm soát tốt hơn.'}
+              </p>
             </div>
-            <div className="feature-split-list">
-              {resolvedFeatures.map((item, idx) => {
-                const Icon = item.icon
-                const isEven = idx % 2 === 1
-                return (
-                  <div className={`feature-split-row${isEven ? ' feature-split-row--reverse' : ''}`} key={idx}>
-                    <div className={`feature-split-visual${item.imgUrl ? ' feature-split-visual--img' : ''}`}>
-                      {item.imgUrl ? (
-                        <img
-                          className="feature-split-img"
-                          src={item.imgUrl}
-                          alt={item.title}
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <div className="feature-split-icon-wrap">
-                          <Icon size={52} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="feature-split-text">
-                      <span className="feature-split-num">0{idx + 1}</span>
-                      <h3>{item.title}</h3>
-                      <p>{item.desc}</p>
-                      {item.bullets?.length ? (
-                        <ul className="feature-split-bullets">
-                          {item.bullets.map((b) => (
-                            <li key={b}>{b}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      {item.href ? (
-                        <Link to={item.href} className="feature-split-link">
-                          Xem chi tiết →
-                        </Link>
-                      ) : null}
-                    </div>
+            {activeFeature ? (
+              <div className="feature-command-layout">
+                <div className="feature-command-nav" role="tablist" aria-label="Nhóm tính năng iOrder">
+                  {resolvedFeatures.map((item, idx) => {
+                    const Icon = item.icon
+                    const isActive = idx === activeFeatureIndex % resolvedFeatures.length
+                    return (
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={isActive ? 'is-active' : ''}
+                        key={item.title}
+                        onClick={() => setActiveFeatureIndex(idx)}
+                      >
+                        <span className="feature-command-icon"><Icon size={18} /></span>
+                        <span>{item.title}</span>
+                        <ArrowRight size={16} />
+                      </button>
+                    )
+                  })}
+                </div>
+                <article className="feature-command-panel" role="tabpanel">
+                  <div className="feature-command-copy">
+                    <span className="feature-command-number">0{(activeFeatureIndex % resolvedFeatures.length) + 1}</span>
+                    <h3>{activeFeature.title}</h3>
+                    <p>{activeFeature.desc}</p>
+                    {activeFeature.bullets?.length ? (
+                      <ul className="feature-command-bullets">
+                        {activeFeature.bullets.slice(0, 3).map((bullet) => (
+                          <li key={bullet}><CheckCircle size={16} /> {bullet}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {activeFeature.href ? (
+                      <Link to={activeFeature.href} className="feature-command-link">
+                        Khám phá tính năng <ArrowRight size={16} />
+                      </Link>
+                    ) : null}
                   </div>
-                )
-              })}
-            </div>
+                  <div className={`feature-command-visual${activeFeature.imgUrl ? ' has-image' : ''}`}>
+                    {activeFeature.imgUrl ? (
+                      <img src={activeFeature.imgUrl} alt={activeFeature.title} loading="lazy" decoding="async" />
+                    ) : (
+                      <ActiveFeatureIcon size={92} strokeWidth={1.35} />
+                    )}
+                  </div>
+                </article>
+              </div>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -915,38 +928,77 @@ export default function Home() {
       {shouldShow('home_testimonials') && resolvedTestimonials.length > 0 ? (
         <section
           {...mergeSectionProps(
-            'section home-testimonials-section',
+            'section home-testimonials-section home-proof-section',
             { order: blockOrder('home_testimonials') },
             cmsTestimonials,
             cmsMedia,
           )}
         >
           <div className="container">
-            <div className="section-title">
-              <span className="section-eyebrow">{cmsTestimonials?.data?.eyebrow ?? 'KHÁCH HÀNG NÓI GÌ'}</span>
-              <h2>{cmsTestimonials?.data?.heading ?? 'Trải nghiệm thực tế từ chủ cửa hàng'}</h2>
+            <div className="home-proof-heading">
+              <div>
+                <span className="section-eyebrow">{cmsTestimonials?.data?.eyebrow ?? 'CÂU CHUYỆN KHÁCH HÀNG'}</span>
+                <h2>{cmsTestimonials?.data?.heading ?? 'iOrder trong vận hành thực tế'}</h2>
+              </div>
+              <p>Những chia sẻ từ các cửa hàng đang sử dụng iOrder trong công việc mỗi ngày.</p>
             </div>
-            <div className="testimonial-grid">
-              {resolvedTestimonials.map((item, idx) => (
-                <div className="testimonial-card" key={`${item.name}-${idx}`}>
-                  <Quote size={30} className="testimonial-quote-icon" />
-                  <p>{item.quote}</p>
-                  <div className="testimonial-author">
-                    <div className="testimonial-avatar">
-                      {item.avatarUrl ? (
-                        <img src={item.avatarUrl} alt={item.name} />
-                      ) : (
-                        (item.initials ?? item.name?.[0])
-                      )}
+            {featuredTestimonial ? (
+              <div className="home-proof-layout">
+                <article className="testimonial-featured">
+                  <div className="testimonial-featured-media">
+                    {featuredTestimonial.avatarUrl ? (
+                      <img
+                        src={featuredTestimonial.avatarUrl}
+                        alt={featuredTestimonial.company ?? `Cửa hàng của ${featuredTestimonial.name}`}
+                      />
+                    ) : (
+                      <div className="customer-story-placeholder"><Store size={28} /><span>Ảnh cửa hàng</span></div>
+                    )}
+                  </div>
+                  <div className="testimonial-featured-body">
+                    <div className="customer-story-title">
+                      <span>KHÁCH HÀNG IORDER</span>
+                      <h3>{featuredTestimonial.company ?? 'Cửa hàng đang sử dụng iOrder'}</h3>
                     </div>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <span>{item.role ?? item.company}</span>
+                    <p className="customer-story-quote"><Quote size={20} /> {featuredTestimonial.quote}</p>
+                    <div className="testimonial-author">
+                      <div>
+                        <strong>{featuredTestimonial.name ?? 'Khách hàng iOrder'}</strong>
+                        {featuredTestimonial.role ? <span>{featuredTestimonial.role}</span> : null}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                </article>
+                {testimonialHighlights.length > 0 ? (
+                  <div className="testimonial-highlights">
+                    {testimonialHighlights.slice(0, 2).map((item, idx) => (
+                      <article className="testimonial-highlight" key={`${item.name}-${idx}`}>
+                        <div className="testimonial-highlight-head">
+                          <div className="testimonial-story-thumb">
+                            {item.avatarUrl ? (
+                              <img src={item.avatarUrl} alt={item.company ?? `Cửa hàng của ${item.name}`} />
+                            ) : (
+                              <Store size={18} aria-label="Ảnh cửa hàng chưa cập nhật" />
+                            )}
+                          </div>
+                          <div className="customer-story-title">
+                            <span>KHÁCH HÀNG IORDER</span>
+                            <h3>{item.company ?? 'Cửa hàng đang sử dụng iOrder'}</h3>
+                          </div>
+                        </div>
+                        <p className="customer-story-quote"><Quote size={16} /> {item.quote}</p>
+                        <div className="testimonial-author">
+                          <div>
+                            <strong>{item.name ?? 'Khách hàng iOrder'}</strong>
+                            {item.role ? <span>{item.role}</span> : null}
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -955,20 +1007,30 @@ export default function Home() {
       {shouldShow('home_ecosystem_services') ? (
         <section
           id="giai-phap"
-          {...mergeSectionProps('section', { order: blockOrder('home_ecosystem_services') }, cmsEcosystem, cmsMedia)}
+          {...mergeSectionProps(
+            'section ecosystem-section',
+            { order: blockOrder('home_ecosystem_services') },
+            cmsEcosystem,
+            cmsMedia,
+          )}
         >
           <div className="container">
-            <div className="section-title">
+            <div className="section-title ecosystem-heading">
               <span className="section-eyebrow">{cmsEcosystem?.data?.eyebrow ?? 'TRIỂN KHAI TRỌN GÓI'}</span>
               <h2>{cmsEcosystem?.data?.heading ?? 'Không chỉ phần mềm — triển khai trọn gói'}</h2>
-              {cmsEcosystem?.data?.intro ? <p>{cmsEcosystem.data.intro}</p> : null}
+              <p>
+                {cmsEcosystem?.data?.intro ??
+                  'Từ phần mềm đến hạ tầng và hỗ trợ triển khai, iOrder giúp bạn có một hệ thống vận hành thống nhất.'}
+              </p>
             </div>
 
-            <div className="solution-grid ecosystem-grid">
-              {resolvedEcosystemGroups.map((group) => {
+            <div className="ecosystem-grid">
+              {resolvedEcosystemGroups.map((group, index) => {
                 const Icon = group.icon
+                const actionLabels = ['Khám phá phần mềm', 'Giải pháp hạ tầng', 'Dịch vụ CNTT']
                 return (
-                  <article className="ecosystem-card" key={group.title}>
+                  <article className={`ecosystem-card${index === 0 ? ' ecosystem-card--primary' : ''}`} key={group.title}>
+                    <span className="ecosystem-order">0{index + 1}</span>
                     <div className="ecosystem-card-head">
                       <div className="ecosystem-icon">
                         <Icon size={24} />
@@ -976,21 +1038,30 @@ export default function Home() {
                       <div>
                         <span>{group.label}</span>
                         <h3>
-                          <a href={group.href}>{group.title}</a>
+                          <Link to={group.href}>{group.title}</Link>
                         </h3>
                       </div>
                     </div>
                     <p className="ecosystem-desc">{group.desc}</p>
                     <ul>
-                      {group.items.map((item) => (
+                      {group.items.slice(0, index === 0 ? 4 : 3).map((item) => (
                         <li key={item.href}>
-                          <a href={item.href}>{item.title}</a>
+                          <Link to={item.href}>{item.title}</Link>
                         </li>
                       ))}
                     </ul>
-                    <a className="ecosystem-link" href={group.href}>
-                      Xem {group.items.length} mục <ArrowRight size={16} />
-                    </a>
+                    {index === 0 ? (
+                      <img
+                        className="ecosystem-primary-visual"
+                        src={heroPosFnb}
+                        alt="iOrder POS cho vận hành tại quầy"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : null}
+                    <Link className="ecosystem-link" to={group.href}>
+                      {actionLabels[index] ?? 'Khám phá giải pháp'} <ArrowRight size={16} />
+                    </Link>
                   </article>
                 )
               })}
@@ -1097,7 +1168,7 @@ export default function Home() {
                 <ChevronLeft size={22} />
               </button>
               <div className="home-news-grid">
-                {homeNews.map((article) => (
+                {homeNews.slice(0, 2).map((article) => (
                   <Link to={`/tin-tuc/${article.slug}`} className="home-news-card" key={article.slug}>
                     <div className="home-news-image">
                       <SafeImage src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
@@ -1140,7 +1211,9 @@ export default function Home() {
               {(isCmsMode && cmsFaq?.data?.items?.length
                 ? cmsFaq.data.items.map((item) => ({ q: item.question, a: item.answer }))
                 : faqItems
-              ).map((item, idx) => {
+              )
+                .slice(0, 4)
+                .map((item, idx) => {
                 const isOpen = openFaq === idx
                 return (
                   <div className={`faq-item${isOpen ? ' faq-item--open' : ''}`} key={idx}>
@@ -1158,7 +1231,7 @@ export default function Home() {
                     </div>
                   </div>
                 )
-              })}
+                })}
             </div>
             <div className="faq-cta">
               <p>Còn câu hỏi khác? Đội ngũ iOrder sẵn sàng hỗ trợ bạn.</p>
@@ -1174,25 +1247,17 @@ export default function Home() {
       {shouldShow('home_cta') ? (
         <section
           {...mergeSectionProps(
-            'section',
-            { textAlign: 'center', padding: '60px 0', order: blockOrder('home_cta') },
+            'section home-final-cta',
+            { order: blockOrder('home_cta') },
             cmsCta,
             cmsMedia,
           )}
         >
           <div className="container">
-            <h2 style={{ fontSize: 'clamp(28px, 3vw, 42px)', marginBottom: '20px' }}>
+            <h2>
               {cmsCta?.data?.title ?? 'Sẵn sàng tăng cường bán hàng?'}
             </h2>
-            <p
-              style={{
-                fontSize: '18px',
-                color: 'var(--muted)',
-                marginBottom: '30px',
-                maxWidth: '600px',
-                margin: '0 auto 30px',
-              }}
-            >
+            <p>
               {cmsCta?.data?.description ??
                 'Hãy trải nghiệm miễn phí trong 14 ngày. Không cần thẻ tín dụng, hủy bất cứ lúc nào.'}
             </p>
@@ -1201,7 +1266,6 @@ export default function Home() {
               target="_blank"
               rel="noreferrer"
               className="btn primary"
-              style={{ display: 'inline-block', minWidth: '200px' }}
             >
               {cmsCta?.data?.buttonLabel ?? 'Bắt đầu dùng thử'}
             </a>
