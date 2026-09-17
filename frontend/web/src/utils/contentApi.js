@@ -3,13 +3,74 @@ const localApiHost =
 const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
 const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
-async function apiFetch(path, options = {}) {
+// Nội dung public được đọc ở nhiều vùng cùng lúc (Header, Footer, trang chủ).
+// Cache theo phiên vừa tránh request trùng khi mount, vừa không giữ nội dung CMS
+// quá lâu sau khi biên tập viên xuất bản thay đổi.
+const PUBLIC_CACHE_TTL = 5 * 60 * 1000
+const CACHE_PREFIX = 'iorder:public-content:'
+const memoryCache = new Map()
+const pendingRequests = new Map()
+
+function getCacheKey(path) {
+  return `${API_URL}${path}`
+}
+
+function readSessionCache(key) {
+  if (typeof window === 'undefined') return null
+  try {
+    const entry = JSON.parse(sessionStorage.getItem(`${CACHE_PREFIX}${key}`) ?? 'null')
+    if (entry?.expiresAt > Date.now()) return entry
+    sessionStorage.removeItem(`${CACHE_PREFIX}${key}`)
+  } catch {
+    // Storage có thể bị chặn ở private mode; memory cache vẫn hoạt động.
+  }
+  return null
+}
+
+function writeCache(key, data, ttl) {
+  const entry = { data, expiresAt: Date.now() + ttl }
+  memoryCache.set(key, entry)
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(entry))
+    } catch {
+      // Bỏ qua khi sessionStorage đầy/bị chặn để request chính vẫn hoàn tất.
+    }
+  }
+  return data
+}
+
+async function fetchJson(path, options) {
   const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Cache-Control': 'no-cache' },
     ...options,
+    headers: { Accept: 'application/json', ...options.headers },
   })
   if (!response.ok) throw new Error(`HTTP_${response.status}`)
   return response.json()
+}
+
+async function apiFetch(path, options = {}) {
+  const { cacheTtl = PUBLIC_CACHE_TTL, ...fetchOptions } = options
+  const method = (fetchOptions.method ?? 'GET').toUpperCase()
+  if (method !== 'GET' || cacheTtl <= 0) return fetchJson(path, fetchOptions)
+
+  const key = getCacheKey(path)
+  const memoryEntry = memoryCache.get(key)
+  if (memoryEntry?.expiresAt > Date.now()) return memoryEntry.data
+
+  const sessionEntry = readSessionCache(key)
+  if (sessionEntry) {
+    memoryCache.set(key, sessionEntry)
+    return sessionEntry.data
+  }
+
+  // Chia sẻ Promise đang chạy: Header và Home có thể cùng yêu cầu nav khi tải lần đầu.
+  if (pendingRequests.has(key)) return pendingRequests.get(key)
+  const request = fetchJson(path, fetchOptions)
+    .then((data) => writeCache(key, data, cacheTtl))
+    .finally(() => pendingRequests.delete(key))
+  pendingRequests.set(key, request)
+  return request
 }
 
 // ── Contact leads ────────────────────────────────────────────────────────────
@@ -54,9 +115,10 @@ export function normalizeCmsPost(post) {
   }
 }
 
-export async function fetchPublishedPosts(limit = 50, category = null) {
+export async function fetchPublishedPosts(limit = 50, category = null, type = null) {
   const params = new URLSearchParams({ limit: String(limit) })
   if (category) params.set('category', category)
+  if (type) params.set('type', type)
   const payload = await apiFetch(`/api/public/posts?${params}`)
   return (payload.items ?? []).map(normalizeCmsPost)
 }
@@ -178,4 +240,13 @@ export async function fetchSiteSettings() {
 export async function fetchMenu(location) {
   const payload = await apiFetch(`/api/public/menus/${encodeURIComponent(location)}`)
   return payload
+}
+
+export async function fetchHomepage() {
+  return apiFetch('/api/public/homepage')
+}
+
+// Nội dung preview là bản nháp nên luôn phải đọc mới, không được lấy cache phiên.
+export async function fetchHomepagePreview(token) {
+  return apiFetch(`/api/public/homepage/preview?token=${encodeURIComponent(token)}`, { cacheTtl: 0 })
 }

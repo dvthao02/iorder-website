@@ -311,20 +311,28 @@
 @media (max-width: 640px) {
   .floating-actions {
     right: 7px;
-    bottom: 12px;
-    gap: 9px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    gap: 0;
   }
+
+  /* A vertical stack covered essential content on small screens. Keep the fastest support path visible. */
+  .floating-action.facebook,
+  .floating-action.gmail,
+  .floating-action.zalo {
+    display: none;
+  }
+
   .floating-action {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
     font-size: 13px;
   }
   .floating-action-icon {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    flex-basis: 44px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    flex-basis: 48px;
   }
   .floating-action-icon img,
   .floating-action-icon svg {

@@ -5,7 +5,14 @@ import PageLayout from '../components/PageLayout'
 import SafeImage from '../components/SafeImage'
 import { setPageSeo } from '../utils/seo'
 import { externalLinks, servicePages, softwareProducts, solutionPages } from '../data/siteContent'
-import { fetchNavOfferings, fetchPartners, fetchTestimonials } from '../utils/contentApi'
+import {
+  fetchHomepage,
+  fetchHomepagePreview,
+  fetchNavOfferings,
+  fetchPartners,
+  fetchPublishedPosts,
+  fetchTestimonials,
+} from '../utils/contentApi'
 import {
   BarChart3,
   Boxes,
@@ -22,6 +29,7 @@ import {
   Rocket,
   Server,
   ArrowRight,
+  CirclePlay,
   ChevronLeft,
   ChevronRight,
   Quote,
@@ -48,9 +56,10 @@ import {
   Award,
 } from 'lucide-react'
 
-import heroImg from '../assets/products/hero-img.png'
-import heroImg2 from '../assets/products/hero-img2.png'
-import heroImg3 from '../assets/products/hero-img3.jpg'
+import heroIorderSuite from '../assets/products/hero-iorder-suite.png'
+import heroPosFnb from '../assets/products/hero-pos-fnb-cutout.png'
+import heroPosRetail from '../assets/products/hero-pos-retail-cutout.png'
+import heroDashboard from '../assets/products/hero-dashboard-cutout.png'
 import posIotImage from '../assets/products/mh-pos-iot.png'
 import logoCrm from '../assets/partners/crm_online.png'
 import logoHuit from '../assets/partners/huit.png'
@@ -70,12 +79,6 @@ import logoTaxnet from '../assets/partners/taxnet.png'
 import logoTTC from '../assets/partners/ttc.png'
 import { newsArticles } from '../data/newsArticles'
 import { industryGroups } from '../data/industrySolutions'
-
-const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
-const localApiHost =
-  typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'localhost' : '127.0.0.1'
-// Khi mở qua IP LAN thì gọi tương đối để đi qua proxy của vite (giống contentApi.js).
-const API_URL = import.meta.env.VITE_API_URL ?? (isLocal ? `http://${localApiHost}:4000` : '')
 
 const overlayGradients = {
   none: 'linear-gradient(transparent, transparent)',
@@ -212,9 +215,10 @@ const featureTabs = [
 ]
 
 const heroSlides = [
-  { image: heroImg, width: 1672, height: 941 },
-  { image: heroImg2, width: 1802, height: 873 },
-  { image: heroImg3, width: 1804, height: 872 },
+  { image: heroIorderSuite, width: 1254, height: 1254, title: 'Nền tảng iOrder đa thiết bị' },
+  { image: heroPosFnb, width: 1536, height: 1024, title: 'Bán hàng nhanh tại quầy' },
+  { image: heroPosRetail, width: 1536, height: 1024, title: 'Quản lý bán lẻ trực quan' },
+  { image: heroDashboard, width: 1254, height: 1254, title: 'Báo cáo vận hành thời gian thực' },
 ]
 
 const partnerItems = [
@@ -299,7 +303,6 @@ const faqItems = [
 
 export default function Home() {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0)
-  const [loadedHeroSlides, setLoadedHeroSlides] = useState([0])
   const [activeNewsIndex, setActiveNewsIndex] = useState(0)
   const previewToken =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('cmsPreview') : null
@@ -377,34 +380,21 @@ export default function Home() {
 
   useEffect(() => {
     let active = true
-    const endpoint = previewToken
-      ? `${API_URL}/api/public/homepage/preview?token=${encodeURIComponent(previewToken)}`
-      : `${API_URL}/api/public/homepage`
-    const loadHomepage = () =>
-      fetch(endpoint, { cache: 'no-store' })
-        .then((response) => (response.ok ? response.json() : Promise.reject(new Error('CMS unavailable'))))
-        .then((payload) => {
-          if (!active) return
-          setCmsHomepage(payload)
-          if (!previewToken)
-            try {
-              sessionStorage.setItem('cms_hp', JSON.stringify(payload))
-            } catch {}
-        })
-        .catch(() => {
-          if (active) setCmsHomepage(null)
-        })
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === 'visible') void loadHomepage()
-    }
-
-    void loadHomepage()
-    window.addEventListener('focus', loadHomepage)
-    document.addEventListener('visibilitychange', refreshWhenVisible)
+    const loadHomepage = previewToken ? fetchHomepagePreview(previewToken) : fetchHomepage()
+    void loadHomepage
+      .then((payload) => {
+        if (!active) return
+        setCmsHomepage(payload)
+        if (!previewToken)
+          try {
+            sessionStorage.setItem('cms_hp', JSON.stringify(payload))
+          } catch {}
+      })
+      .catch(() => {
+        if (active) setCmsHomepage(null)
+      })
     return () => {
       active = false
-      window.removeEventListener('focus', loadHomepage)
-      document.removeEventListener('visibilitychange', refreshWhenVisible)
     }
   }, [previewToken])
 
@@ -477,6 +467,14 @@ export default function Home() {
         }))
         .filter((slide) => slide.image)
     : heroSlides
+  const heroVisual = resolvedHeroSlides[activeHeroSlide % resolvedHeroSlides.length] ?? heroSlides[0]
+  const heroPoints = cmsHero?.data?.points?.length
+    ? cmsHero.data.points.map((label) => ({ label, detail: null }))
+    : [
+        { label: 'Dễ sử dụng', detail: 'Bắt đầu nhanh chóng' },
+        { label: 'Triển khai nhanh', detail: 'Sẵn sàng vận hành' },
+        { label: 'Hỗ trợ 24/7', detail: 'Luôn đồng hành' },
+      ]
   // Ưu tiên danh sách Đối tác quản lý ở CMS (bảng partners) → logo nhúng trong block home_stats → fallback logo tĩnh
   // partnersLimit (cấu hình hiển thị của block home_stats) áp dụng cho cả nguồn kho chung lẫn nguồn nhúng cũ.
   const cmsBlockPartners = isCmsMode
@@ -539,17 +537,22 @@ export default function Home() {
       setCmsPosts([])
       return
     }
-    const params = new URLSearchParams({ limit: String(featuredPostsLimit) })
-    if (featuredPostsType !== 'all') params.set('type', featuredPostsType)
-    fetch(`${API_URL}/api/public/posts?${params}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Posts unavailable'))))
-      .then((payload) => setCmsPosts(payload.items ?? []))
+    fetchPublishedPosts(featuredPostsLimit, null, featuredPostsType === 'all' ? null : featuredPostsType)
+      .then(setCmsPosts)
       .catch(() => setCmsPosts([]))
   }, [featuredPostsLimit, featuredPostsType])
 
   const navSoftware = cmsNav?.software ?? softwareProducts
   const navSolutions = cmsNav?.solutions ?? solutionPages
   const navServices = cmsNav?.services ?? servicePages
+
+  useEffect(() => {
+    if (resolvedHeroSlides.length < 2) return undefined
+    const timer = window.setInterval(() => {
+      setActiveHeroSlide((current) => (current + 1) % resolvedHeroSlides.length)
+    }, 5600)
+    return () => window.clearInterval(timer)
+  }, [resolvedHeroSlides.length])
 
   const resolvedEcosystemGroups = useMemo(() => {
     const cmsGroups = isCmsMode ? (cmsEcosystem?.data?.groups ?? []) : []
@@ -597,30 +600,6 @@ export default function Home() {
     })
   }, [location.pathname, cmsHomepage?.item?.seoTitle, cmsHomepage?.item?.seoDescription, previewToken])
 
-  useEffect(() => {
-    if (resolvedHeroSlides.length === 0) return undefined
-    const timer = window.setInterval(() => {
-      setActiveHeroSlide((current) => (current + 1) % resolvedHeroSlides.length)
-    }, 4500)
-
-    return () => window.clearInterval(timer)
-  }, [resolvedHeroSlides.length])
-
-  useEffect(() => {
-    setLoadedHeroSlides((current) => {
-      const nextSlide = (activeHeroSlide + 1) % resolvedHeroSlides.length
-      const next = new Set([...current, activeHeroSlide, nextSlide])
-      return next.size === current.length ? current : Array.from(next)
-    })
-  }, [activeHeroSlide, resolvedHeroSlides.length])
-
-  const goToHeroSlide = (direction) => {
-    setActiveHeroSlide((current) => {
-      if (direction === 'next') return (current + 1) % resolvedHeroSlides.length
-      return (current - 1 + resolvedHeroSlides.length) % resolvedHeroSlides.length
-    })
-  }
-
   const homeNews = useMemo(() => {
     const source =
       cmsPosts.length > 0
@@ -664,29 +643,30 @@ export default function Home() {
             <div className="hero-content">
               <span className="eyebrow">
                 <CheckCircle size={16} />
-                {cmsHero?.data?.eyebrow ?? 'Tìm kiếm giải pháp quản lý bán hàng?'}
+                {cmsHero?.data?.eyebrow ?? 'Giải pháp quản lý bán hàng toàn diện'}
               </span>
               <h1>
                 {cmsHero?.data?.title ?? (
                   <>
-                    Phần mềm quản lý <span>hiệu quả</span> cho mô hình kinh doanh của bạn
+                    Phần mềm quản lý <span>hiệu quả</span> cho mọi mô hình kinh doanh
                   </>
                 )}
               </h1>
               <p>
                 {cmsHero?.data?.description ??
-                  'Nền tảng tích hợp hệ thống POS, quản lý kho, nhân viên và báo cáo chi tiết - tối ưu cho nhà hàng, quán café, bán lẻ và chuỗi cửa hàng.'}
+                  'Quản lý bán hàng, kho, nhân viên và báo cáo chi tiết trên một nền tảng duy nhất — phù hợp từ cửa hàng, quán café đến chuỗi cửa hàng.'}
               </p>
 
               <div className="hero-points">
-                {(cmsHero?.data?.points ?? ['Triển khai nhanh', 'Hỗ trợ 24/7', 'Dễ sử dụng', 'An toàn']).map(
-                  (point) => (
-                    <div className="hero-point" key={point}>
+                {heroPoints.map((point) => (
+                    <div className="hero-point" key={point.label}>
                       <CheckCircle size={20} />
-                      <span>{point}</span>
+                      <span>
+                        <strong>{point.label}</strong>
+                        {point.detail ? <small>{point.detail}</small> : null}
+                      </span>
                     </div>
-                  ),
-                )}
+                  ))}
               </div>
 
               <div className="hero-actions">
@@ -696,106 +676,87 @@ export default function Home() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span>{cmsHero?.data?.primaryLabel ?? 'Dùng thử miễn phí'}</span>
+                  <span>{cmsHero?.data?.primaryLabel ?? 'Dùng thử miễn phí'}</span> <ArrowRight size={18} />
                 </a>
                 {(cmsHero?.data?.secondaryLabel ?? 'Xem demo') ? (
                   <Link className="btn large outline" to={cmsHero?.data?.secondaryUrl ?? '/ho-tro/video'}>
                     <span>{cmsHero?.data?.secondaryLabel ?? 'Xem demo'}</span>
-                    <small>Video hướng dẫn</small>
+                    <CirclePlay size={20} />
                   </Link>
                 ) : null}
               </div>
+
+              <p className="hero-commitment">
+                <ShieldCheck size={17} />
+                Dùng thử đầy đủ tính năng — không cần thẻ tín dụng
+              </p>
             </div>
 
             <div className="hero-visual">
-              <div className="hero-carousel" aria-label="Ảnh giới thiệu iOrder">
-                <div className="hero-carousel-frame">
-                  {resolvedHeroSlides.map((slide, index) => (
-                    <div
-                      key={slide.title}
-                      className={`hero-slide ${index === activeHeroSlide ? 'active' : ''}`}
-                      aria-hidden={index !== activeHeroSlide}
-                    >
-                      {loadedHeroSlides.includes(index) ? (
-                        <img
-                          src={slide.image}
-                          alt={slide.title}
-                          loading={index === 0 ? 'eager' : 'lazy'}
-                          decoding={index === 0 ? 'sync' : 'async'}
-                          fetchPriority={index === 0 ? 'high' : 'low'}
-                          width={slide.width}
-                          height={slide.height}
-                          sizes="100vw"
-                          onError={(e) => {
-                            const fallback = heroSlides[index % heroSlides.length]?.image
-                            if (fallback && e.currentTarget.src !== String(fallback)) {
-                              e.currentTarget.src = fallback
-                              e.currentTarget.onerror = null
-                            }
-                          }}
-                        />
-                      ) : null}
-                      {slide.title || slide.caption ? (
-                        <div className="hero-slide-copy">
-                          <b>{slide.title}</b>
-                          <span>{slide.caption}</span>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="hero-carousel-arrow prev"
-                    aria-label="Ảnh trước"
-                    onClick={() => goToHeroSlide('prev')}
-                  >
-                    <ChevronLeft size={22} />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="hero-carousel-arrow next"
-                    aria-label="Ảnh tiếp theo"
-                    onClick={() => goToHeroSlide('next')}
-                  >
-                    <ChevronRight size={22} />
-                  </button>
-                </div>
-
-                <div className="hero-carousel-dots" aria-label="Chọn ảnh">
-                  {resolvedHeroSlides.map((slide, index) => (
-                    <button
-                      key={slide.title}
-                      type="button"
-                      className={index === activeHeroSlide ? 'active' : ''}
-                      aria-label={`Xem ${slide.title}`}
-                      onClick={() => setActiveHeroSlide(index)}
-                    />
-                  ))}
-                </div>
+              <div className="hero-product-stage">
+                <img
+                  className="hero-product-image"
+                  key={heroVisual.image}
+                  src={heroVisual.image}
+                  alt={heroVisual.title || 'Giao diện phần mềm quản lý bán hàng iOrder'}
+                  loading="eager"
+                  decoding="sync"
+                  fetchPriority="high"
+                  width={heroVisual.width}
+                  height={heroVisual.height}
+                  sizes="(max-width: 1023px) 100vw, 52vw"
+                />
               </div>
             </div>
           </div>
         </section>
       ) : null}
 
-      {/* About + Core Values Section */}
+      {/* Logo partners are sourced from the Partners CMS collection and can be changed by admins. */}
+      {shouldShow('home_stats') && resolvedPartners.length > 0 ? (
+        <section
+          {...mergeSectionProps('home-partner-strip', { order: blockOrder('home_stats') }, cmsStats, cmsMedia)}
+        >
+          <div className="container">
+            <p className="partners-trust-line">
+              {(isCmsMode ? cmsStats?.data?.partnersHeading : null) ?? 'Được hơn 10.000+ cửa hàng tin tưởng sử dụng'}
+            </p>
+            <div className="home-partner-layout">
+              <div className="home-partner-marquee" aria-label="Các đối tác iOrder">
+                <div className="home-partner-logo-row">
+                  {resolvedPartners.map((partner, index) => (
+                    <div className="home-partner-logo" key={`a-${partner.name}-${index}`} title={partner.name}>
+                      <SafeImage src={partner.src} alt={partner.name} loading="lazy" decoding="async" />
+                    </div>
+                  ))}
+                  {resolvedPartners.map((partner, index) => (
+                    <div className="home-partner-logo" key={`b-${partner.name}-${index}`} aria-hidden="true">
+                      <SafeImage src={partner.src} alt="" loading="lazy" decoding="async" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="home-partner-more">Và hàng nghìn khách hàng khác đang sử dụng iOrder</p>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Operating outcomes: concise proof after the primary conversion action. */}
       <section className="section about-section" style={isCmsMode ? { order: blockOrder('home_hero') } : undefined}>
         <div className="container">
-          {/* Giới thiệu công ty */}
-          <div className="about-company-intro">
-            <span className="section-eyebrow">GIỚI THIỆU CÔNG TY</span>
-            <h2>iOrder — Nền tảng quản lý bán hàng toàn diện cho doanh nghiệp Việt</h2>
-            <p>
-              Được thành lập với mục tiêu mang lại giải pháp công nghệ thiết thực cho doanh nghiệp vừa và nhỏ, iOrder
-              cung cấp hệ thống quản lý bán hàng tích hợp đầy đủ từ POS, quản lý kho, nhân viên đến báo cáo kinh doanh
-              thời gian thực.
-            </p>
-            <p>
-              Với đội ngũ kỹ thuật tâm huyết và am hiểu thực tế vận hành tại thị trường Việt Nam, chúng tôi không chỉ
-              cung cấp phần mềm mà còn là người bạn đồng hành lâu dài giúp doanh nghiệp phát triển bền vững.
-            </p>
+          <div className="about-overview">
+            <div className="about-overview-copy">
+              <span className="section-eyebrow">THIẾT KẾ CHO CA BÁN THẬT</span>
+              <h2>Biết cửa hàng đang vận hành thế nào, ngay cả khi bạn không ở quầy</h2>
+              <p>
+                iOrder gom bán hàng, tồn kho, nhân sự và báo cáo vào cùng một luồng làm việc. Nhân viên thao tác nhanh
+                hơn; chủ cửa hàng có số liệu đủ rõ để ra quyết định mỗi ngày.
+              </p>
+              <Link to="/giai-phap" className="about-overview-link">
+                Khám phá giải pháp theo mô hình <ArrowRight size={17} />
+              </Link>
+            </div>
             <div className="about-company-stats">
               {resolvedStats.map((stat, idx) => {
                 const numeric = String(stat.value).match(/^(\d+)(\D*)$/)
@@ -815,85 +776,31 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Row 1: Sứ mệnh — text trái, ảnh phải */}
-          <div className="about-split">
-            <div className="about-split-text">
-              <span className="section-eyebrow">SỨ MỆNH</span>
-              <h2>Đồng hành cùng người bán hàng Việt</h2>
-              <p>
-                iOrder ra đời với mục tiêu giúp các doanh nghiệp vừa và nhỏ tại Việt Nam số hóa vận hành bán hàng một
-                cách đơn giản và hiệu quả nhất.
-              </p>
-              <p>
-                Từ cửa hàng tạp hóa đơn lẻ đến chuỗi nhà hàng nhiều chi nhánh — chúng tôi cung cấp nền tảng quản lý toàn
-                diện, dễ dùng và liên tục phát triển cùng doanh nghiệp.
-              </p>
-            </div>
-            <div className="about-split-visual">
-              <img src={heroImg} alt="iOrder - Phần mềm quản lý bán hàng" loading="lazy" />
-            </div>
-          </div>
-
-          {/* Row 2: Giá trị cốt lõi — ảnh trái, text phải */}
-          <div className="about-split about-split--reverse">
-            <div className="about-split-visual">
-              <img src={heroImg2} alt="iOrder quản lý trên nhiều thiết bị" loading="lazy" />
-            </div>
-            <div className="about-split-text">
-              <span className="section-eyebrow">GIÁ TRỊ CỐT LÕI</span>
-              <h2>Cam kết của chúng tôi với từng khách hàng</h2>
-              <ul className="about-values-list">
-                <li>
-                  <b>Sáng tạo không ngừng:</b> Liên tục cập nhật tính năng mới, ứng dụng công nghệ hiện đại vào quản lý
-                  bán hàng.
-                </li>
-                <li>
-                  <b>Chuyên nghiệp &amp; Tận tâm:</b> Đội ngũ hỗ trợ kỹ thuật 24/7, sẵn sàng phục vụ 365 ngày trong năm.
-                </li>
-                <li>
-                  <b>Đảm bảo an toàn dữ liệu:</b> Mã hóa toàn bộ, sao lưu tự động mỗi ngày, cam kết uptime 99.9%.
-                </li>
-                <li>
-                  <b>Đơn giản &amp; Chính xác:</b> Giao diện thân thiện, báo cáo thời gian thực, bám sát thực tế vận
-                  hành.
-                </li>
-              </ul>
-            </div>
+          <div className="operating-principles">
+            <article className="operating-principle">
+              <div className="operating-principle-icon"><ReceiptText size={22} /></div>
+              <div>
+                <h3>Một luồng thao tác</h3>
+                <p>Từ tạo đơn, thanh toán đến in bill — đội ngũ làm việc theo một quy trình nhất quán.</p>
+              </div>
+            </article>
+            <article className="operating-principle">
+              <div className="operating-principle-icon"><BarChart3 size={22} /></div>
+              <div>
+                <h3>Dữ liệu để quyết định</h3>
+                <p>Doanh thu, tồn kho và hiệu suất ca bán luôn sẵn khi bạn cần kiểm tra.</p>
+              </div>
+            </article>
+            <article className="operating-principle">
+              <div className="operating-principle-icon"><Headphones size={22} /></div>
+              <div>
+                <h3>Triển khai có người đồng hành</h3>
+                <p>Đội ngũ hỗ trợ cùng bạn chuẩn hóa dữ liệu, thiết bị và cách vận hành ban đầu.</p>
+              </div>
+            </article>
           </div>
         </div>
       </section>
-
-      {/* Partners Section (số liệu đã hiển thị ở mục Giới thiệu công ty phía trên) */}
-      {shouldShow('home_stats') && resolvedPartners.length > 0 ? (
-        <section
-          {...mergeSectionProps('section home-stats-section', { order: blockOrder('home_stats') }, cmsStats, cmsMedia)}
-        >
-          <div className="container">
-            {resolvedPartners.length > 0 ? (
-              <>
-                <p className="partners-trust-line">
-                  {(isCmsMode ? cmsStats?.data?.partnersHeading : null) ??
-                    'Tin dùng bởi 10000+ doanh nghiệp & đơn vị đối tác'}
-                </p>
-                <div className="home-partner-marquee partner-marquee" aria-hidden="false">
-                  <div className="home-partner-track partner-track">
-                    {resolvedPartners.map((p, idx) => (
-                      <div key={`a-${idx}`} className="model-card" title={p.name}>
-                        <SafeImage src={p.src} alt={p.name} loading="lazy" decoding="async" />
-                      </div>
-                    ))}
-                    {resolvedPartners.map((p, idx) => (
-                      <div key={`b-${idx}`} className="model-card" title={p.name}>
-                        <SafeImage src={p.src} alt={p.name} loading="lazy" decoding="async" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
 
       {/* Industry Solutions Section */}
       {shouldShow('home_industries') ? (
