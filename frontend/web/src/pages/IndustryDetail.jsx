@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, Printer, ScanBarcode, Smartphone, Wifi } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
+import SectionRenderer from '../components/detail/SectionRenderer'
 import StaticPage from './StaticPage'
 import { findIndustrySolution, industrySolutions } from '../data/industrySolutions'
 import { setPageSeo } from '../utils/seo'
@@ -66,6 +67,22 @@ export default function IndustryDetail() {
   }, [industry])
 
   if (!industry) return <StaticPage />
+
+  // Industry pages giữ các khối liên quan đặc thù ở bản legacy. Khi editor đã
+  // tạo sections trong CMS, chúng dùng cùng renderer với software/solution/service.
+  if (cmsIndustry?.sections?.length) {
+    return (
+      <PageLayout>
+        <SectionRenderer
+          offering={{ ...cmsIndustry, description: cmsIndustry.description || cmsIndustry.summary || '' }}
+          type="industry"
+          backPath="/giai-phap"
+          backLabel="Quay lại giải pháp"
+          fallbackImage={posHero}
+        />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout>

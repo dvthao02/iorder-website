@@ -139,6 +139,7 @@ const TYPE_PREFIX = { software: 'phan-mem', solution: 'giai-phap', service: 'dic
 
 export function normalizeOffering(o) {
   const c = o.contentJson ?? {}
+  const sectionMediaUrls = o.sectionMediaUrls ?? {}
   return {
     ...o,
     description: c.description ?? o.summary ?? '',
@@ -151,6 +152,10 @@ export function normalizeOffering(o) {
     faq: c.faq ?? [],
     items: c.items ?? [],
     category: c.category ?? null,
+    sections: (c.sections ?? []).map((section) => ({
+      ...section,
+      imageUrl: section.imageMediaId ? sectionMediaUrls[section.imageMediaId] ?? null : null,
+    })),
     href: `/${TYPE_PREFIX[o.type] ?? o.type}/${o.slug}`,
     iconKey: o.icon ?? 'server',
   }

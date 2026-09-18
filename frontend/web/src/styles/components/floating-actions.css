@@ -1,347 +1,185 @@
-﻿/* Floating actions styles (moved from module/main) */
+/* Contact actions stay quiet until the visitor asks for help. */
 .floating-actions {
   position: fixed;
-  right: 8px;
+  right: 22px;
   bottom: 22px;
   z-index: 160;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.floating-contact-menu {
+  display: grid;
   gap: 8px;
+  width: min(286px, calc(100vw - 48px));
+  padding: 9px;
+  border: 1px solid rgba(203, 213, 225, 0.88);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
   pointer-events: none;
+  transform: translateY(10px) scale(0.98);
+  transform-origin: bottom right;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.floating-actions.is-open .floating-contact-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .floating-action {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  padding: 0;
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  gap: 0;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #172033;
-  box-shadow:
-    0 16px 38px rgba(15, 35, 68, 0.18),
-    0 5px 14px rgba(15, 35, 68, 0.08);
+  gap: 10px;
+  min-height: 54px;
+  padding: 8px;
+  border-radius: 12px;
+  color: #344054;
   text-decoration: none;
-  font-size: 14.5px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  pointer-events: auto;
-  overflow: visible;
-  transform-origin: center;
   transition:
-    width 0.28s ease,
-    min-width 0.28s ease,
-    padding 0.28s ease,
-    transform 0.22s ease,
-    box-shadow 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.floating-action:hover,
+.floating-action:focus-visible {
+  background: #f3f9fe;
+  outline: 0;
+  transform: translateX(-2px);
 }
 
 .floating-action-icon {
-  position: relative;
-  z-index: 2;
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  flex: 0 0 56px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(21, 136, 227, 0.12), rgba(11, 148, 238, 0.22));
-  box-shadow:
-    inset 0 0 0 1px rgba(21, 136, 227, 0.16),
-    0 8px 18px rgba(21, 136, 227, 0.12);
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e9f5fe;
+  color: #087dc5;
 }
 
 .floating-action-icon img,
-.floating-action-icon svg,
-.floating-action-icon b {
-  position: relative;
-  z-index: 3;
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
+.floating-action-icon svg {
   display: block;
-  animation: floating-icon-shake 1.65s ease-in-out infinite;
-}
-
-.floating-action-icon b {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: inherit;
-  font-family: Arial, sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.floating-action.zalo .floating-action-icon img {
-  width: 34px;
-  height: 34px;
+  width: 19px;
+  height: 19px;
   object-fit: contain;
-  object-position: center center;
-  margin: 0 auto;
-  display: block;
-  animation: none;
 }
 
 .floating-action > span:not(.floating-action-icon) {
-  position: absolute;
-  right: calc(100% + 12px);
-  top: 50%;
-  transform: translateY(-50%) translateX(-8px);
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: #ffffff;
-  color: var(--text);
-  box-shadow: 0 10px 28px rgba(15, 35, 68, 0.12);
-  white-space: nowrap;
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.floating-action strong {
+  color: #172033;
+  font-size: 13.5px;
   font-weight: 800;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
-  z-index: 30;
+  line-height: 1.2;
 }
 
-.floating-action:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 22px 52px rgba(15, 35, 68, 0.22),
-    0 8px 22px rgba(15, 35, 68, 0.1);
-}
-
-.floating-action:hover > span:not(.floating-action-icon) {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
-  pointer-events: auto;
-}
-
-.floating-action:hover .floating-action-icon img,
-.floating-action:hover .floating-action-icon svg,
-.floating-action:hover .floating-action-icon b {
-  animation-play-state: paused;
-}
-
-.floating-action.zalo {
-  color: #0b67b2;
-}
-
-.floating-action.facebook .floating-action-icon img {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-  animation: floating-icon-shake 1.65s ease-in-out infinite;
-}
-
-.floating-action.facebook {
-  background: linear-gradient(135deg, #1877f2, #0b5bd3);
-  color: #ffffff;
+.floating-action small {
+  overflow: hidden;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .floating-action.facebook .floating-action-icon {
-  background: transparent;
-  color: #ffffff;
-  box-shadow: none;
+  background: #eaf2ff;
 }
 
-.floating-action.facebook .floating-action-icon::before,
-.floating-action.facebook .floating-action-icon::after {
-  background: rgba(24, 119, 242, 0.22);
-}
-
-.floating-action.facebook > span:not(.floating-action-icon) {
-  background: linear-gradient(135deg, #1877f2, #0b5bd3);
-  color: #ffffff;
-  box-shadow: 0 12px 30px rgba(24, 119, 242, 0.16);
-}
-
-.floating-action.gmail {
-  background: linear-gradient(135deg, #d14836, #c5372f);
-  color: #fff;
-}
-
-.floating-action.gmail .floating-action-icon {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 8px 18px rgba(0, 0, 0, 0.06);
-}
-
-.floating-action.gmail:hover {
-  box-shadow: 0 22px 52px rgba(197, 57, 41, 0.28);
-}
-
-.floating-action.gmail .floating-action-icon::before,
-.floating-action.gmail .floating-action-icon::after {
-  background: rgba(209, 72, 54, 0.16);
-}
-
-.floating-action.gmail > span:not(.floating-action-icon) {
-  background: linear-gradient(135deg, #d14836, #c5372f);
-  color: #fff;
-  box-shadow: 0 12px 30px rgba(209, 72, 54, 0.14);
+.floating-action.facebook .floating-action-icon img {
+  width: 21px;
+  height: 21px;
 }
 
 .floating-action.zalo .floating-action-icon {
-  background: #ffffff;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 122, 255, 0.16),
-    0 8px 18px rgba(0, 122, 255, 0.14);
+  background: #eef7ff;
 }
 
-.floating-action.zalo .floating-action-icon::before,
-.floating-action.zalo .floating-action-icon::after {
-  background: rgba(0, 122, 255, 0.18);
+.floating-action.zalo .floating-action-icon img {
+  width: 24px;
+  height: 24px;
 }
 
-.floating-action.zalo > span:not(.floating-action-icon) {
-  background: #ffffff;
-  color: #0b67b2;
-  box-shadow: 0 12px 30px rgba(11, 103, 178, 0.08);
+.floating-action.gmail .floating-action-icon {
+  background: #fff0ee;
+  color: #cf4b3b;
 }
 
-.floating-action.hotline {
-  background: linear-gradient(135deg, var(--primary), #136dd9);
-  color: #ffffff;
-}
-
-.floating-action.hotline:hover {
-  box-shadow:
-    0 24px 58px rgba(21, 136, 227, 0.35),
-    0 8px 22px rgba(21, 136, 227, 0.18);
-}
-
-.floating-action.hotline .floating-action-icon {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    0 8px 18px rgba(255, 255, 255, 0.08);
-}
-
-.floating-action.hotline .floating-action-icon::before,
-.floating-action.hotline .floating-action-icon::after {
-  background: rgba(21, 136, 227, 0.25);
-}
-
-.floating-action.hotline > span:not(.floating-action-icon) {
-  background: linear-gradient(135deg, var(--primary), #136dd9);
-  color: #fff;
-  box-shadow: 0 12px 30px rgba(19, 103, 200, 0.14);
-}
-
-.floating-action-icon::before,
-.floating-action-icon::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+.floating-toggle {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 999px;
-  pointer-events: none;
-  transform: scale(1);
-  opacity: 0;
+  color: #ffffff;
+  background: linear-gradient(135deg, #1597df, #0570b8);
+  box-shadow: 0 12px 28px rgba(11, 142, 220, 0.3);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.floating-action-icon::before {
-  animation: floating-wave 2s ease-out infinite;
-}
-
-.floating-action-icon::after {
-  animation: floating-wave 2s ease-out infinite;
-  animation-delay: 0.68s;
-}
-
-.floating-action:hover .floating-action-icon::before,
-.floating-action:hover .floating-action-icon::after {
-  animation-play-state: paused;
-  opacity: 0;
-}
-
-@keyframes floating-wave {
-  0% {
-    opacity: 0.8;
-    transform: scale(1);
-  }
-  70% {
-    opacity: 0;
-    transform: scale(1.75);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.75);
-  }
-}
-
-@keyframes floating-icon-shake {
-  0%,
-  100% {
-    transform: rotate(0deg) scale(1);
-  }
-  18% {
-    transform: rotate(-8deg) scale(1.05);
-  }
-  36% {
-    transform: rotate(8deg) scale(1.05);
-  }
-  54% {
-    transform: rotate(-5deg) scale(1.03);
-  }
-  72% {
-    transform: rotate(5deg) scale(1.03);
-  }
+.floating-toggle:hover,
+.floating-toggle:focus-visible {
+  background: linear-gradient(135deg, #0e8dd5, #055f9e);
+  box-shadow: 0 16px 34px rgba(11, 142, 220, 0.36);
+  outline: 0;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 640px) {
   .floating-actions {
-    right: 7px;
+    right: 14px;
     bottom: calc(14px + env(safe-area-inset-bottom));
-    gap: 0;
   }
 
-  /* A vertical stack covered essential content on small screens. Keep the fastest support path visible. */
-  .floating-action.facebook,
-  .floating-action.gmail,
-  .floating-action.zalo {
-    display: none;
+  .floating-contact-menu {
+    width: min(272px, calc(100vw - 36px));
   }
 
-  .floating-action {
+  .floating-toggle {
     width: 48px;
     height: 48px;
-    min-width: 48px;
-    font-size: 13px;
   }
-  .floating-action-icon {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    flex-basis: 48px;
-  }
-  .floating-action-icon img,
-  .floating-action-icon svg {
-    width: 24px;
-    height: 24px;
-  }
-  .floating-action.facebook .floating-action-icon img,
-  .floating-action.zalo .floating-action-icon img {
-    width: 28px;
-    height: 28px;
-  }
+}
+
+[data-theme='dark'] .floating-contact-menu {
+  border-color: rgba(30, 58, 82, 0.9);
+  background: rgba(10, 25, 45, 0.97);
+}
+
+[data-theme='dark'] .floating-action {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .floating-action:hover,
+[data-theme='dark'] .floating-action:focus-visible {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+[data-theme='dark'] .floating-action strong {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .floating-action small {
+  color: #94a3b8;
 }

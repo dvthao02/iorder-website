@@ -25,6 +25,7 @@ export default function ContactPage() {
     message: '',
     website: '',
   })
+  const [fieldErrors, setFieldErrors] = useState({})
   const [submitState, setSubmitState] = useState('idle')
   const [submitMessage, setSubmitMessage] = useState('')
 
@@ -42,6 +43,29 @@ export default function ContactPage() {
       ...prev,
       [name]: value,
     }))
+    setFieldErrors((current) => {
+      if (!current[name]) return current
+      const next = { ...current }
+      delete next[name]
+      return next
+    })
+  }
+
+  const validate = () => {
+    const nextErrors = {}
+
+    if (!formData.name.trim()) nextErrors.name = 'Vui lòng nhập họ tên.'
+    if (!formData.phone.trim()) {
+      nextErrors.phone = 'Vui lòng nhập số điện thoại.'
+    } else if (formData.phone.replace(/\D/g, '').length < 8) {
+      nextErrors.phone = 'Số điện thoại chưa hợp lệ.'
+    }
+    if (!formData.businessModel) nextErrors.businessModel = 'Vui lòng chọn mô hình kinh doanh.'
+    if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
+      nextErrors.email = 'Email chưa đúng định dạng.'
+    }
+
+    return nextErrors
   }
 
   const mailtoHref = () => {
@@ -63,6 +87,16 @@ export default function ContactPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const nextErrors = validate()
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors)
+      setSubmitState('error')
+      setSubmitMessage('Kiểm tra lại các trường được đánh dấu trước khi gửi.')
+      return
+    }
+
+    setFieldErrors({})
     setSubmitState('submitting')
     setSubmitMessage('')
     try {
@@ -120,9 +154,9 @@ export default function ContactPage() {
           <div className="contact-grid">
             <div>
               <h2 className="contact-section-title">Thông tin tư vấn</h2>
-              <form onSubmit={handleSubmit} className="contact-form">
+              <form onSubmit={handleSubmit} className="contact-form" noValidate>
                 <div className="contact-form-grid">
-                  <div className="contact-field">
+                  <div className={`contact-field ${fieldErrors.name ? 'has-error' : ''}`}>
                     <label>
                       Họ tên <span>*</span>
                     </label>
@@ -132,12 +166,19 @@ export default function ContactPage() {
                       value={formData.name}
                       onChange={handleChange}
                       required
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? 'contact-name-error' : undefined}
                       className="contact-input"
                       placeholder="Nhập họ tên"
                     />
+                    {fieldErrors.name ? (
+                      <p id="contact-name-error" className="contact-field-error">
+                        {fieldErrors.name}
+                      </p>
+                    ) : null}
                   </div>
 
-                  <div className="contact-field">
+                  <div className={`contact-field ${fieldErrors.phone ? 'has-error' : ''}`}>
                     <label>
                       Số điện thoại <span>*</span>
                     </label>
@@ -147,24 +188,19 @@ export default function ContactPage() {
                       value={formData.phone}
                       onChange={handleChange}
                       required
+                      aria-invalid={Boolean(fieldErrors.phone)}
+                      aria-describedby={fieldErrors.phone ? 'contact-phone-error' : undefined}
                       className="contact-input"
                       placeholder="090..."
                     />
+                    {fieldErrors.phone ? (
+                      <p id="contact-phone-error" className="contact-field-error">
+                        {fieldErrors.phone}
+                      </p>
+                    ) : null}
                   </div>
 
-                  <div className="contact-field">
-                    <label>Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="contact-input"
-                      placeholder="example@email.com"
-                    />
-                  </div>
-
-                  <div className="contact-field">
+                  <div className={`contact-field contact-field-wide ${fieldErrors.businessModel ? 'has-error' : ''}`}>
                     <label>
                       Mô hình kinh doanh <span>*</span>
                     </label>
@@ -173,6 +209,8 @@ export default function ContactPage() {
                       value={formData.businessModel}
                       onChange={handleChange}
                       required
+                      aria-invalid={Boolean(fieldErrors.businessModel)}
+                      aria-describedby={fieldErrors.businessModel ? 'contact-model-error' : undefined}
                       className="contact-input"
                     >
                       <option value="">Chọn mô hình</option>
@@ -183,45 +221,76 @@ export default function ContactPage() {
                       <option>Chuỗi nhiều chi nhánh</option>
                       <option>Mô hình khác</option>
                     </select>
-                  </div>
-
-                  <div className="contact-field">
-                    <label>Số chi nhánh/quầy</label>
-                    <input
-                      type="text"
-                      name="branches"
-                      value={formData.branches}
-                      onChange={handleChange}
-                      className="contact-input"
-                      placeholder="Ví dụ: 1 chi nhánh, 2 quầy thu ngân"
-                    />
-                  </div>
-
-                  <div className="contact-field">
-                    <label>Nhu cầu chính</label>
-                    <select name="need" value={formData.need} onChange={handleChange} className="contact-input">
-                      <option value="">Chọn nhu cầu</option>
-                      <option>POS bán hàng tại quầy</option>
-                      <option>Order tại bàn, in bếp/bar</option>
-                      <option>Quản lý kho</option>
-                      <option>Báo cáo doanh thu</option>
-                      <option>Đồng bộ nhiều chi nhánh</option>
-                      <option>Cần tư vấn tổng thể</option>
-                    </select>
+                    {fieldErrors.businessModel ? (
+                      <p id="contact-model-error" className="contact-field-error">
+                        {fieldErrors.businessModel}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="contact-field">
-                  <label>Mô tả thêm</label>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows="5"
-                    className="contact-textarea"
-                    placeholder="Ví dụ: cần setup menu, máy in bếp, báo cáo doanh thu theo ca..."
-                  />
-                </div>
+                <details className="contact-optional-fields">
+                  <summary>
+                    Thêm thông tin để tư vấn chính xác hơn <span>Không bắt buộc</span>
+                  </summary>
+                  <div className="contact-form-grid">
+                    <div className={`contact-field ${fieldErrors.email ? 'has-error' : ''}`}>
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        aria-invalid={Boolean(fieldErrors.email)}
+                        aria-describedby={fieldErrors.email ? 'contact-email-error' : undefined}
+                        className="contact-input"
+                        placeholder="example@email.com"
+                      />
+                      {fieldErrors.email ? (
+                        <p id="contact-email-error" className="contact-field-error">
+                          {fieldErrors.email}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div className="contact-field">
+                      <label>Số chi nhánh/quầy</label>
+                      <input
+                        type="text"
+                        name="branches"
+                        value={formData.branches}
+                        onChange={handleChange}
+                        className="contact-input"
+                        placeholder="Ví dụ: 1 chi nhánh, 2 quầy thu ngân"
+                      />
+                    </div>
+
+                    <div className="contact-field">
+                      <label>Nhu cầu chính</label>
+                      <select name="need" value={formData.need} onChange={handleChange} className="contact-input">
+                        <option value="">Chọn nhu cầu</option>
+                        <option>POS bán hàng tại quầy</option>
+                        <option>Order tại bàn, in bếp/bar</option>
+                        <option>Quản lý kho</option>
+                        <option>Báo cáo doanh thu</option>
+                        <option>Đồng bộ nhiều chi nhánh</option>
+                        <option>Cần tư vấn tổng thể</option>
+                      </select>
+                    </div>
+
+                    <div className="contact-field contact-field-wide">
+                      <label>Mô tả thêm</label>
+                      <textarea
+                        name="message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        rows="4"
+                        className="contact-textarea"
+                        placeholder="Ví dụ: cần setup menu, máy in bếp, báo cáo doanh thu theo ca..."
+                      />
+                    </div>
+                  </div>
+                </details>
 
                 {/* Honeypot chống spam: ẩn thực sự khỏi người dùng, chỉ bot mới điền vào field này. */}
                 <div

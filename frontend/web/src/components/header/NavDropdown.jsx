@@ -15,17 +15,28 @@ export default function NavDropdown({
   onClose,
 }) {
   const gridClass = columns === 1 ? 'dropdown-grid-single' : 'dropdown-grid-2'
+  const menuId = `dropdown-${name}`
 
   return (
     <div className={`nav-item has-dropdown ${isOpen ? 'open' : ''}`} onMouseEnter={onOpen} onFocusCapture={onOpen}>
       {basePath ? (
-        <Link to={basePath} className={`nav-trigger ${isActive || isOpen ? 'active' : ''}`} onClick={onClose}>
+        <Link
+          to={basePath}
+          className={`nav-trigger ${isActive || isOpen ? 'active' : ''}`}
+          aria-controls={menuId}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
+          onClick={onClose}
+        >
           {label}
         </Link>
       ) : (
         <button
           type="button"
           className={`nav-trigger ${isOpen ? 'active' : ''}`}
+          aria-controls={menuId}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
           onClick={() => (isOpen ? onClose() : onOpen())}
         >
           {label}
@@ -33,7 +44,7 @@ export default function NavDropdown({
       )}
 
       {isOpen ? (
-        <div className={`dropdown-menu dropdown-menu-${name}`}>
+        <div id={menuId} className={`dropdown-menu dropdown-menu-${name}`}>
           <div className={`dropdown-grid ${gridClass}`}>
             {items.map((item) => (
               <Link key={item.slug ?? item.href} to={item.href} className="dropdown-item" onClick={onClose}>

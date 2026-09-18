@@ -1,4 +1,4 @@
-import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse } from '@iorder/contracts'
+import type { MediaAsset, OfferingContent, OfferingInput, OfferingResponse, OfferingSection } from '@iorder/contracts'
 import {
   ArrowLeft,
   Building2,
@@ -183,6 +183,7 @@ const emptyContent = (): OfferingContent => ({
   faq: [],
   items: [],
   category: null,
+  sections: [],
 })
 
 const emptyInput = (type: OfferingType): OfferingInput => ({
@@ -470,6 +471,143 @@ function ItemsEditor({
       ))}
       {items.length === 0 ? <p className="list-editor-empty">Chưa có liên kết nào.</p> : null}
     </div>
+  )
+}
+
+const DETAIL_SECTION_OPTIONS: Array<{ value: OfferingSection['type']; label: string }> = [
+  { value: 'hero', label: 'Hero mở đầu' },
+  { value: 'richText', label: 'Nội dung văn bản' },
+  { value: 'stats', label: 'Dải thông tin nhanh' },
+  { value: 'featureGrid', label: 'Lưới tính năng' },
+  { value: 'benefitList', label: 'Danh sách lợi ích' },
+  { value: 'imageText', label: 'Hình ảnh + nội dung' },
+  { value: 'imageShowcase', label: 'Trưng bày hình ảnh' },
+  { value: 'process', label: 'Quy trình triển khai' },
+  { value: 'highlight', label: 'Điểm nhấn' },
+  { value: 'steps', label: 'Các bước' },
+  { value: 'comparison', label: 'So sánh' },
+  { value: 'deviceShowcase', label: 'Thiết bị' },
+  { value: 'gallery', label: 'Bộ sưu tập ảnh' },
+  { value: 'useCases', label: 'Tình huống sử dụng' },
+  { value: 'testimonial', label: 'Chia sẻ khách hàng' },
+  { value: 'faq', label: 'Câu hỏi thường gặp' },
+  { value: 'cta', label: 'Kêu gọi tư vấn' },
+  { value: 'spacer', label: 'Khoảng cách' },
+]
+
+function newDetailSection(type: OfferingSection['type']): OfferingSection {
+  return {
+    id: `section-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    type,
+    variant: 'default',
+    background: 'white',
+    container: 'standard',
+    alignment: 'left',
+    spacing: 'normal',
+    isVisible: true,
+    eyebrow: null,
+    title: null,
+    body: null,
+    imageMediaId: null,
+    imageAlt: null,
+    ctaLabel: null,
+    ctaHref: null,
+    items: [],
+  }
+}
+
+function DetailSectionItemsEditor({
+  items,
+  onChange,
+}: {
+  items: OfferingSection['items']
+  onChange: (items: OfferingSection['items']) => void
+}) {
+  return (
+    <div className="detail-section-items">
+      <div className="list-editor-head">
+        <span className="list-editor-label">Nội dung trong khối</span>
+        <button type="button" className="list-editor-add" onClick={() => onChange([...items, { title: '', description: null, href: null }])}>
+          <Plus size={13} /> Thêm mục
+        </button>
+      </div>
+      {items.map((item, index) => (
+        <div key={`${item.title}-${index}`} className="detail-section-item-row">
+          <span>{index + 1}</span>
+          <div>
+            <input
+              value={item.title}
+              placeholder="Tiêu đề hoặc nội dung chính"
+              onChange={(event) => onChange(items.map((value, i) => i === index ? { ...value, title: event.target.value } : value))}
+            />
+            <input
+              value={item.description ?? ''}
+              placeholder="Mô tả ngắn (không bắt buộc)"
+              onChange={(event) => onChange(items.map((value, i) => i === index ? { ...value, description: event.target.value || null } : value))}
+            />
+          </div>
+          <button type="button" className="list-editor-remove" aria-label="Xóa mục" onClick={() => onChange(items.filter((_, i) => i !== index))}>
+            <Minus size={14} />
+          </button>
+        </div>
+      ))}
+      {!items.length ? <p className="list-editor-empty">Khối này chưa có mục nội dung.</p> : null}
+    </div>
+  )
+}
+
+function DetailSectionsEditor({
+  sections,
+  images,
+  onChange,
+}: {
+  sections: OfferingSection[]
+  images: MediaAsset[]
+  onChange: (sections: OfferingSection[]) => void
+}) {
+  const update = (index: number, patch: Partial<OfferingSection>) =>
+    onChange(sections.map((section, i) => i === index ? { ...section, ...patch } : section))
+
+  return (
+    <section className="detail-sections-editor">
+      <div className="detail-sections-editor__head">
+        <div><span className="field-label">Bố cục trang chi tiết</span><p>Sắp thứ tự các khối hiển thị. Nếu để trống, trang vẫn dùng bố cục mặc định từ dữ liệu hiện có.</p></div>
+        <select aria-label="Thêm khối" defaultValue="" onChange={(event) => { if (event.target.value) { onChange([...sections, newDetailSection(event.target.value as OfferingSection['type'])]); event.target.value = '' } }}>
+          <option value="">+ Thêm khối...</option>
+          {DETAIL_SECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </div>
+      {sections.map((section, index) => (
+        <article key={section.id} className="detail-section-editor-card">
+          <div className="detail-section-editor-card__head">
+            <strong>{index + 1}. {DETAIL_SECTION_OPTIONS.find((option) => option.value === section.type)?.label}</strong>
+            <div>
+              <label><input type="checkbox" checked={section.isVisible} onChange={(event) => update(index, { isVisible: event.target.checked })} /> Hiện</label>
+              <button type="button" className="list-editor-remove" aria-label="Xóa khối" onClick={() => onChange(sections.filter((_, i) => i !== index))}><Minus size={14} /></button>
+            </div>
+          </div>
+          {section.type !== 'spacer' ? <>
+            <div className="form-row-2col">
+              <label>Nhãn nhỏ<input value={section.eyebrow ?? ''} maxLength={120} onChange={(event) => update(index, { eyebrow: event.target.value || null })} /></label>
+              <label>Biến thể<select value={section.variant} onChange={(event) => update(index, { variant: event.target.value })}><option value="default">Mặc định</option><option value="soft">Nền xanh nhạt</option><option value="accent">Nhấn màu</option><option value="compact">Gọn</option><option value="split">Hai cột</option></select></label>
+            </div>
+            <div className="form-row-3col">
+              <label>Nền<select value={section.background} onChange={(event) => update(index, { background: event.target.value as OfferingSection['background'] })}><option value="white">Trắng</option><option value="soft-blue">Xanh nhạt</option><option value="gradient">Gradient</option><option value="navy">Xanh navy</option></select></label>
+              <label>Độ rộng<select value={section.container} onChange={(event) => update(index, { container: event.target.value as OfferingSection['container'] })}><option value="standard">Chuẩn</option><option value="wide">Rộng</option><option value="narrow">Hẹp</option></select></label>
+              <label>Khoảng cách<select value={section.spacing} onChange={(event) => update(index, { spacing: event.target.value as OfferingSection['spacing'] })}><option value="compact">Gọn</option><option value="normal">Chuẩn</option><option value="spacious">Thoáng</option></select></label>
+            </div>
+            <label>Tiêu đề<input value={section.title ?? ''} maxLength={220} onChange={(event) => update(index, { title: event.target.value || null })} /></label>
+            <label>Nội dung / mô tả<textarea rows={3} value={section.body ?? ''} maxLength={4000} onChange={(event) => update(index, { body: event.target.value || null })} /></label>
+            {['hero', 'imageText', 'process'].includes(section.type) ? <div className="form-row-2col">
+              <label>Ảnh từ thư viện<select value={section.imageMediaId ?? ''} onChange={(event) => update(index, { imageMediaId: event.target.value || null })}><option value="">Dùng ảnh cover của trang</option>{images.filter((image) => image.mimeType.startsWith('image/')).map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}</select></label>
+              <label>Mô tả ảnh<input value={section.imageAlt ?? ''} maxLength={220} onChange={(event) => update(index, { imageAlt: event.target.value || null })} /></label>
+            </div> : null}
+            {section.type === 'cta' || section.ctaLabel ? <div className="form-row-2col"><label>Nhãn nút<input value={section.ctaLabel ?? ''} maxLength={120} onChange={(event) => update(index, { ctaLabel: event.target.value || null })} /></label><label>Đường dẫn nút<input value={section.ctaHref ?? ''} maxLength={500} placeholder="/lien-he" onChange={(event) => update(index, { ctaHref: event.target.value || null })} /></label></div> : null}
+            {!['hero', 'cta'].includes(section.type) ? <DetailSectionItemsEditor items={section.items} onChange={(items) => update(index, { items })} /> : null}
+          </> : null}
+        </article>
+      ))}
+    </section>
   )
 }
 
@@ -837,6 +975,11 @@ function OfferingForm({
             />
             <FaqEditor items={form.contentJson.faq} onChange={(next) => setContent({ faq: next })} />
             <ItemsEditor items={form.contentJson.items} onChange={(next) => setContent({ items: next })} />
+            <DetailSectionsEditor
+              sections={form.contentJson.sections ?? []}
+              images={availableImages}
+              onChange={(sections) => setContent({ sections })}
+            />
           </ContentBodyEditor>
 
           {form.type !== 'industry' ? (

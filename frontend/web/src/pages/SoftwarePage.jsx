@@ -1,58 +1,39 @@
 import { useEffect, useState } from 'react'
+import { ArrowRight, CheckCircle2, MonitorSmartphone, Printer, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import {
-  ArrowRight,
-  BarChart3,
-  Boxes,
-  CheckCircle,
-  Printer,
-  ReceiptText,
-  ShieldCheck,
-  Smartphone,
-  Users,
-} from 'lucide-react'
 import PageLayout from '../components/PageLayout'
 import { setPageSeo } from '../utils/seo'
 import { softwareProducts } from '../data/siteContent'
 import { fetchOfferings } from '../utils/contentApi'
+import productSuite from '../assets/products/hero-iorder-suite.png'
+import dashboard from '../assets/products/hero-dashboard-cutout.png'
+import tablet from '../assets/products/mh-pos-iot.png'
+import phone from '../assets/products/mh-phone-iot.png'
+import pos from '../assets/products/hero-pos-retail-cutout.png'
 
-import heroImg from '../assets/products/hero-img.png'
-import mhPosIot from '../assets/products/mh-pos-iot.png'
-import mhMtIot from '../assets/products/mh-mt-iot.png'
-import mhPhoneIot from '../assets/products/mh-phone-iot.png'
-import softWareImg from '../assets/products/soft_ware.png'
-import posImg from '../assets/products/pos.jpg'
+const fallbackVisuals = [productSuite, dashboard, tablet, phone, pos]
 
-const reasons = [
+const ecosystem = [
   {
-    icon: Smartphone,
-    title: 'Dùng được trên nhiều thiết bị',
-    desc: 'Máy tính, tablet và điện thoại cùng truy cập dữ liệu cửa hàng.',
+    icon: MonitorSmartphone,
+    title: 'Một hệ thống, nhiều điểm chạm',
+    description: 'Từ quầy bán hàng đến màn hình quản trị và điện thoại của người chủ.',
   },
   {
     icon: Printer,
-    title: 'Kết nối thiết bị bán hàng',
-    desc: 'Máy in hóa đơn, in bếp, máy quét mã vạch và ngăn kéo tiền.',
+    title: 'Sẵn sàng cho thiết bị thực tế',
+    description: 'Kết nối thiết bị POS, máy in hóa đơn, máy in bếp và máy quét mã vạch.',
   },
   {
     icon: ShieldCheck,
-    title: 'Dữ liệu và phân quyền rõ ràng',
-    desc: 'Tách vai trò nhân viên, quản lý thao tác quan trọng và giảm rủi ro thất thoát.',
+    title: 'Dữ liệu rõ ràng theo từng vai trò',
+    description: 'Theo dõi vận hành, phân quyền và đối soát theo đúng cách cửa hàng làm việc.',
   },
 ]
 
-const productIconMap = {
-  boxes: Boxes,
-  chart: BarChart3,
-  receipt: ReceiptText,
-  shield: ShieldCheck,
-  smartphone: Smartphone,
-  users: Users,
+function productHref(product) {
+  return product.href ?? `/phan-mem/${product.slug}`
 }
-
-const productPages = softwareProducts // static fallback
-
-const productVisuals = [heroImg, mhPosIot, mhMtIot, mhPhoneIot, softWareImg, posImg]
 
 export default function SoftwarePage() {
   const [cmsProducts, setCmsProducts] = useState(null)
@@ -71,140 +52,118 @@ export default function SoftwarePage() {
     })
   }, [])
 
+  const products = cmsProducts ?? softwareProducts
+  const [featured, ...otherProducts] = products
+  const featuredHref = featured ? productHref(featured) : '/phan-mem/quan-ly-ban-hang-iorder'
+
   return (
     <PageLayout>
-      <section className="listing-hero software-hero">
-        <div className="container software-hero-grid">
-          <div>
-            <span className="listing-kicker">
-              <CheckCircle size={16} />
-              Bộ phần mềm iOrder
-            </span>
-            <h1 className="listing-hero-title">Quản lý bán hàng, dữ liệu và vận hành trên một nền tảng</h1>
-            <p className="listing-hero-lead">
-              iOrder gom các nghiệp vụ quan trọng vào một hệ sinh thái: bán hàng tại quầy, thiết bị POS, dữ liệu đồng
-              bộ, báo cáo vận hành và các giải pháp mở rộng cho doanh nghiệp.
+      <section className="software-editorial-hero">
+        <div className="container software-editorial-hero-grid">
+          <div className="software-editorial-hero-copy">
+            <p className="software-eyebrow">
+              <CheckCircle2 size={17} aria-hidden="true" /> HỆ SINH THÁI PHẦN MỀM IORDER
             </p>
-            <div className="software-stats">
-              <div>
-                <strong>{(cmsProducts ?? productPages).length}</strong>
-                <span>sản phẩm phần mềm</span>
-              </div>
-              <div>
-                <strong>24/7</strong>
-                <span>hỗ trợ triển khai</span>
-              </div>
-              <div>
-                <strong>Realtime</strong>
-                <span>báo cáo vận hành</span>
-              </div>
+            <h1>Phần mềm cho vận hành thật, không chỉ để quản lý trên màn hình</h1>
+            <p className="software-editorial-lead">
+              Xây dựng từ quy trình bán hàng tại quầy, iOrder kết nối dữ liệu, nhân sự và thiết bị để
+              cửa hàng vận hành nhất quán hơn mỗi ngày.
+            </p>
+            <div className="software-editorial-actions">
+              <Link to={featuredHref} className="btn primary">
+                Khám phá iOrder POS <ArrowRight size={18} />
+              </Link>
+              <Link to="/lien-he" className="software-text-link">
+                Trao đổi về mô hình của bạn <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
-
-          <div className="software-hero-panel">
-            <h2>Luồng vận hành mẫu</h2>
-            {[
-              'Tạo sản phẩm và giá bán',
-              'Bán hàng tại quầy hoặc gọi món',
-              'Tự động trừ kho và in hóa đơn',
-              'Chốt ca, xem báo cáo và đối soát',
-            ].map((item, index) => (
-              <div key={item} className="software-flow-item">
-                <span>{index + 1}</span>
-                <p>{item}</p>
-              </div>
-            ))}
+          <div className="software-editorial-hero-visual" aria-label="Bộ giải pháp iOrder">
+            <img src={productSuite} alt="Thiết bị và phần mềm quản lý bán hàng iOrder" fetchPriority="high" />
           </div>
         </div>
       </section>
 
-      <section className="listing-section soft software-products-section">
+      <section className="software-featured-product">
+        <div className="container software-featured-product-grid">
+          <div className="software-featured-product-copy">
+            <p className="software-eyebrow">SẢN PHẨM NỔI BẬT</p>
+            <h2>{featured?.title ?? 'Phần mềm quản lý bán hàng iOrder'}</h2>
+            <p>
+              {featured?.description ??
+                'Một không gian làm việc tập trung cho bán hàng, kho, nhân viên và báo cáo vận hành.'}
+            </p>
+            <ul className="software-proof-list">
+              <li>Thao tác nhanh tại quầy và trên thiết bị di động</li>
+              <li>Kho, đơn hàng và báo cáo cùng nằm trong một luồng dữ liệu</li>
+              <li>Dễ cấu hình theo cách vận hành riêng của từng cửa hàng</li>
+            </ul>
+            <Link to={featuredHref} className="software-arrow-link">
+              Xem chi tiết sản phẩm <ArrowRight size={18} />
+            </Link>
+          </div>
+          <div className="software-featured-product-visual">
+            <img src={featured?.coverUrl ?? dashboard} alt="Giao diện dashboard iOrder" loading="eager" />
+          </div>
+        </div>
+      </section>
+
+      <section className="software-product-editorial">
         <div className="container">
-          <div className="section-title compact">
-            <span>Danh mục phần mềm</span>
-            <h2>Chọn sản phẩm phù hợp với mô hình của bạn</h2>
-            <p>Mỗi nhóm phần mềm có trang chi tiết riêng để khách xem đúng giải pháp, đúng nhu cầu.</p>
+          <div className="software-section-heading">
+            <p className="software-eyebrow">CÁC SẢN PHẨM KHÁC</p>
+            <h2>Mở rộng theo đúng nghiệp vụ doanh nghiệp cần</h2>
+            <p>Không phải mô hình nào cũng vận hành giống nhau. Các sản phẩm được thiết kế cho từng bài toán riêng.</p>
           </div>
 
-          <div className="listing-grid cols-4 software-product-grid">
-            {(cmsProducts ?? productPages).map((product, index) => {
-              const Icon = productIconMap[product.iconKey] ?? ReceiptText
-              const visual = productVisuals[index % productVisuals.length]
+          <div className="software-editorial-product-list">
+            {otherProducts.map((product, index) => {
+              const visual = product.coverUrl ?? fallbackVisuals[(index + 1) % fallbackVisuals.length]
+              const reversed = index % 2 === 1
               return (
-                <Link to={`/phan-mem/${product.slug}`} key={product.id} className="listing-card-link">
-                  <article className="listing-card software-listing-card">
-                    <div className="software-card-media">
-                      <img src={visual} alt="" loading="lazy" decoding="async" />
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                    </div>
-                    <div className="software-card-body">
-                      <div className="listing-icon-shell">
-                        <Icon size={28} className="listing-card-icon" />
-                      </div>
-                      <h3 className="listing-card-title">{product.title}</h3>
-                      <p className="listing-card-desc">{product.description}</p>
-                      <div className="news-chip-row">
-                        {product.tags.map((tag) => (
-                          <span key={tag}>{tag}</span>
-                        ))}
-                      </div>
-                      <div className="listing-card-action">
-                        Xem chi tiết <ArrowRight size={16} />
-                      </div>
-                    </div>
-                  </article>
-                </Link>
+                <article className={`software-editorial-product ${reversed ? 'is-reversed' : ''}`} key={product.id ?? product.slug}>
+                  <div className="software-editorial-product-index">{String(index + 2).padStart(2, '0')}</div>
+                  <div className="software-editorial-product-copy">
+                    <p>{product.tags?.[0] ?? 'iOrder platform'}</p>
+                    <h3>{product.title}</h3>
+                    <span>{product.description}</span>
+                    <Link to={productHref(product)} className="software-arrow-link">
+                      Khám phá sản phẩm <ArrowRight size={17} />
+                    </Link>
+                  </div>
+                  <Link to={productHref(product)} className="software-editorial-product-visual" aria-label={`Xem ${product.title}`}>
+                    <img src={visual} alt="" loading="lazy" decoding="async" />
+                  </Link>
+                </article>
               )
             })}
           </div>
         </div>
       </section>
 
-      <section className="listing-section software-compare-section">
-        <div className="container">
-          <div className="section-title">
-            <h2>Chọn module theo nhu cầu vận hành</h2>
-            <p>Bảng tóm tắt giúp khách truy cập hiểu nhanh nên bắt đầu từ phần nào của iOrder.</p>
-          </div>
-          <div className="software-compare-table">
-            <div className="software-compare-row compare-header">
-              <span>Module</span>
-              <span>Phù hợp nhất với</span>
-              <span>Giá trị chính</span>
-              <span>Chi tiết</span>
-            </div>
-            {(cmsProducts ?? productPages).map((product) => (
-              <div className="software-compare-row" key={product.slug}>
-                <strong>{product.title}</strong>
-                <span>{product.bestFor}</span>
-                <span>{product.keyValue}</span>
-                <Link to={`/phan-mem/${product.slug}`}>Xem thêm</Link>
-              </div>
-            ))}
-          </div>
-          <div className="software-compare-cta">
-            <p>Chưa chắc cửa hàng nên bắt đầu từ module nào?</p>
-            <Link to="/lien-he" className="btn primary">
-              Nhận tư vấn cấu hình
+      <section className="software-ecosystem-section">
+        <div className="container software-ecosystem-grid">
+          <div>
+            <p className="software-eyebrow">HỆ SINH THÁI VẬN HÀNH</p>
+            <h2>Phần mềm cần đi cùng cách cửa hàng làm việc.</h2>
+            <p>
+              iOrder không chỉ dừng ở một màn hình bán hàng. Hệ thống được triển khai cùng thiết bị, quy trình và đội ngũ của bạn.
+            </p>
+            <Link to="/lien-he" className="btn light">
+              Nhận tư vấn cấu hình <ArrowRight size={18} />
             </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="listing-section software-reasons-section">
-        <div className="container">
-          <div className="section-title">
-            <h2>Tại sao chọn iOrder?</h2>
-            <p>Giao diện tập trung vào thao tác thật tại cửa hàng, không chỉ là màn hình quản trị.</p>
-          </div>
-          <div className="news-split-grid three">
-            {reasons.map((item) => {
+          <div className="software-ecosystem-list">
+            {ecosystem.map((item, index) => {
               const Icon = item.icon
               return (
-                <div key={item.title} className="news-insight-card">
-                  <Icon size={30} />
-                  <h3>{item.title}</h3>
-                  <p>{item.desc}</p>
+                <div className="software-ecosystem-item" key={item.title}>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <Icon size={25} aria-hidden="true" />
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </div>
                 </div>
               )
             })}

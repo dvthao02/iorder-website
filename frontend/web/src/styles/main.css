@@ -139,21 +139,9 @@
   background: var(--bg-card);
 }
 
-/* Header */
-[data-theme='dark'] .header,
-[data-theme='dark'] .header.scrolled {
-  background: rgba(8, 18, 35, 0.97) !important;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
-}
-
-[data-theme='dark'] nav .nav-link,
+/* Legacy footer navigation */
 [data-theme='dark'] .footer-nav a {
   color: var(--muted);
-}
-
-[data-theme='dark'] .nav-link:hover {
-  color: var(--primary);
 }
 
 /* Feature split visual panels */
@@ -855,7 +843,6 @@ img {
 .partner-grid,
 .feature-grid,
 .featured-grid,
-.contact-grid,
 .solution-grid,
 .service-grid,
 .news-grid,
@@ -962,8 +949,7 @@ img {
 .solution-grid,
 .software-grid,
 .featured-grid,
-.news-grid,
-.contact-grid {
+.news-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -1407,10 +1393,6 @@ img {
   gap: 6px;
 }
 
-.contact-section {
-  padding-bottom: 56px;
-}
-
 /* Footer styles moved to src/styles/components/footer.css */
 /* Old mega classes kept only to prevent legacy JSX from breaking */
 .mega-panel-shell,
@@ -1427,31 +1409,6 @@ img {
     --container-padding: 24px;
   }
 
-  .header-container {
-    width: min(100%, calc(100% - 48px));
-    grid-template-columns: 190px minmax(0, 1fr) auto;
-    gap: 20px;
-  }
-
-  .logo img {
-    height: 38px;
-    max-width: 150px;
-  }
-
-  .nav {
-    gap: 4px;
-  }
-
-  .nav-link,
-  .nav-trigger {
-    padding: 0 9px;
-    font-size: 15px;
-  }
-
-  .nav-actions .btn {
-    padding: 0 18px;
-  }
-
   .model-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1465,88 +1422,9 @@ img {
 }
 
 @media (max-width: 1023px) {
-  :root {
-    --header-height: 74px;
-  }
-
-  .header-container {
-    width: min(100%, calc(100% - 40px));
-    height: var(--header-height);
-    grid-template-columns: 1fr auto;
-    justify-content: space-between;
-  }
-
-  .logo img {
-    height: 42px;
-    max-width: 148px;
-  }
-
-  .nav,
-  .nav-actions {
-    display: none;
-  }
-
-  .menu-btn {
-    display: grid;
-    justify-self: end;
-  }
-
-  .mobile-nav {
-    display: block;
-    border-top: 1px solid rgba(231, 237, 245, 0.9);
-    background: rgba(255, 255, 255, 0.98);
-    max-height: calc(100svh - var(--header-height));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .mobile-nav-panel {
-    padding: 12px 0 18px;
-    display: grid;
-    gap: 10px;
-  }
-
-  .mobile-nav-panel a {
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: #f7fbff;
-    font-weight: 700;
-  }
-
-  .mobile-menu-group {
-    display: grid;
-    gap: 10px;
-    padding: 6px 0 2px;
-  }
-
-  .mobile-menu-title {
-    background: #eef8ff !important;
-    color: var(--text);
-    font-weight: 700;
-  }
-
-  .mobile-menu-links {
-    display: grid;
-    gap: 8px;
-    padding-left: 12px;
-  }
-
-  .mobile-menu-links a {
-    background: #f8fbff;
-    color: #334155;
-    font-weight: 600;
-  }
-
-  .mobile-nav-actions {
-    display: grid;
-    gap: 10px;
-    margin-top: 4px;
-  }
-
   .hero-grid,
   .page-hero-grid,
   .app-box,
-  .contact-grid,
   .feature-grid,
   .solution-grid,
   .software-grid,
@@ -1579,10 +1457,6 @@ img {
 @media (max-width: 640px) {
   :root {
     --container-padding: 16px;
-  }
-
-  .header-container {
-    width: min(100%, calc(100% - 32px));
   }
 
   .hero-content h2,
@@ -1679,7 +1553,6 @@ body,
 .page-shell .page-content,
 .page-shell .listing-page,
 .page-shell .detail-page,
-.page-shell .contact-section,
 .page-shell .section:first-of-type {
   flex: 1;
 }
@@ -1699,48 +1572,6 @@ body,
 .not-found-page > div,
 .empty-page > div {
   width: 100%;
-}
-
-@media (max-width: 1080px) {
-  .header .header-container {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .header .mobile-nav {
-    max-height: calc(100svh - var(--header-height));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 139, 0.32) transparent;
-  }
-
-  .header .mobile-nav::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .header .mobile-nav::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.3);
-    border-radius: 999px;
-  }
-
-  .header .menu-btn {
-    position: relative;
-    top: auto;
-    right: auto;
-    z-index: 2000;
-    display: grid !important;
-    visibility: visible;
-    opacity: 1;
-    place-items: center;
-    color: #101828;
-    background: #ffffff;
-    border: 1px solid rgba(203, 213, 225, 0.95);
-  }
-
-  .header .menu-btn svg {
-    display: block !important;
-  }
 }
 
 /* ── Dark mode: general cards (main.css classes) ────────────── */

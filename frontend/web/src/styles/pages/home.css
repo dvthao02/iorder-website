@@ -2922,11 +2922,14 @@
 }
 
 .industry-compact-header {
-  display: flex;
-  justify-content: space-between;
+  display: block;
   max-width: 800px;
   margin: 0 auto 40px;
   text-align: center;
+}
+
+.industry-compact-header > div {
+  width: 100%;
 }
 
 .industry-compact-header h2 {
@@ -3456,26 +3459,26 @@
 }
 
 .ecosystem-heading {
-  max-width: 760px;
-  margin: 0 0 38px;
-  text-align: left;
+  max-width: 1100px;
+  margin: 0 auto 38px;
+  text-align: center;
 }
 
 .ecosystem-heading .section-eyebrow {
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .ecosystem-heading h2 {
-  max-width: 760px;
-  margin-right: 0;
-  margin-left: 0;
+  max-width: 1100px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .ecosystem-heading p {
   max-width: 680px;
-  margin-right: 0;
-  margin-left: 0;
-  text-align: left;
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
 }
 
 .ecosystem-grid {
@@ -3548,7 +3551,9 @@
 }
 
 .ecosystem-link {
-  gap: 7px;
+  width: min(100%, 216px);
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 20px;
   font-weight: 800;
 }
@@ -4665,8 +4670,8 @@
 }
 
 .home-news-section {
-  padding-top: 76px;
-  padding-bottom: 80px;
+  padding-top: 64px;
+  padding-bottom: 68px;
 }
 
 .home-news-heading {
@@ -4674,21 +4679,45 @@
 }
 
 .home-news-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .home-news-card {
-  border-radius: 18px;
-  box-shadow: 0 8px 24px rgba(28, 73, 108, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(28, 73, 108, 0.04);
 }
 
 .home-news-copy {
-  padding: 20px 22px 22px;
+  padding: 15px 16px 16px;
 }
 
 .home-news-copy h3 {
-  font-size: 20px;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.home-news-copy p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.home-news-copy b {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .home-news-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .home-faq-section {
@@ -4829,7 +4858,9 @@
   }
 
   .home-news-arrow {
-    display: none;
+    display: grid;
+    width: 36px;
+    height: 36px;
   }
 
   .home-news-copy h3 {

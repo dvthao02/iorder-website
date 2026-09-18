@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, CheckCircle, Database, Fingerprint, Network, Server, ShieldCheck, Wifi } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
+import ListingHero from '../components/ListingHero'
 import { setPageSeo } from '../utils/seo'
 import { solutionPages } from '../data/siteContent'
 import { fetchOfferings } from '../utils/contentApi'
@@ -43,34 +44,18 @@ export default function SolutionsPage() {
 
   return (
     <PageLayout>
-      <section className="listing-hero solution-hero">
-        <div className="container software-hero-grid">
-          <div>
-            <span className="listing-kicker">
-              <CheckCircle size={16} />
-              Giải pháp triển khai
-            </span>
-            <h1 className="listing-hero-title">Hạ tầng ổn định để phần mềm vận hành mượt hơn</h1>
-            <p className="listing-hero-lead">
-              iOrder không chỉ cung cấp phần mềm. Chúng tôi hỗ trợ thiết kế, triển khai và chuẩn hóa hạ tầng mạng, thiết
-              bị, máy chủ và bảo mật để hệ thống bán hàng hoạt động ổn định.
-            </p>
-            <div className="software-stats">
-              <div>
-                <strong>{(cmsSolutions ?? staticSolutions).length}</strong>
-                <span>nhóm giải pháp</span>
-              </div>
-              <div>
-                <strong>LAN/Wifi</strong>
-                <span>thiết kế theo mặt bằng</span>
-              </div>
-              <div>
-                <strong>HA</strong>
-                <span>dự phòng và bảo mật</span>
-              </div>
-            </div>
-          </div>
-
+      <ListingHero
+        className="solution-hero"
+        crumb="Giải pháp"
+        kicker={
+          <>
+            <CheckCircle size={16} />
+            Giải pháp triển khai
+          </>
+        }
+        title="Hạ tầng ổn định để phần mềm vận hành mượt hơn"
+        lead="iOrder không chỉ cung cấp phần mềm. Chúng tôi hỗ trợ thiết kế, triển khai và chuẩn hóa hạ tầng mạng, thiết bị, máy chủ và bảo mật để hệ thống bán hàng hoạt động ổn định."
+        aside={
           <div className="software-hero-panel">
             <h2>Quy trình triển khai</h2>
             {[
@@ -85,8 +70,23 @@ export default function SolutionsPage() {
               </div>
             ))}
           </div>
+        }
+      >
+        <div className="software-stats">
+          <div>
+            <strong>{(cmsSolutions ?? staticSolutions).length}</strong>
+            <span>nhóm giải pháp</span>
+          </div>
+          <div>
+            <strong>LAN/Wifi</strong>
+            <span>thiết kế theo mặt bằng</span>
+          </div>
+          <div>
+            <strong>HA</strong>
+            <span>dự phòng và bảo mật</span>
+          </div>
         </div>
-      </section>
+      </ListingHero>
 
       <section className="listing-section soft solution-products-section">
         <div className="container">

@@ -10,8 +10,18 @@ export default function MobileNav({ navItems, softwareMenu, solutionsMenu, servi
   }
 
   return (
-    <div className="mobile-nav">
+    <div id="mobile-navigation" className="mobile-nav">
       <div className="container mobile-nav-panel">
+        <div className="mobile-nav-actions" aria-label="Truy cập iOrder">
+          <a className="btn outline" href={externalLinks.appLogin} target="_blank" rel="noreferrer">
+            Đăng nhập
+          </a>
+
+          <a className="btn primary" href={externalLinks.trial} target="_blank" rel="noreferrer">
+            Dùng thử miễn phí
+          </a>
+        </div>
+
         {navItems.map((item) => {
           const offeringLinks = offeringsByUrl[item.url]
           if (offeringLinks) {
@@ -52,16 +62,6 @@ export default function MobileNav({ navItems, softwareMenu, solutionsMenu, servi
             </NavLink>
           )
         })}
-
-        <div className="mobile-nav-actions">
-          <a className="btn outline" href={externalLinks.appLogin} target="_blank" rel="noreferrer">
-            Đăng nhập
-          </a>
-
-          <a className="btn primary" href={externalLinks.trial} target="_blank" rel="noreferrer">
-            Dùng thử miễn phí
-          </a>
-        </div>
       </div>
     </div>
   )

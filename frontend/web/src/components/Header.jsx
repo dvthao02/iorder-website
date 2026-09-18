@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import {
   servicePages as defaultServicePages,
   softwareProducts as defaultSoftwareMenu,
@@ -110,6 +110,10 @@ export default function Header({
 
   const openDropdownFor = (name) => setOpenDropdown(name)
 
+  const handleHeaderKeyDown = (event) => {
+    if (event.key === 'Escape') closeMenu()
+  }
+
   // Mỗi mục menu render theo URL: 3 mục Offerings dùng dropdown dữ liệu riêng,
   // mục có con (Hỗ trợ) dùng dropdown thường, còn lại là link phẳng.
   const renderNavItem = (item) => {
@@ -171,7 +175,11 @@ export default function Header({
   }
 
   return (
-    <header className={`header ${scrolled ? 'scrolled' : ''}`} onMouseLeave={() => setOpenDropdown(null)}>
+    <header
+      className={`header ${scrolled ? 'scrolled' : ''}`}
+      onMouseLeave={() => setOpenDropdown(null)}
+      onKeyDown={handleHeaderKeyDown}
+    >
       <div className="header-container">
         <Link to="/" className="logo" onClick={closeMenu}>
           <img src={logoMain} alt="iOrder" loading="eager" decoding="sync" fetchPriority="high" />
@@ -186,10 +194,12 @@ export default function Header({
         <button
           className="menu-btn"
           type="button"
-          aria-label="Mở menu"
+          aria-controls="mobile-navigation"
+          aria-expanded={mobileOpen}
+          aria-label={mobileOpen ? 'Đóng menu' : 'Mở menu'}
           onClick={() => setMobileOpen((value) => !value)}
         >
-          <Menu size={22} />
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 

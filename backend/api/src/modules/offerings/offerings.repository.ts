@@ -1,11 +1,15 @@
 import type { OfferingInput, OfferingListQuery } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
 import { auditLogs, mediaAssets, offeringRevisions, offerings } from '@iorder/database'
-import { and, asc, count, desc, eq, ilike, isNull, max, ne, or } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, inArray, isNull, max, ne, or } from 'drizzle-orm'
 
 export type OfferingRecord = typeof offerings.$inferSelect
 
-export function serializeOffering(offering: OfferingRecord, coverUrl: string | null = null) {
+export function serializeOffering(
+  offering: OfferingRecord,
+  coverUrl: string | null = null,
+  sectionMediaUrls: Record<string, string> = {},
+) {
   return {
     id: offering.id,
     type: offering.type,
@@ -15,6 +19,7 @@ export function serializeOffering(offering: OfferingRecord, coverUrl: string | n
     icon: offering.icon,
     coverMediaId: offering.coverMediaId,
     coverUrl,
+    sectionMediaUrls,
     sortOrder: offering.sortOrder,
     isFeatured: offering.isFeatured,
     status: offering.status,
@@ -49,6 +54,13 @@ export class OfferingsRepository {
       .where(eq(mediaAssets.id, id))
       .limit(1)
     return Boolean(asset)
+  }
+
+  async mediaReferencesExist(ids: Array<string | null>) {
+    const uniqueIds = [...new Set(ids.filter((id): id is string => Boolean(id)))]
+    if (!uniqueIds.length) return true
+    const rows = await this.db.select({ id: mediaAssets.id }).from(mediaAssets).where(inArray(mediaAssets.id, uniqueIds))
+    return rows.length === uniqueIds.length
   }
 
   async slugExistsForType(type: OfferingRecord['type'], slug: string, excludedId?: string) {

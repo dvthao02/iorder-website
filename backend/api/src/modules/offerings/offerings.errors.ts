@@ -20,3 +20,10 @@ export class OfferingCoverNotFoundError extends ApplicationError {
     Object.setPrototypeOf(this, OfferingCoverNotFoundError.prototype)
   }
 }
+
+export class OfferingSectionMediaNotFoundError extends ApplicationError {
+  constructor() {
+    super('SECTION_MEDIA_NOT_FOUND', 'A media asset referenced by a detail section does not exist', 422)
+    Object.setPrototypeOf(this, OfferingSectionMediaNotFoundError.prototype)
+  }
+}

@@ -1885,6 +1885,11 @@ a.row-action {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+.form-row-3col {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
 .form-divider {
   border: none;
   border-top: 1.5px solid #e5eef7;
@@ -2646,6 +2651,50 @@ a.row-action {
   color: #8096ae;
   text-align: center;
   font-style: italic;
+}
+
+/* ── Detail page section editor ─────────────────────────────────────────── */
+.detail-sections-editor {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px solid #cfe5f7;
+  border-radius: 14px;
+  background: #f9fcff;
+}
+.detail-sections-editor__head,
+.detail-section-editor-card__head,
+.detail-section-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.detail-sections-editor__head > div { min-width: 0; }
+.detail-sections-editor__head .field-label { display: block; }
+.detail-sections-editor__head p { margin: 4px 0 0; color: #71859a; font-size: 12px; line-height: 1.5; }
+.detail-sections-editor__head select { min-width: 160px; }
+.detail-section-editor-card {
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid #dce8f4;
+  border-radius: 11px;
+  background: #fff;
+}
+.detail-section-editor-card__head { padding-bottom: 10px; border-bottom: 1px solid #edf3f8; color: #263f59; }
+.detail-section-editor-card__head > div { display: inline-flex; align-items: center; gap: 9px; }
+.detail-section-editor-card__head label { margin: 0; color: #607991; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.detail-section-editor-card__head input { width: auto; margin-right: 4px; }
+.detail-section-items { overflow: hidden; border: 1px solid #e1ecf5; border-radius: 9px; }
+.detail-section-items .list-editor-head { padding: 8px 10px; }
+.detail-section-item-row { align-items: flex-start; padding: 9px 10px; border-top: 1px solid #edf3f8; }
+.detail-section-item-row > span { width: 19px; padding-top: 8px; color: #7aa6c9; font-size: 12px; font-weight: 800; }
+.detail-section-item-row > div { display: grid; flex: 1; gap: 6px; }
+.detail-section-item-row input { padding: 7px 9px; border: 1px solid #dce8f4; border-radius: 7px; }
+@media (max-width: 700px) {
+  .detail-sections-editor__head { align-items: flex-start; flex-direction: column; }
+  .detail-sections-editor__head select { width: 100%; }
 }
 
 /* ── FAQ editor ────────────────────────────────────────────────────────────── */
@@ -6138,6 +6187,7 @@ a.row-action {
 /* Nhãn trường xếp dọc trên input (khôi phục hành vi cũ của .modal-body label
    sau khi bỏ modal). Chỉ áp cho nhãn trường — không đụng tới chip / toggle. */
 .content-editor-page .form-row-2col > label,
+.content-editor-page .form-row-3col > label,
 .content-editor-page label.full-field,
 .content-editor-page .content-stack > label,
 .content-editor-page .content-subsection > label {
@@ -6747,6 +6797,12 @@ a.row-action {
 
 .content-editor-page.is-standalone .form-row-2col {
   gap: 14px;
+}
+.content-editor-page.is-standalone .form-row-3col {
+  gap: 14px;
+}
+@media (max-width: 760px) {
+  .form-row-3col { grid-template-columns: 1fr; }
 }
 
 .content-editor-page.is-standalone .content-form-card-body input:not([type='checkbox']),

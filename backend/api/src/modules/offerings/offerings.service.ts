@@ -1,9 +1,14 @@
-import type { OfferingInput, OfferingListQuery } from '@iorder/contracts'
+import type { OfferingContent, OfferingInput, OfferingListQuery } from '@iorder/contracts'
 
 import type { HookManager } from '../../shared/hooks/index.js'
-import { OfferingCoverNotFoundError, OfferingNotFoundError, OfferingSlugExistsError } from './offerings.errors.js'
+import {
+  OfferingCoverNotFoundError,
+  OfferingNotFoundError,
+  OfferingSectionMediaNotFoundError,
+  OfferingSlugExistsError,
+} from './offerings.errors.js'
 import { OFFERING_EVENTS } from './offerings.hooks.js'
-import { serializeOffering, type OfferingsRepository } from './offerings.repository.js'
+import { serializeOffering, type OfferingRecord, type OfferingsRepository } from './offerings.repository.js'
 
 export class OfferingsService {
   constructor(
@@ -11,22 +16,36 @@ export class OfferingsService {
     private hooks: HookManager,
   ) {}
 
+  private async serializeWithMedia(offering: OfferingRecord) {
+    const content = offering.contentJson as OfferingContent
+    const mediaIds = [...new Set((content.sections ?? []).map((section) => section.imageMediaId).filter(Boolean))] as string[]
+    const entries = await Promise.all(
+      mediaIds.map(async (id) => [id, await this.repository.resolveMediaUrl(id)] as const),
+    )
+    const sectionMediaUrls = Object.fromEntries(entries.filter((entry): entry is [string, string] => Boolean(entry[1])))
+    return serializeOffering(
+      offering,
+      await this.repository.resolveMediaUrl(offering.coverMediaId),
+      sectionMediaUrls,
+    )
+  }
+
   async list(query: OfferingListQuery) {
     const { rows, total } = await this.repository.list(query)
-    const withUrls = await Promise.all(
-      rows.map(async (o) => serializeOffering(o, await this.repository.resolveMediaUrl(o.coverMediaId))),
-    )
+    const withUrls = await Promise.all(rows.map((o) => this.serializeWithMedia(o)))
     return { items: withUrls, total, page: query.page, limit: query.limit }
   }
 
   async getById(id: string) {
     const offering = await this.repository.findById(id)
     if (!offering) throw new OfferingNotFoundError()
-    return { item: serializeOffering(offering, await this.repository.resolveMediaUrl(offering.coverMediaId)) }
+    return { item: await this.serializeWithMedia(offering) }
   }
 
   async create(input: OfferingInput, editorId: string) {
     if (!(await this.repository.coverExists(input.coverMediaId))) throw new OfferingCoverNotFoundError()
+    if (!(await this.repository.mediaReferencesExist(input.contentJson.sections.map((section) => section.imageMediaId))))
+      throw new OfferingSectionMediaNotFoundError()
     if (await this.repository.slugExistsForType(input.type, input.slug)) throw new OfferingSlugExistsError()
 
     const created = await this.repository.create(input)
@@ -43,7 +62,7 @@ export class OfferingsService {
 
     return {
       statusCode: 201,
-      item: serializeOffering(created, await this.repository.resolveMediaUrl(created.coverMediaId)),
+      item: await this.serializeWithMedia(created),
     }
   }
 
@@ -51,6 +70,8 @@ export class OfferingsService {
     const existing = await this.repository.findById(id)
     if (!existing) throw new OfferingNotFoundError()
     if (!(await this.repository.coverExists(input.coverMediaId))) throw new OfferingCoverNotFoundError()
+    if (!(await this.repository.mediaReferencesExist(input.contentJson.sections.map((section) => section.imageMediaId))))
+      throw new OfferingSectionMediaNotFoundError()
     if (input.slug !== existing.slug && (await this.repository.slugExistsForType(input.type, input.slug, id)))
       throw new OfferingSlugExistsError()
 
@@ -69,7 +90,7 @@ export class OfferingsService {
 
     await this.hooks.emit(OFFERING_EVENTS.UPDATED, { offeringId: id })
 
-    return { item: serializeOffering(updated, await this.repository.resolveMediaUrl(updated.coverMediaId)) }
+    return { item: await this.serializeWithMedia(updated) }
   }
 
   async publish(id: string, editorId: string) {
@@ -88,7 +109,7 @@ export class OfferingsService {
     })
     await this.hooks.emit(OFFERING_EVENTS.PUBLISHED, { offeringId: id })
 
-    return { item: serializeOffering(updated, await this.repository.resolveMediaUrl(updated.coverMediaId)) }
+    return { item: await this.serializeWithMedia(updated) }
   }
 
   async archive(id: string, editorId: string) {
@@ -106,7 +127,7 @@ export class OfferingsService {
     })
     await this.hooks.emit(OFFERING_EVENTS.ARCHIVED, { offeringId: id })
 
-    return { item: serializeOffering(updated, await this.repository.resolveMediaUrl(updated.coverMediaId)) }
+    return { item: await this.serializeWithMedia(updated) }
   }
 
   // Gỡ xuất bản: đưa nội dung đã đăng về bản nháp (khác với archive/ẩn).
@@ -125,7 +146,7 @@ export class OfferingsService {
     })
     await this.hooks.emit(OFFERING_EVENTS.UNPUBLISHED, { offeringId: id })
 
-    return { item: serializeOffering(updated, await this.repository.resolveMediaUrl(updated.coverMediaId)) }
+    return { item: await this.serializeWithMedia(updated) }
   }
 
   async delete(id: string, editorId: string) {
@@ -144,15 +165,13 @@ export class OfferingsService {
 
   async listPublic(type?: OfferingInput['type']) {
     const rows = await this.repository.listPublic(type)
-    const withUrls = await Promise.all(
-      rows.map(async (o) => serializeOffering(o, await this.repository.resolveMediaUrl(o.coverMediaId))),
-    )
+    const withUrls = await Promise.all(rows.map((o) => this.serializeWithMedia(o)))
     return { items: withUrls }
   }
 
   async getPublicByTypeAndSlug(type: OfferingInput['type'], slug: string) {
     const row = await this.repository.findPublicByTypeAndSlug(type, slug)
     if (!row) throw new OfferingNotFoundError()
-    return { item: serializeOffering(row, await this.repository.resolveMediaUrl(row.coverMediaId)) }
+    return { item: await this.serializeWithMedia(row) }
   }
 }

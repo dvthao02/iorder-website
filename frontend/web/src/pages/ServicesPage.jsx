@@ -13,6 +13,7 @@ import {
   Video,
 } from 'lucide-react'
 import PageLayout from '../components/PageLayout'
+import ListingHero from '../components/ListingHero'
 import { servicePages } from '../data/siteContent'
 import { setPageSeo } from '../utils/seo'
 import { fetchOfferings } from '../utils/contentApi'
@@ -49,15 +50,12 @@ export default function ServicesPage() {
 
   return (
     <PageLayout>
-      <section className="listing-hero">
-        <div className="container">
-          <h1 className="listing-hero-title">Dịch vụ & Hỗ trợ</h1>
-          <p className="listing-hero-lead">
-            Dịch vụ CNTT hỗ trợ triển khai, bảo trì, website, hóa đơn điện tử và chuyển đổi số cho cửa hàng, doanh
-            nghiệp.
-          </p>
-        </div>
-      </section>
+      <ListingHero
+        crumb="Dịch vụ"
+        kicker="Dịch vụ CNTT"
+        title="Dịch vụ & Hỗ trợ"
+        lead="Dịch vụ CNTT hỗ trợ triển khai, bảo trì, website, hóa đơn điện tử và chuyển đổi số cho cửa hàng, doanh nghiệp."
+      />
 
       <section className="listing-section soft">
         <div className="container">

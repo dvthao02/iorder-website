@@ -304,6 +304,7 @@ export default function Home() {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0)
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
   const [activeNewsIndex, setActiveNewsIndex] = useState(0)
+  const [newsPerView, setNewsPerView] = useState(3)
   const previewToken =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('cmsPreview') : null
   const previewTheme =
@@ -446,7 +447,6 @@ export default function Home() {
   const cmsProcess = cmsBlock('home_process')
   const cmsTestimonials = cmsBlock('home_testimonials')
   const cmsFeaturedPosts = cmsBlock('home_featured_posts')
-  const featuredPostsLimit = cmsFeaturedPosts?.data?.limit
   const featuredPostsType = cmsFeaturedPosts?.data?.postType
   const cmsFaq = cmsBlock('home_faq')
   const cmsCta = cmsBlock('home_cta')
@@ -526,14 +526,23 @@ export default function Home() {
   const processFeatureImage = isCmsMode ? cmsMedia.get(cmsProcess?.data?.featureMediaId)?.publicUrl : posIotImage
 
   useEffect(() => {
-    if (featuredPostsLimit === undefined || featuredPostsType === undefined) {
+    if (featuredPostsType === undefined) {
       setCmsPosts([])
       return
     }
-    fetchPublishedPosts(featuredPostsLimit, null, featuredPostsType === 'all' ? null : featuredPostsType)
+    fetchPublishedPosts(100, null, featuredPostsType === 'all' ? null : featuredPostsType)
       .then(setCmsPosts)
       .catch(() => setCmsPosts([]))
-  }, [featuredPostsLimit, featuredPostsType])
+  }, [featuredPostsType])
+
+  useEffect(() => {
+    const syncNewsPerView = () => {
+      setNewsPerView(window.innerWidth <= 640 ? 1 : window.innerWidth <= 1023 ? 2 : 3)
+    }
+    syncNewsPerView()
+    window.addEventListener('resize', syncNewsPerView)
+    return () => window.removeEventListener('resize', syncNewsPerView)
+  }, [])
 
   const navSoftware = cmsNav?.software ?? softwareProducts
   const navSolutions = cmsNav?.solutions ?? solutionPages
@@ -605,16 +614,22 @@ export default function Home() {
             imageAlt: post.title,
           }))
         : newsArticles
+    return source
+  }, [cmsPosts])
+
+  const visibleHomeNews = useMemo(() => {
+    if (!homeNews.length) return []
     return Array.from(
-      { length: Math.min(3, source.length) },
-      (_, index) => source[(activeNewsIndex + index) % source.length],
+      { length: Math.min(newsPerView, homeNews.length) },
+      (_, index) => homeNews[(activeNewsIndex + index) % homeNews.length],
     )
-  }, [activeNewsIndex, cmsPosts])
+  }, [activeNewsIndex, homeNews, newsPerView])
 
   const goToNews = (direction) => {
+    if (homeNews.length < 2) return
     setActiveNewsIndex((current) => {
-      if (direction === 'next') return (current + 1) % newsArticles.length
-      return (current - 1 + newsArticles.length) % newsArticles.length
+      const offset = direction === 'next' ? 1 : -1
+      return (current + offset + homeNews.length) % homeNews.length
     })
   }
 
@@ -1066,7 +1081,7 @@ export default function Home() {
                     </div>
                     <p className="ecosystem-desc">{group.desc}</p>
                     <ul>
-                      {group.items.slice(0, 3).map((item) => (
+                      {group.items.map((item) => (
                         <li key={item.href}>
                           <Link to={item.href}>{item.title}</Link>
                         </li>
@@ -1177,11 +1192,12 @@ export default function Home() {
                 className="home-news-arrow prev"
                 aria-label="Bài trước"
                 onClick={() => goToNews('prev')}
+                disabled={homeNews.length < 2}
               >
-                <ChevronLeft size={22} />
+                <ChevronLeft size={20} />
               </button>
               <div className="home-news-grid">
-                {homeNews.slice(0, 2).map((article) => (
+                {visibleHomeNews.map((article) => (
                   <Link to={`/tin-tuc/${article.slug}`} className="home-news-card" key={article.slug}>
                     <div className="home-news-image">
                       <SafeImage src={article.image} alt={article.imageAlt} loading="lazy" decoding="async" />
@@ -1202,8 +1218,9 @@ export default function Home() {
                 className="home-news-arrow next"
                 aria-label="Bài tiếp theo"
                 onClick={() => goToNews('next')}
+                disabled={homeNews.length < 2}
               >
-                <ChevronRight size={22} />
+                <ChevronRight size={20} />
               </button>
             </div>
           </div>
