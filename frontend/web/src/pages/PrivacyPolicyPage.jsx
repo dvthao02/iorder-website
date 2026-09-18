@@ -39,12 +39,17 @@ const policySections = [
       {
         title: (company) =>
           `A. Đối với khách hàng sử dụng Ứng dụng ${company} từ Apple App Store hoặc Google Play, bạn hiểu và chấp nhận rằng ${company} có quyền:`,
-        items: (company) => ['Lấy vị trí hiện tại của bạn;', `Ghi dữ liệu của Ứng dụng ${company} lên thẻ nhớ;`, 'Truy cập Internet từ thiết bị của bạn.'],
+        items: (company) => [
+          'Lấy vị trí hiện tại của bạn;',
+          `Ghi dữ liệu của Ứng dụng ${company} lên thẻ nhớ;`,
+          'Truy cập Internet từ thiết bị của bạn.',
+        ],
         note: (company) =>
           `Lưu ý: Tất cả các truy cập này chỉ được chúng tôi thực hiện khi có sự đồng ý của bạn. Việc từ chối quyền có thể ảnh hưởng đến một số tính năng của ${company}.`,
       },
       {
-        title: (company) => `B. Đối với tài khoản Facebook của Khách hàng khi liên kết ${company}, ${company} sẽ yêu cầu quyền truy cập các thông tin sau:`,
+        title: (company) =>
+          `B. Đối với tài khoản Facebook của Khách hàng khi liên kết ${company}, ${company} sẽ yêu cầu quyền truy cập các thông tin sau:`,
         items: (company) => [
           `Quyền truy cập vào địa chỉ email của Trang (Fanpage) Facebook sử dụng để tích hợp với ${company};`,
           `Quyền truy cập vào tập hợp các mục công khai trên Trang Facebook đã tích hợp với ${company};`,
@@ -53,7 +58,8 @@ const policySections = [
         ],
       },
       {
-        title: (company) => `C. Đối với tài khoản Zalo của Khách hàng khi liên kết với ${company}, ${company} sẽ yêu cầu quyền truy cập các thông tin sau:`,
+        title: (company) =>
+          `C. Đối với tài khoản Zalo của Khách hàng khi liên kết với ${company}, ${company} sẽ yêu cầu quyền truy cập các thông tin sau:`,
         items: (company) => [
           `Quyền truy cập vào ảnh đại diện, tên, ảnh bìa của tài khoản Zalo Official Account sử dụng để tích hợp với ${company};`,
           `Quyền truy cập vào thông tin tên, số điện thoại của tài khoản Zalo Official Account sử dụng tích hợp với ${company};`,
@@ -68,11 +74,13 @@ const policySections = [
     paragraphs: [(company) => `${company} sử dụng thông tin Khách hàng cung cấp để:`],
     bullets: [
       'Cung cấp các dịch vụ đến Khách hàng.',
-      (company) => `Gửi các thông báo về các hoạt động trao đổi thông tin giữa Khách hàng và đơn vị Hỗ trợ kỹ thuật của ${company}.`,
+      (company) =>
+        `Gửi các thông báo về các hoạt động trao đổi thông tin giữa Khách hàng và đơn vị Hỗ trợ kỹ thuật của ${company}.`,
       'Ngăn ngừa các hoạt động phá hủy tài khoản của người dùng hoặc các hoạt động giả mạo Khách hàng.',
       'Gửi các thông báo, khuyến mãi (chỉ khi có sự đồng ý của khách hàng).',
       'Liên lạc và giải quyết với khách hàng trong những trường hợp đặc biệt.',
-      (company) => `${company} có trách nhiệm hợp tác cung cấp thông tin cá nhân Khách hàng khi có yêu cầu từ cơ quan nhà nước có thẩm quyền.`,
+      (company) =>
+        `${company} có trách nhiệm hợp tác cung cấp thông tin cá nhân Khách hàng khi có yêu cầu từ cơ quan nhà nước có thẩm quyền.`,
       'Chia sẻ dữ liệu với đối tác tích hợp hoặc bên thứ ba (chỉ khi có sự đồng ý của khách hàng).',
     ],
   },
@@ -84,7 +92,10 @@ const policySections = [
         `Trong mọi trường hợp, thông tin cá nhân Khách hàng sẽ được bảo mật hoàn toàn trên máy chủ của ${company}. Khách hàng có quyền cập nhật, sửa đổi và xóa thông tin của các Dữ liệu cá nhân này. Tuy nhiên, trong một số trường hợp, ${company} vẫn có thể khôi phục những thông tin đó từ cơ sở dữ liệu để giải quyết các tranh chấp, thi hành điều khoản, hoặc vì các yêu cầu kỹ thuật, pháp lý liên quan đến sự an toàn và hoạt động của ${company}.`,
       (company) => `Thông tin của Khách hàng được lưu trữ trên hệ thống bảo mật của ${company} và:`,
     ],
-    bullets: ['Được lưu trong suốt thời gian sử dụng Dịch vụ.', 'Sau khi ngưng sử dụng dịch vụ, dữ liệu được lưu trữ tối đa 10 năm, trừ khi có yêu cầu khác từ Pháp luật hoặc vì lý do tranh chấp.'],
+    bullets: [
+      'Được lưu trong suốt thời gian sử dụng Dịch vụ.',
+      'Sau khi ngưng sử dụng dịch vụ, dữ liệu được lưu trữ tối đa 10 năm, trừ khi có yêu cầu khác từ Pháp luật hoặc vì lý do tranh chấp.',
+    ],
   },
   {
     id: 'access',
@@ -106,7 +117,8 @@ const policySections = [
     ],
     bullets: [
       'Không sử dụng, chuyển giao, cung cấp hay tiết lộ cho bên thứ ba thông tin cá nhân của Khách hàng khi không có sự cho phép hoặc đồng ý từ Khách hàng, trừ những trường hợp theo quy định khác.',
-      (company) => `Bảo mật tuyệt đối mọi thông tin giao dịch trực tuyến của Khách hàng, bao gồm thông tin hóa đơn và chứng từ kế toán số hóa tại khu vực dữ liệu trung tâm an toàn của ${company}.`,
+      (company) =>
+        `Bảo mật tuyệt đối mọi thông tin giao dịch trực tuyến của Khách hàng, bao gồm thông tin hóa đơn và chứng từ kế toán số hóa tại khu vực dữ liệu trung tâm an toàn của ${company}.`,
       'Chủ động phòng tránh truy cập trái phép, tấn công dữ liệu và mất mát thông tin.',
     ],
   },
@@ -143,9 +155,14 @@ export default function PrivacyPolicyPage() {
             Trang chủ <ChevronRight size={16} /> Chính sách bảo mật
           </Link>
           <div className="policy-hero-content">
-            <span className="policy-eyebrow"><ShieldCheck size={18} /> Bảo vệ dữ liệu khách hàng</span>
+            <span className="policy-eyebrow">
+              <ShieldCheck size={18} /> Bảo vệ dữ liệu khách hàng
+            </span>
             <h1>Chính sách bảo mật</h1>
-            <p>{company} cam kết tôn trọng và bảo vệ thông tin cá nhân của khách hàng sử dụng ứng dụng và dịch vụ của chúng tôi.</p>
+            <p>
+              {company} cam kết tôn trọng và bảo vệ thông tin cá nhân của khách hàng sử dụng ứng dụng và dịch vụ của
+              chúng tôi.
+            </p>
           </div>
         </div>
       </section>
@@ -154,26 +171,45 @@ export default function PrivacyPolicyPage() {
         <div className="container policy-layout">
           <aside className="policy-toc" aria-label="Mục lục chính sách">
             <p>Nội dung chính sách</p>
-            {policySections.map((section) => <a key={section.id} href={`#${section.id}`}>{value(section.title, company)}</a>)}
+            {policySections.map((section) => (
+              <a key={section.id} href={`#${section.id}`}>
+                {value(section.title, company)}
+              </a>
+            ))}
           </aside>
 
           <article className="policy-content">
-            <p className="policy-intro">Việc truy cập và sử dụng {company} đồng nghĩa với việc bạn đồng ý với các điều khoản trong Chính sách bảo mật này.</p>
+            <p className="policy-intro">
+              Việc truy cập và sử dụng {company} đồng nghĩa với việc bạn đồng ý với các điều khoản trong Chính sách bảo
+              mật này.
+            </p>
 
-            {policySections.slice(0, 4).map((section) => <PolicySection key={section.id} section={section} company={company} />)}
+            {policySections.slice(0, 4).map((section) => (
+              <PolicySection key={section.id} section={section} company={company} />
+            ))}
 
             <section className="policy-block" id="contact">
               <h2>5. Địa chỉ của đơn vị thu thập, quản lý thông tin hỗ trợ Khách hàng</h2>
               <div className="policy-contact-card">
                 <strong>Công ty TNHH Công nghệ {company}</strong>
-                <a href={contact.addressMapUrl} target="_blank" rel="noreferrer"><MapPin size={18} /> {contact.address}</a>
-                <a href={contact.phoneHref}><Phone size={18} /> Hotline: {contact.phoneDisplay}</a>
-                <a href={`mailto:${contact.supportEmail}`}><Mail size={18} /> Email: {contact.supportEmail}</a>
+                <a href={contact.addressMapUrl} target="_blank" rel="noreferrer">
+                  <MapPin size={18} /> {contact.address}
+                </a>
+                <a href={contact.phoneHref}>
+                  <Phone size={18} /> Hotline: {contact.phoneDisplay}
+                </a>
+                <a href={`mailto:${contact.supportEmail}`}>
+                  <Mail size={18} /> Email: {contact.supportEmail}
+                </a>
               </div>
-              <p>Chúng tôi có trách nhiệm tiếp nhận, xác minh và phản hồi mọi yêu cầu liên quan đến bảo mật thông tin.</p>
+              <p>
+                Chúng tôi có trách nhiệm tiếp nhận, xác minh và phản hồi mọi yêu cầu liên quan đến bảo mật thông tin.
+              </p>
             </section>
 
-            {policySections.slice(4).map((section) => <PolicySection key={section.id} section={section} company={company} />)}
+            {policySections.slice(4).map((section) => (
+              <PolicySection key={section.id} section={section} company={company} />
+            ))}
           </article>
         </div>
       </section>
@@ -185,20 +221,36 @@ function PolicySection({ section, company }) {
   return (
     <section className="policy-block" id={section.id}>
       <h2>{value(section.title, company)}</h2>
-      {section.paragraphs?.map((paragraph, index) => <p key={index}>{value(paragraph, company)}</p>)}
+      {section.paragraphs?.map((paragraph, index) => (
+        <p key={index}>{value(paragraph, company)}</p>
+      ))}
       {section.bullets ? <PolicyList items={section.bullets} company={company} /> : null}
       {section.integrations?.map((integration) => (
         <div className="policy-integration" key={value(integration.title, company)}>
           <h3>{value(integration.title, company)}</h3>
-          <ol>{integration.items(company).map((item) => <li key={item}>{item}</li>)}</ol>
+          <ol>
+            {integration.items(company).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ol>
           {integration.note ? <p className="policy-note">{integration.note(company)}</p> : null}
         </div>
       ))}
-      {section.after?.map((paragraph, index) => <p key={index}>{value(paragraph, company)}</p>)}
+      {section.after?.map((paragraph, index) => (
+        <p key={index}>{value(paragraph, company)}</p>
+      ))}
     </section>
   )
 }
 
 function PolicyList({ items, company }) {
-  return <ul className="policy-list">{items.map((item) => <li key={value(item, company)}><CheckCircle size={18} /> <span>{value(item, company)}</span></li>)}</ul>
+  return (
+    <ul className="policy-list">
+      {items.map((item) => (
+        <li key={value(item, company)}>
+          <CheckCircle size={18} /> <span>{value(item, company)}</span>
+        </li>
+      ))}
+    </ul>
+  )
 }

@@ -256,8 +256,7 @@ const staticTestimonials = [
     company: 'Cửa hàng đối tác iOrder',
   },
   {
-    quote:
-      'Nhân viên mới làm quen khá nhanh. Những thao tác bán hàng cơ bản hướng dẫn một lúc là có thể sử dụng.',
+    quote: 'Nhân viên mới làm quen khá nhanh. Những thao tác bán hàng cơ bản hướng dẫn một lúc là có thể sử dụng.',
     name: 'Anh Tuấn',
     role: 'Chủ cửa hàng',
     company: 'Cửa hàng đối tác iOrder',
@@ -653,14 +652,14 @@ export default function Home() {
 
               <div className="hero-points">
                 {heroPoints.map((point) => (
-                    <div className="hero-point" key={point.label}>
-                      <CheckCircle size={20} />
-                      <span>
-                        <strong>{point.label}</strong>
-                        {point.detail ? <small>{point.detail}</small> : null}
-                      </span>
-                    </div>
-                  ))}
+                  <div className="hero-point" key={point.label}>
+                    <CheckCircle size={20} />
+                    <span>
+                      <strong>{point.label}</strong>
+                      {point.detail ? <small>{point.detail}</small> : null}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               <div className="hero-actions">
@@ -708,9 +707,7 @@ export default function Home() {
 
       {/* Logo partners are sourced from the Partners CMS collection and can be changed by admins. */}
       {shouldShow('home_stats') && resolvedPartners.length > 0 ? (
-        <section
-          {...mergeSectionProps('home-partner-strip', { order: blockOrder('home_stats') }, cmsStats, cmsMedia)}
-        >
+        <section {...mergeSectionProps('home-partner-strip', { order: blockOrder('home_stats') }, cmsStats, cmsMedia)}>
           <div className="container">
             <p className="partners-trust-line">
               {(isCmsMode ? cmsStats?.data?.partnersHeading : null) ?? 'Được hơn 10.000+ cửa hàng tin tưởng sử dụng'}
@@ -760,30 +757,42 @@ export default function Home() {
                 <img src={dashboardLaptop} alt="Báo cáo vận hành iOrder trên laptop" loading="lazy" decoding="async" />
               </div>
               <div className="about-workspace-modules" aria-label="Các mô-đun vận hành">
-                <span><ReceiptText size={16} /> Bán hàng</span>
-                <span><Boxes size={16} /> Tồn kho</span>
-                <span><BarChart3 size={16} /> Báo cáo</span>
+                <span>
+                  <ReceiptText size={16} /> Bán hàng
+                </span>
+                <span>
+                  <Boxes size={16} /> Tồn kho
+                </span>
+                <span>
+                  <BarChart3 size={16} /> Báo cáo
+                </span>
               </div>
             </div>
           </div>
 
           <div className="operating-principles">
             <article className="operating-principle">
-              <div className="operating-principle-icon"><ReceiptText size={22} /></div>
+              <div className="operating-principle-icon">
+                <ReceiptText size={22} />
+              </div>
               <div>
                 <h3>Một luồng thao tác</h3>
                 <p>Từ tạo đơn, thanh toán đến in bill — đội ngũ làm việc theo một quy trình nhất quán.</p>
               </div>
             </article>
             <article className="operating-principle">
-              <div className="operating-principle-icon"><BarChart3 size={22} /></div>
+              <div className="operating-principle-icon">
+                <BarChart3 size={22} />
+              </div>
               <div>
                 <h3>Dữ liệu để quyết định</h3>
                 <p>Doanh thu, tồn kho và hiệu suất ca bán luôn sẵn khi bạn cần kiểm tra.</p>
               </div>
             </article>
             <article className="operating-principle">
-              <div className="operating-principle-icon"><Headphones size={22} /></div>
+              <div className="operating-principle-icon">
+                <Headphones size={22} />
+              </div>
               <div>
                 <h3>Triển khai có người đồng hành</h3>
                 <p>Đội ngũ hỗ trợ cùng bạn chuẩn hóa dữ liệu, thiết bị và cách vận hành ban đầu.</p>
@@ -885,7 +894,9 @@ export default function Home() {
                         key={item.title}
                         onClick={() => setActiveFeatureIndex(idx)}
                       >
-                        <span className="feature-command-icon"><Icon size={18} /></span>
+                        <span className="feature-command-icon">
+                          <Icon size={18} />
+                        </span>
                         <span>{item.title}</span>
                         <ArrowRight size={16} />
                       </button>
@@ -894,13 +905,17 @@ export default function Home() {
                 </div>
                 <article className="feature-command-panel" role="tabpanel">
                   <div className="feature-command-copy">
-                    <span className="feature-command-number">0{(activeFeatureIndex % resolvedFeatures.length) + 1}</span>
+                    <span className="feature-command-number">
+                      0{(activeFeatureIndex % resolvedFeatures.length) + 1}
+                    </span>
                     <h3>{activeFeature.title}</h3>
                     <p>{activeFeature.desc}</p>
                     {activeFeature.bullets?.length ? (
                       <ul className="feature-command-bullets">
                         {activeFeature.bullets.slice(0, 3).map((bullet) => (
-                          <li key={bullet}><CheckCircle size={16} /> {bullet}</li>
+                          <li key={bullet}>
+                            <CheckCircle size={16} /> {bullet}
+                          </li>
                         ))}
                       </ul>
                     ) : null}
@@ -952,7 +967,10 @@ export default function Home() {
                         alt={featuredTestimonial.company ?? `Cửa hàng của ${featuredTestimonial.name}`}
                       />
                     ) : (
-                      <div className="customer-story-placeholder"><Store size={28} /><span>Ảnh cửa hàng</span></div>
+                      <div className="customer-story-placeholder">
+                        <Store size={28} />
+                        <span>Ảnh cửa hàng</span>
+                      </div>
                     )}
                   </div>
                   <div className="testimonial-featured-body">
@@ -960,7 +978,9 @@ export default function Home() {
                       <span>KHÁCH HÀNG IORDER</span>
                       <h3>{featuredTestimonial.company ?? 'Cửa hàng đang sử dụng iOrder'}</h3>
                     </div>
-                    <p className="customer-story-quote"><Quote size={20} /> {featuredTestimonial.quote}</p>
+                    <p className="customer-story-quote">
+                      <Quote size={20} /> {featuredTestimonial.quote}
+                    </p>
                     <div className="testimonial-author">
                       <div>
                         <strong>{featuredTestimonial.name ?? 'Khách hàng iOrder'}</strong>
@@ -986,7 +1006,9 @@ export default function Home() {
                             <h3>{item.company ?? 'Cửa hàng đang sử dụng iOrder'}</h3>
                           </div>
                         </div>
-                        <p className="customer-story-quote"><Quote size={16} /> {item.quote}</p>
+                        <p className="customer-story-quote">
+                          <Quote size={16} /> {item.quote}
+                        </p>
                         <div className="testimonial-author">
                           <div>
                             <strong>{item.name ?? 'Khách hàng iOrder'}</strong>
@@ -1205,23 +1227,23 @@ export default function Home() {
               )
                 .slice(0, 4)
                 .map((item, idx) => {
-                const isOpen = openFaq === idx
-                return (
-                  <div className={`faq-item${isOpen ? ' faq-item--open' : ''}`} key={idx}>
-                    <button
-                      type="button"
-                      className="faq-question"
-                      onClick={() => setOpenFaq(isOpen ? null : idx)}
-                      aria-expanded={isOpen}
-                    >
-                      <span>{item.q}</span>
-                      <ChevronDown size={20} className="faq-chevron" />
-                    </button>
-                    <div className="faq-answer">
-                      <p>{item.a}</p>
+                  const isOpen = openFaq === idx
+                  return (
+                    <div className={`faq-item${isOpen ? ' faq-item--open' : ''}`} key={idx}>
+                      <button
+                        type="button"
+                        className="faq-question"
+                        onClick={() => setOpenFaq(isOpen ? null : idx)}
+                        aria-expanded={isOpen}
+                      >
+                        <span>{item.q}</span>
+                        <ChevronDown size={20} className="faq-chevron" />
+                      </button>
+                      <div className="faq-answer">
+                        <p>{item.a}</p>
+                      </div>
                     </div>
-                  </div>
-                )
+                  )
                 })}
             </div>
             <div className="faq-cta">
@@ -1236,18 +1258,9 @@ export default function Home() {
 
       {/* CTA Section */}
       {shouldShow('home_cta') ? (
-        <section
-          {...mergeSectionProps(
-            'section home-final-cta',
-            { order: blockOrder('home_cta') },
-            cmsCta,
-            cmsMedia,
-          )}
-        >
+        <section {...mergeSectionProps('section home-final-cta', { order: blockOrder('home_cta') }, cmsCta, cmsMedia)}>
           <div className="container">
-            <h2>
-              {cmsCta?.data?.title ?? 'Sẵn sàng tăng cường bán hàng?'}
-            </h2>
+            <h2>{cmsCta?.data?.title ?? 'Sẵn sàng tăng cường bán hàng?'}</h2>
             <p>
               {cmsCta?.data?.description ??
                 'Hãy trải nghiệm miễn phí trong 14 ngày. Không cần thẻ tín dụng, hủy bất cứ lúc nào.'}
