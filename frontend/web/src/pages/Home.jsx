@@ -1027,9 +1027,9 @@ export default function Home() {
             <div className="ecosystem-grid">
               {resolvedEcosystemGroups.map((group, index) => {
                 const Icon = group.icon
-                const actionLabels = ['Khám phá phần mềm', 'Giải pháp hạ tầng', 'Dịch vụ CNTT']
+                const actionLabels = ['Khám phá phần mềm', 'Xem giải pháp', 'Xem dịch vụ']
                 return (
-                  <article className={`ecosystem-card${index === 0 ? ' ecosystem-card--primary' : ''}`} key={group.title}>
+                  <article className="ecosystem-card" key={group.title}>
                     <span className="ecosystem-order">0{index + 1}</span>
                     <div className="ecosystem-card-head">
                       <div className="ecosystem-icon">
@@ -1044,21 +1044,12 @@ export default function Home() {
                     </div>
                     <p className="ecosystem-desc">{group.desc}</p>
                     <ul>
-                      {group.items.slice(0, index === 0 ? 4 : 3).map((item) => (
+                      {group.items.slice(0, 3).map((item) => (
                         <li key={item.href}>
                           <Link to={item.href}>{item.title}</Link>
                         </li>
                       ))}
                     </ul>
-                    {index === 0 ? (
-                      <img
-                        className="ecosystem-primary-visual"
-                        src={heroPosFnb}
-                        alt="iOrder POS cho vận hành tại quầy"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : null}
                     <Link className="ecosystem-link" to={group.href}>
                       {actionLabels[index] ?? 'Khám phá giải pháp'} <ArrowRight size={16} />
                     </Link>

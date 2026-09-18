@@ -98,32 +98,34 @@ export async function buildApp(env: ApiEnv) {
     })
   }
 
-  // Serve admin CMS at /admin
-  const adminDist = resolve(repositoryRoot, 'frontend/admin/dist')
-  await app.register(staticFiles, {
-    root: adminDist,
-    prefix: '/admin/',
-    decorateReply: false,
-  })
-  app.get('/admin', async (_req, reply) => reply.sendFile('index.html', adminDist))
-  app.get('/admin/', async (_req, reply) => reply.sendFile('index.html', adminDist))
+  if (env.SERVE_STATIC_FILES) {
+    // Serve admin CMS at /admin
+    const adminDist = resolve(repositoryRoot, 'frontend/admin/dist')
+    await app.register(staticFiles, {
+      root: adminDist,
+      prefix: '/admin/',
+      decorateReply: false,
+    })
+    app.get('/admin', async (_req, reply) => reply.sendFile('index.html', adminDist))
+    app.get('/admin/', async (_req, reply) => reply.sendFile('index.html', adminDist))
 
-  // Serve compiled React frontend (SPA)
-  const frontendDist = resolve(repositoryRoot, 'frontend/web/dist')
-  await app.register(staticFiles, {
-    root: frontendDist,
-    prefix: '/',
-    index: 'index.html',
-  })
+    // Serve compiled React frontend (SPA)
+    const frontendDist = resolve(repositoryRoot, 'frontend/web/dist')
+    await app.register(staticFiles, {
+      root: frontendDist,
+      prefix: '/',
+      index: 'index.html',
+    })
 
-  // SPA fallback: serve index.html for React Router deep links.
-  // Deep links trong CMS (vd /admin/bai-viet) → admin index.html; còn lại → site index.html
-  app.setNotFoundHandler(async (request, reply) => {
-    if (request.url.startsWith('/admin')) {
-      return reply.sendFile('index.html', adminDist)
-    }
-    return reply.sendFile('index.html')
-  })
+    // SPA fallback: serve index.html for React Router deep links.
+    // Deep links trong CMS (vd /admin/bai-viet) → admin index.html; còn lại → site index.html
+    app.setNotFoundHandler(async (request, reply) => {
+      if (request.url.startsWith('/admin')) {
+        return reply.sendFile('index.html', adminDist)
+      }
+      return reply.sendFile('index.html')
+    })
+  }
 
   // Helmet mặc định set Cross-Origin-Resource-Policy: same-origin, block <img>/<video>
   // từ public site (port 5173) load media từ API (port 4000).

@@ -5,6 +5,7 @@ const app = await buildApp({
   NODE_ENV: 'test',
   API_HOST: '127.0.0.1',
   API_PORT: 4000,
+  SERVE_STATIC_FILES: true,
   ADMIN_ORIGIN: 'http://127.0.0.1:5174',
   PUBLIC_ORIGIN: 'http://127.0.0.1:5173',
   DATABASE_URL: 'postgresql://unused:unused@127.0.0.1:5432/unused',

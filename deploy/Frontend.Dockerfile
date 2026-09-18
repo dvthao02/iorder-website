@@ -1,7 +1,9 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine AS build
+
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV COREPACK_INTEGRITY_KEYS=0
+
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 WORKDIR /app
@@ -27,8 +29,13 @@ ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV SENTRY_RELEASE=$SENTRY_RELEASE
 
 RUN pnpm --filter @iorder/contracts build \
-  && pnpm --filter @iorder/database build \
-  && pnpm --filter @iorder/api build
+  && pnpm --filter @iorder/web build \
+  && pnpm --filter @iorder/admin build
 
-EXPOSE 8080
-CMD ["node", "backend/api/dist/server.js"]
+FROM nginx:1.27-alpine AS runtime
+
+COPY deploy/nginx.frontend.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/frontend/web/dist /usr/share/nginx/html
+COPY --from=build /app/frontend/admin/dist /usr/share/nginx/html/admin
+
+EXPOSE 80

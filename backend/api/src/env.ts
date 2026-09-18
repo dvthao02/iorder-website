@@ -9,6 +9,12 @@ const envSchema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     API_HOST: z.string().min(1).default('127.0.0.1'),
     API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+    // Khi chạy sau frontend Nginx riêng, API chỉ xử lý API/media thay vì giữ cả bundle React.
+    // Mặc định true để không đổi hành vi local/Railway hiện tại.
+    SERVE_STATIC_FILES: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
     ADMIN_ORIGIN: z.string().url().default('http://127.0.0.1:5174'),
     PUBLIC_ORIGIN: z.string().url().default('http://127.0.0.1:5173'),
     DATABASE_URL: z.string().min(1),

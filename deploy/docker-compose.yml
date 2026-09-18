@@ -1,4 +1,4 @@
-x-app-build: &app-build
+x-api-build: &api-build
   context: ..
   dockerfile: deploy/Dockerfile
   args:
@@ -15,6 +15,7 @@ x-app-environment: &app-environment
   NODE_ENV: production
   API_HOST: 0.0.0.0
   API_PORT: 8080
+  SERVE_STATIC_FILES: 'false'
   DATABASE_URL: postgresql://admin_iorder:${POSTGRES_PASSWORD}@postgres:5432/iorderCMS
   SESSION_SECRET: ${SESSION_SECRET}
   CMS_PREVIEW_SECRET: ${CMS_PREVIEW_SECRET}
@@ -56,7 +57,7 @@ services:
       retries: 5
 
   migrate:
-    build: *app-build
+    build: *api-build
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,7 +88,7 @@ services:
       start_period: 20s
 
   minio-init:
-    build: *app-build
+    build: *api-build
     depends_on:
       minio:
         condition: service_healthy
@@ -102,15 +103,13 @@ services:
     restart: 'no'
 
   api:
-    build: *app-build
+    build: *api-build
     depends_on:
       migrate:
         condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
     restart: unless-stopped
-    ports:
-      - '${APP_PORT:-4000}:8080'
     environment: *app-environment
     volumes:
       - media_data:/app/storage/media
@@ -120,6 +119,32 @@ services:
           'CMD-SHELL',
           'node -e "fetch(''http://127.0.0.1:8080/ready'').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"',
         ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Frontend.Dockerfile
+      args:
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-production}
+        VITE_SENTRY_RELEASE: ${VITE_SENTRY_RELEASE:-}
+        VITE_SENTRY_TRACES_SAMPLE_RATE: ${VITE_SENTRY_TRACES_SAMPLE_RATE:-0.05}
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-4000}:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/healthz']
       interval: 10s
       timeout: 5s
       retries: 12
