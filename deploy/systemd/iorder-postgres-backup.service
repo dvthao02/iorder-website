@@ -1,0 +1,12 @@
+[Unit]
+Description=Create a compressed iOrder PostgreSQL backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=dvthao
+Environment=IORDER_DEPLOY_DIR=/home/dvthao/apps/iorder-website/deploy
+Environment=IORDER_BACKUP_DIR=/home/dvthao/backups/iorder-postgres
+Environment=IORDER_BACKUP_RETENTION_DAYS=14
+ExecStart=/bin/sh /home/dvthao/apps/iorder-website/deploy/scripts/backup-postgres.sh

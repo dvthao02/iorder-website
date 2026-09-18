@@ -1,141 +1,128 @@
-# Production Runbook
+# iOrder release runbook (VPS + Docker)
 
-## Release Gate
+## Kiến trúc release
 
-Before deploying, the repository must pass:
+```text
+GitHub main → GitHub Actions CI → GHCR images theo commit SHA
+                                      ↓
+                         staging → duyệt → production VPS
+                                      ↓
+                              web / api / PostgreSQL / MinIO
+```
+
+- `web`: Nginx phục vụ website và CMS, cache asset Vite có hash.
+- `api`: Fastify API, không bind public port.
+- `postgres`: nội dung CMS, users và dữ liệu nghiệp vụ.
+- `minio`: ảnh/tài liệu CMS. Dữ liệu không nằm trong Docker image.
+
+## Release gate
+
+Pull request vào `main` phải qua workflow `.github/workflows/ci.yml`:
+
+```text
+format → lint → typecheck → migration CI → bootstrap CI → test → build → compose config
+```
+
+Sau khi merge `main`, CI publish ba image bất biến:
+
+```text
+ghcr.io/dvthao02/iorder-api:sha-<full-commit>
+ghcr.io/dvthao02/iorder-web:sha-<full-commit>
+ghcr.io/dvthao02/iorder-minio:sha-<full-commit>
+```
+
+Không dùng tag `latest` để release hoặc rollback; chỉ dùng tag `sha-...`.
+
+## Chuẩn bị một môi trường mới
+
+1. Dùng `.env` riêng, `VOLUME_PREFIX` riêng, secret riêng và storage riêng.
+2. Khởi động PostgreSQL/MinIO.
+3. Chạy migration schema.
+4. Chỉ database mới: chạy `bootstrap` đúng một lần.
+5. Khởi động `api` và `web`.
 
 ```bash
-pnpm verify
+cd ~/apps/iorder-website/deploy
+docker compose up -d postgres minio
+docker compose run --rm migrate
+docker compose --profile bootstrap run --rm --no-deps bootstrap
+docker compose up -d
 ```
 
-This runs frontend lint, CMS/API type-checking, full production builds, and API smoke tests.
+`bootstrap` không được đưa vào deploy thường vì nó seed dữ liệu lõi và tạo tài
+khoản CMS. Migration chỉ thay đổi schema database.
 
-## Required Production Variables
+## Deploy staging
 
-Set these per Railway environment:
+Staging phải có VPS/VM hoặc Compose project riêng. Dùng
+`deploy/.env.staging.example` làm mẫu; không dùng volume, domain hay `.env`
+production.
 
-```ini
-NODE_ENV=production
-API_HOST=0.0.0.0
-API_PORT=${{PORT}}
-ADMIN_ORIGIN=https://your-admin-origin.example
-PUBLIC_ORIGIN=https://your-public-origin.example
-DATABASE_URL=postgresql://...
-SESSION_SECRET=replace-with-strong-secret
-CMS_PREVIEW_SECRET=replace-with-strong-secret
-# Object storage: the bucket is public-read only for immutable media objects.
-MEDIA_STORAGE_DRIVER=minio
-MEDIA_STORAGE_PATH=/app/storage/media
-MEDIA_PUBLIC_BASE_URL=https://media.your-domain.example/iorder-media
-MEDIA_S3_ENDPOINT=minio.internal
-MEDIA_S3_PORT=9000
-MEDIA_S3_USE_SSL=true
-MEDIA_S3_ACCESS_KEY=replace-with-minio-service-access-key
-MEDIA_S3_SECRET_KEY=replace-with-minio-service-secret-key
-MEDIA_S3_BUCKET=iorder-media
-HOMEPAGE_SLUG=home
-TRUST_PROXY=true
-SENTRY_DSN=https://...
-SENTRY_ENVIRONMENT=production
-SENTRY_RELEASE=<git-sha-or-release>
-SENTRY_TRACES_SAMPLE_RATE=0.05
-VITE_SENTRY_DSN=https://...
-VITE_SENTRY_ENVIRONMENT=production
-VITE_SENTRY_RELEASE=<git-sha-or-release>
-VITE_SENTRY_TRACES_SAMPLE_RATE=0.05
-```
-
-Source map upload also needs CI/deploy secrets:
-
-```ini
-SENTRY_AUTH_TOKEN=...
-SENTRY_ORG=...
-SENTRY_PROJECT=...
-```
-
-GitHub deployment secrets:
-
-```ini
-RAILWAY_STAGING_TOKEN=...
-RAILWAY_PRODUCTION_TOKEN=...
-```
-
-GitHub deployment variable:
-
-```ini
-RAILWAY_SERVICE_ID=...
-```
-
-## Deployment Flow
-
-1. Merge to `main`.
-2. GitHub Actions runs `CI`.
-3. `Deploy` uploads to Railway `staging`.
-4. Verify staging `/ready`, login, homepage, media upload, and post publish/archive.
-5. `Deploy` proceeds to `production` through the GitHub `production` environment.
-
-Configure GitHub Environments:
-
-- `staging`: no manual approval required.
-- `production`: require manual reviewer approval and restrict deployment branch to `main`.
-
-## Database Migration Policy
-
-Back up the database and media store before a schema change. Railway runs the migration before switching traffic to the new deployment:
+1. Đặt `API_IMAGE`, `WEB_IMAGE` và `MINIO_IMAGE` cùng commit SHA đã qua CI.
+2. Pull image.
+3. Chạy migration nếu release có migration.
+4. Khởi động/recreate service.
+5. Kiểm tra homepage, `/admin`, upload media và `/api/public/health`.
 
 ```bash
-pnpm db:backup
+docker compose pull
+docker compose up -d --no-build
+docker compose ps
 ```
 
-For production, run the backup against the production `DATABASE_URL` and store the generated `backups/*.dump` outside the application container. Do not run `db:seed`, `bootstrap:core`, or `content:import:legacy` during a routine deploy: CMS content is owned by the production database.
+## Deploy production
 
-Drizzle migrations in this project are forward-only. If a migration is logically wrong, prefer a corrective follow-up migration. Use full restore only for catastrophic migration failures or accidental destructive changes.
+### Frontend hoặc CMS tĩnh
 
-## Media Migration
-
-Before changing `MEDIA_PUBLIC_BASE_URL`, back up both the database and old local media volume. Deploy the API with MinIO configured, then run the one-time copy job against the old media path:
+Chỉ thay `WEB_IMAGE` sang tag release rồi:
 
 ```bash
-pnpm media:migrate-local
+docker compose pull web
+docker compose up -d --no-build web
 ```
 
-The job preserves each `storageKey`, uploads it to the configured bucket, and updates only `media_assets.public_url`. Verify representative image URLs and the CMS library before retiring the old volume.
-
-## Restore Procedure
-
-Restore is intentionally guarded:
+### API không có migration
 
 ```bash
-ALLOW_DATABASE_RESTORE=yes BACKUP_FILE=backups/iordercms-YYYY-MM-DD.dump pnpm db:restore
+docker compose pull api
+docker compose up -d --no-build api
 ```
 
-After restore:
+### API có migration
+
+Backup database trước, sau đó deploy API tag mới:
 
 ```bash
-pnpm db:migrate
-pnpm db:seed
-pnpm test:api
+./scripts/backup-postgres.sh
+docker compose pull api
+docker compose up -d --no-build --force-recreate migrate api
+```
+
+Sau mọi release:
+
+```bash
+docker compose ps
+docker compose logs --tail 100 web
+docker compose logs --tail 100 api
+curl -I http://127.0.0.1:4000/
+curl -i http://127.0.0.1:4000/api/public/health
 ```
 
 ## Rollback
 
-Application rollback:
+- **Web**: đổi `WEB_IMAGE` về tag SHA release trước, pull và recreate `web`.
+- **API**: đổi `API_IMAGE` về tag SHA release trước, pull và recreate `api`.
+- **Database**: migration là forward-only. Ưu tiên migration sửa tiếp theo;
+  chỉ restore backup khi dữ liệu bị hỏng hoặc migration mang tính phá huỷ.
 
-1. Roll back to the previous Railway deployment from the Railway dashboard.
-2. Confirm `/health`, `/ready`, and `/api/public/health`.
-3. Smoke CMS login and homepage.
+Không dùng `git reset`, build source trực tiếp hoặc `docker compose down -v`
+như một cách rollback production.
 
-Database rollback:
+## Backup, bảo mật và quan sát
 
-1. Prefer corrective forward migration.
-2. If data is corrupted, restore the latest pre-migration backup.
-3. Re-run smoke tests before reopening CMS editing.
-
-## Observability Checks
-
-After each production deploy:
-
-- Confirm Sentry release receives events for API and frontend projects.
-- Confirm API responses include `x-request-id`.
-- Confirm Railway logs have request IDs for failed requests.
-- Confirm no `SESSION_SECRET`, cookies, or authorization headers are present in Sentry events.
+- Backup PostgreSQL hằng ngày bằng systemd timer trong `deploy/systemd/`.
+- Mirror MinIO sang object storage/ổ ngoài; backup trên chính VPS là chưa đủ.
+- Giữ `.env` ngoài Git, `chmod 600`, không gửi token/password qua chat.
+- Dùng Sentry cho lỗi ứng dụng và uptime monitor bên ngoài cho `/` cùng
+  `/api/public/health`.
+- Định kỳ thử restore backup vào môi trường không phải production.

@@ -7,8 +7,18 @@ ENV COREPACK_INTEGRITY_KEYS=0
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 WORKDIR /app
+
+# Dependency layer chỉ đổi khi manifest/lockfile đổi; source code đổi sẽ tận dụng cache này.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY frontend/web/package.json frontend/web/package.json
+COPY frontend/admin/package.json frontend/admin/package.json
+COPY backend/contracts/package.json backend/contracts/package.json
+COPY backend/database/package.json backend/database/package.json
+COPY backend/api/package.json backend/api/package.json
+RUN pnpm fetch --frozen-lockfile
+
 COPY . .
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --offline --frozen-lockfile --prod=false
 
 ARG VITE_SENTRY_DSN=""
 ARG VITE_SENTRY_ENVIRONMENT="production"

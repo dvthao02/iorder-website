@@ -11,6 +11,9 @@ x-api-build: &api-build
     SENTRY_PROJECT: ${SENTRY_PROJECT:-}
     SENTRY_RELEASE: ${SENTRY_RELEASE:-}
 
+x-api-image: &api-image ${API_IMAGE:-iorder-api:local}
+x-minio-image: &minio-image ${MINIO_IMAGE:-iorder-minio:local}
+
 x-app-environment: &app-environment
   NODE_ENV: production
   API_HOST: 0.0.0.0
@@ -57,11 +60,25 @@ services:
       retries: 5
 
   migrate:
+    image: *api-image
     build: *api-build
     depends_on:
       postgres:
         condition: service_healthy
-    command: ['sh', '-c', 'pnpm railway:migrate && pnpm bootstrap:core']
+    # Chỉ migration schema. Seed/admin thuộc service bootstrap và không chạy khi deploy thường.
+    command: ['pnpm', 'railway:migrate']
+    environment: *app-environment
+    restart: 'no'
+
+  bootstrap:
+    image: *api-image
+    build: *api-build
+    profiles: ['bootstrap']
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # Chỉ dành cho database mới: seed dữ liệu lõi và tạo tài khoản CMS đầu tiên.
+    command: ['pnpm', 'bootstrap:core']
     environment: *app-environment
     restart: 'no'
 
@@ -69,7 +86,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Minio.Dockerfile
-    image: iorder-minio:local
+    image: *minio-image
     command: server /data --console-address ':9001'
     restart: unless-stopped
     environment:
@@ -88,6 +105,7 @@ services:
       start_period: 20s
 
   minio-init:
+    image: *api-image
     build: *api-build
     depends_on:
       minio:
@@ -103,6 +121,7 @@ services:
     restart: 'no'
 
   api:
+    image: *api-image
     build: *api-build
     depends_on:
       migrate:
@@ -125,6 +144,7 @@ services:
       start_period: 10s
 
   web:
+    image: ${WEB_IMAGE:-iorder-web:local}
     build:
       context: ..
       dockerfile: deploy/Frontend.Dockerfile

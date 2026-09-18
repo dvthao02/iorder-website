@@ -1,73 +1,135 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   verify:
-    name: Verify
-    runs-on: ubuntu-24.04
+    name: Verify source and Docker configuration
+    runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: iorderCMS
           POSTGRES_USER: admin_iorder
-          POSTGRES_PASSWORD: '123'
-        ports:
-          - 5432:5432
+          POSTGRES_PASSWORD: ci-postgres-password
         options: >-
           --health-cmd "pg_isready -U admin_iorder -d iorderCMS"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
     env:
-      NODE_ENV: test
-      API_HOST: 127.0.0.1
-      API_PORT: 4000
-      ADMIN_ORIGIN: http://127.0.0.1:5174
-      PUBLIC_ORIGIN: http://127.0.0.1:5173
-      DATABASE_URL: postgresql://admin_iorder:123@127.0.0.1:5432/iorderCMS
-      SESSION_SECRET: ci-session-secret-minimum-32-characters
-      SESSION_TTL_DAYS: 7
-      MEDIA_STORAGE_PATH: ../../storage/media
-      MEDIA_PUBLIC_BASE_URL: http://127.0.0.1:4000/media
-      MEDIA_MAX_FILE_SIZE_MB: 20
-      HOMEPAGE_SLUG: home
-      TRUST_PROXY: 'false'
-      CMS_ADMIN_USERNAME: admin
-      CMS_ADMIN_NAME: CMS Administrator
+      DATABASE_URL: postgresql://admin_iorder:ci-postgres-password@127.0.0.1:5432/iorderCMS
+      SESSION_SECRET: ci-session-secret-at-least-32-characters
+      CMS_PREVIEW_SECRET: ci-preview-secret-at-least-32-characters
       CMS_ADMIN_PASSWORD: ci-admin-password
+      MEDIA_STORAGE_DRIVER: local
+      MEDIA_STORAGE_PATH: ./storage/media
+      MEDIA_PUBLIC_BASE_URL: http://127.0.0.1:4000/media
+      PUBLIC_ORIGIN: http://127.0.0.1:5173
+      ADMIN_ORIGIN: http://127.0.0.1:5174
+      POST_SCHEDULER_ENABLED: 'false'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
+      - name: Enable pnpm
+        run: corepack enable
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Prepare database
-        run: |
-          pnpm db:migrate
-          pnpm db:seed
+      - name: Prepare disposable CI database
+        run: pnpm railway:migrate && pnpm bootstrap:core
 
-      - name: Verify production build and smoke tests
-        run: pnpm verify
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type-check CMS and API
+        run: pnpm typecheck:cms
+
+      - name: Build production bundles
+        run: pnpm build:production
+
+      - name: Unit and API smoke tests
+        run: pnpm test:unit:api && pnpm test:unit:admin && pnpm test:api
+
+      - name: Validate Docker Compose
+        run: |
+          cp deploy/.env.docker.example deploy/.env
+          docker compose -f deploy/docker-compose.yml config -q
+
+  publish-images:
+    name: Publish versioned Docker images
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      API_IMAGE: ghcr.io/${{ github.repository_owner }}/iorder-api
+      WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/iorder-web
+      MINIO_IMAGE: ghcr.io/${{ github.repository_owner }}/iorder-minio
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:sha-${{ github.sha }}
+            ${{ env.API_IMAGE }}:latest
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Frontend.Dockerfile
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
+            ${{ env.WEB_IMAGE }}:latest
+
+      - name: Build and push MinIO image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Minio.Dockerfile
+          push: true
+          tags: |
+            ${{ env.MINIO_IMAGE }}:sha-${{ github.sha }}
+            ${{ env.MINIO_IMAGE }}:latest
