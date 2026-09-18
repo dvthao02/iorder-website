@@ -58,7 +58,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Prepare disposable CI database
-        run: pnpm railway:migrate && pnpm bootstrap:core
+        run: |
+          pnpm --filter @iorder/contracts build
+          pnpm --filter @iorder/database build
+          pnpm railway:migrate
+          pnpm bootstrap:core
 
       - name: Check formatting
         run: pnpm format:check
