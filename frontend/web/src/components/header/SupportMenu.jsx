@@ -1,6 +1,7 @@
 import NavDropdown from './NavDropdown'
 
 export const SUPPORT_ITEMS = [
+  { slug: 'huong-dan', title: 'Hướng dẫn sử dụng', href: '/huong-dan' },
   { slug: 'cai-dat', title: 'Hỗ trợ cài đặt', href: '/ho-tro/cai-dat' },
   { slug: 'faq', title: 'FAQ', href: '/ho-tro/faq' },
   { slug: 'lien-he', title: 'Liên hệ hỗ trợ', href: '/lien-he' },

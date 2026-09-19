@@ -80,6 +80,7 @@ export default function Footer({ logoFooter }) {
 
   const supportLinks = [
     { title: 'H\u01b0\u1edbng d\u1eabn s\u1eed d\u1ee5ng', path: '/huong-dan' },
+    { title: 'H\u1ed7 tr\u1ee3 c\u00e0i \u0111\u1eb7t', path: '/ho-tro/cai-dat' },
     { title: 'C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p', path: '/faq' },
     { title: 'H\u1ed7 tr\u1ee3 t\u1eeb xa', path: '/ho-tro-tu-xa' },
     { title: 'Li\u00ean h\u1ec7 h\u1ed7 tr\u1ee3', path: '/lien-he' },

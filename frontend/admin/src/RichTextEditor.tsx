@@ -1,13 +1,16 @@
+import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
 import { EditorContent, useEditor, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import type { MediaAsset } from '@iorder/contracts'
 import {
   Bold,
   Check,
   Heading2,
   Heading3,
+  Image as ImageIcon,
   Italic,
   Link2,
   List,
@@ -27,6 +30,8 @@ interface RichTextEditorProps {
   value: string
   onChange: (html: string) => void
   placeholder?: string
+  /** Image assets already loaded from the shared CMS media library. */
+  images?: MediaAsset[]
 }
 
 function ToolbarButton({
@@ -59,9 +64,10 @@ function ToolbarButton({
   )
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+function Toolbar({ editor, images = [] }: { editor: Editor; images?: MediaAsset[] }) {
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkValue, setLinkValue] = useState('')
+  const [imageOpen, setImageOpen] = useState(false)
 
   const openLinkPopover = () => {
     const previous = editor.getAttributes('link').href as string | undefined
@@ -83,6 +89,20 @@ function Toolbar({ editor }: { editor: Editor }) {
     editor.chain().focus().extendMarkRange('link').unsetLink().run()
     setLinkValue('')
     setLinkOpen(false)
+  }
+
+  const insertImage = (asset: MediaAsset) => {
+    const attributes = {
+      src: asset.publicUrl,
+      alt: asset.altText ?? '',
+      ...(asset.caption ? { title: asset.caption } : {}),
+    }
+    editor
+      .chain()
+      .focus()
+      .setImage(attributes)
+      .run()
+    setImageOpen(false)
   }
 
   return (
@@ -185,6 +205,25 @@ function Toolbar({ editor }: { editor: Editor }) {
         icon={Minus}
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
       />
+      <span className="rte-image-wrap">
+        <ToolbarButton
+          title="Chèn ảnh từ thư viện"
+          icon={ImageIcon}
+          disabled={images.length === 0}
+          onClick={() => setImageOpen((open) => !open)}
+        />
+        {imageOpen ? (
+          <span className="rte-image-popover" role="dialog" aria-label="Chọn ảnh từ thư viện">
+            <strong>Chèn ảnh từ thư viện</strong>
+            {images.slice(0, 30).map((asset) => (
+              <button key={asset.id} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => insertImage(asset)}>
+                <img src={asset.publicUrl} alt="" />
+                <span>{asset.altText || asset.originalName}</span>
+              </button>
+            ))}
+          </span>
+        ) : null}
+      </span>
       <span className="rte-sep" />
       <ToolbarButton
         title="Hoàn tác"
@@ -202,7 +241,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   )
 }
 
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder, images }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
@@ -212,6 +251,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         autolink: true,
         HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
       }),
+      Image.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: placeholder ?? 'Soạn nội dung...' }),
     ],
     content: value || '',
@@ -235,7 +275,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
   return (
     <div className="rte">
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} images={images ?? []} />
       <EditorContent className="rte-content" editor={editor} />
     </div>
   )

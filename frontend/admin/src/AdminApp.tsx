@@ -89,6 +89,10 @@ const moduleHeaders: Record<string, ModuleHeader> = {
     title: 'Bài viết',
     description: 'Tạo tin tức hoặc bài khuyến mãi, lưu nháp rồi xuất bản.',
   },
+  guides: {
+    title: 'Hướng dẫn sử dụng',
+    description: 'Tạo tài liệu theo chuyên mục, chèn ảnh minh họa và xuất bản theo quy trình CMS.',
+  },
   downloads: {
     title: 'Hỗ trợ cài đặt',
     description: 'Quản lý tài liệu tải về và file hỗ trợ cài đặt.',
@@ -277,6 +281,9 @@ export function AdminApp() {
       break
     case 'posts':
       content = <PostsManager currentUser={user} />
+      break
+    case 'guides':
+      content = <PostsManager key="guides" currentUser={user} fixedType="guide" />
       break
     case 'partners':
       content = <PartnersManager />

@@ -28,6 +28,7 @@ export const navigation = [
   { key: 'services', slug: 'dich-vu', label: 'Dịch vụ', icon: Wrench, group: 'site' },
   { key: 'industries', slug: 'nganh-hang', label: 'Ngành hàng', icon: Factory, group: 'site' },
   { key: 'posts', slug: 'tin-tuc', label: 'Tin tức', icon: FileText, group: 'site' },
+  { key: 'guides', slug: 'huong-dan', label: 'Hướng dẫn sử dụng', icon: FileStack, group: 'site' },
   { key: 'downloads', slug: 'ho-tro-cai-dat', label: 'Hỗ trợ cài đặt', icon: Download, group: 'site' },
   { key: 'content-pages', slug: 'trang-noi-dung', label: 'Trang nội dung', icon: FileStack, group: 'site' },
   { key: 'partners', slug: 'doi-tac', label: 'Đối tác & Khách hàng', icon: Users, group: 'shared' },

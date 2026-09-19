@@ -33,10 +33,11 @@ const MAIN_NAV_ITEMS: SeedMenuItem[] = [
     url: '/ho-tro',
     sortOrder: 5,
     children: [
-      { label: 'Hỗ trợ cài đặt', url: '/ho-tro/cai-dat', sortOrder: 0 },
-      { label: 'FAQ', url: '/ho-tro/faq', sortOrder: 1 },
-      { label: 'Video hướng dẫn', url: '/ho-tro/video', sortOrder: 2 },
-      { label: 'Liên hệ hỗ trợ', url: '/lien-he', sortOrder: 3 },
+      { label: 'Hướng dẫn sử dụng', url: '/huong-dan', sortOrder: 0 },
+      { label: 'Hỗ trợ cài đặt', url: '/ho-tro/cai-dat', sortOrder: 1 },
+      { label: 'FAQ', url: '/ho-tro/faq', sortOrder: 2 },
+      { label: 'Video hướng dẫn', url: '/ho-tro/video', sortOrder: 3 },
+      { label: 'Liên hệ hỗ trợ', url: '/lien-he', sortOrder: 4 },
     ],
   },
 ]

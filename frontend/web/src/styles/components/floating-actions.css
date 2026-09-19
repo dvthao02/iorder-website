@@ -1,185 +1,781 @@
-/* Contact actions stay quiet until the visitor asks for help. */
+/* =========================================================
+   FLOATING ACTIONS
+   ========================================================= */
+
 .floating-actions {
+  --floating-size: 48px;
+  --floating-gap: 10px;
+
   position: fixed;
   right: 22px;
   bottom: 22px;
-  z-index: 160;
-  display: grid;
-  justify-items: end;
-  gap: 10px;
+
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
+
+/* =========================================================
+   CONTACT MENU
+   ========================================================= */
+
 .floating-contact-menu {
-  display: grid;
-  gap: 8px;
-  width: min(286px, calc(100vw - 48px));
-  padding: 9px;
-  border: 1px solid rgba(203, 213, 225, 0.88);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  opacity: 0;
+  position: absolute;
+
+  right: 0;
+  bottom: calc(
+    var(--floating-size) +
+    var(--floating-gap)
+  );
+
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+
+  gap: var(--floating-gap);
+
   pointer-events: none;
-  transform: translateY(10px) scale(0.98);
-  transform-origin: bottom right;
-  transition:
-    opacity 0.22s ease,
-    transform 0.22s ease;
 }
 
 .floating-actions.is-open .floating-contact-menu {
-  opacity: 1;
   pointer-events: auto;
-  transform: translateY(0) scale(1);
 }
+
+
+/* =========================================================
+   CONTACT ACTION
+   ========================================================= */
 
 .floating-action {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  position: relative;
+
+  width: var(--floating-size);
+  height: var(--floating-size);
+
+  min-width: var(--floating-size);
+  min-height: var(--floating-size);
+
+  flex: 0 0 var(--floating-size);
+
+  display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 54px;
-  padding: 8px;
-  border-radius: 12px;
-  color: #344054;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(15, 74, 110, 0.1);
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #0d8fd3;
+
   text-decoration: none;
+
+  box-shadow:
+    0 8px 24px rgba(20, 72, 105, 0.12),
+    0 2px 6px rgba(20, 72, 105, 0.06);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform:
+    translateY(14px)
+    scale(0.82);
+
   transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.floating-action:hover,
-.floating-action:focus-visible {
-  background: #f3f9fe;
-  outline: 0;
-  transform: translateX(-2px);
-}
-
-.floating-action-icon {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 11px;
-  background: #e9f5fe;
-  color: #087dc5;
-}
-
-.floating-action-icon img,
-.floating-action-icon svg {
-  display: block;
-  width: 19px;
-  height: 19px;
-  object-fit: contain;
-}
-
-.floating-action > span:not(.floating-action-icon) {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-
-.floating-action strong {
-  color: #172033;
-  font-size: 13.5px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.floating-action small {
-  overflow: hidden;
-  color: #667085;
-  font-size: 12px;
-  font-weight: 560;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.floating-action.facebook .floating-action-icon {
-  background: #eaf2ff;
-}
-
-.floating-action.facebook .floating-action-icon img {
-  width: 21px;
-  height: 21px;
-}
-
-.floating-action.zalo .floating-action-icon {
-  background: #eef7ff;
-}
-
-.floating-action.zalo .floating-action-icon img {
-  width: 24px;
-  height: 24px;
-}
-
-.floating-action.gmail .floating-action-icon {
-  background: #fff0ee;
-  color: #cf4b3b;
-}
-
-.floating-toggle {
-  display: grid;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 999px;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1597df, #0570b8);
-  box-shadow: 0 12px 28px rgba(11, 142, 220, 0.3);
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
+    opacity 0.22s ease,
+    visibility 0.22s ease,
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 0.2s ease,
     background 0.2s ease;
 }
 
-.floating-toggle:hover,
-.floating-toggle:focus-visible {
-  background: linear-gradient(135deg, #0e8dd5, #055f9e);
-  box-shadow: 0 16px 34px rgba(11, 142, 220, 0.36);
-  outline: 0;
-  transform: translateY(-2px);
+
+/* =========================================================
+   OPEN CONTACT MENU
+   ========================================================= */
+
+.floating-actions.is-open .floating-action {
+  opacity: 1;
+  visibility: visible;
+
+  transform:
+    translateY(0)
+    scale(1);
 }
 
-@media (max-width: 640px) {
+
+/*
+ * Các nút xuất hiện lần lượt.
+ */
+
+.floating-actions.is-open
+.floating-action:nth-child(1) {
+  transition-delay: 0.03s;
+}
+
+.floating-actions.is-open
+.floating-action:nth-child(2) {
+  transition-delay: 0.07s;
+}
+
+.floating-actions.is-open
+.floating-action:nth-child(3) {
+  transition-delay: 0.11s;
+}
+
+.floating-actions.is-open
+.floating-action:nth-child(4) {
+  transition-delay: 0.15s;
+}
+
+
+/* =========================================================
+   CONTACT ICON
+   ========================================================= */
+
+.floating-action-icon {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: inherit;
+}
+
+.floating-action-icon img {
+  width: 22px;
+  height: 22px;
+
+  display: block;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   ACTION COLORS
+   ========================================================= */
+
+.floating-action.hotline {
+  color: #1295d8;
+}
+
+.floating-action.zalo {
+  color: #0068ff;
+}
+
+.floating-action.gmail {
+  color: #e15241;
+}
+
+.floating-action.facebook {
+  color: #1877f2;
+}
+
+
+/* =========================================================
+   CONTACT HOVER
+   ========================================================= */
+
+.floating-action:hover,
+.floating-action:focus-visible {
+  transform:
+    translateY(-2px)
+    scale(1.06);
+
+  box-shadow:
+    0 12px 30px rgba(20, 72, 105, 0.18),
+    0 3px 8px rgba(20, 72, 105, 0.08);
+}
+
+
+/* =========================================================
+   CONTACT TOOLTIP
+   ========================================================= */
+
+.floating-tooltip {
+  position: absolute;
+
+  right: calc(100% + 12px);
+  top: 50%;
+
+  min-width: max-content;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  padding: 8px 11px;
+
+  border: 1px solid rgba(15, 74, 110, 0.08);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  box-shadow:
+    0 8px 24px rgba(20, 72, 105, 0.12);
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform:
+    translate(8px, -50%);
+
+  transition:
+    opacity 0.18s ease,
+    visibility 0.18s ease,
+    transform 0.18s ease;
+
+  pointer-events: none;
+
+  white-space: nowrap;
+}
+
+
+/* Tooltip title */
+
+.floating-tooltip strong {
+  color: #102a43;
+
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+
+/* Tooltip description */
+
+.floating-tooltip small {
+  margin-top: 2px;
+
+  color: #6b7f90;
+
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+
+/* Tooltip arrow */
+
+.floating-tooltip::after {
+  content: '';
+
+  position: absolute;
+
+  right: -5px;
+  top: 50%;
+
+  width: 9px;
+  height: 9px;
+
+  background: #ffffff;
+
+  border-top:
+    1px solid rgba(15, 74, 110, 0.08);
+
+  border-right:
+    1px solid rgba(15, 74, 110, 0.08);
+
+  transform:
+    translateY(-50%)
+    rotate(45deg);
+}
+
+
+/* Show tooltip */
+
+.floating-action:hover
+.floating-tooltip,
+.floating-action:focus-visible
+.floating-tooltip {
+  opacity: 1;
+  visibility: visible;
+
+  transform:
+    translate(0, -50%);
+}
+
+
+/* =========================================================
+   MAIN CHAT BUTTON
+   ========================================================= */
+
+.floating-toggle {
+  position: relative;
+
+  isolation: isolate;
+
+  width: var(--floating-size);
+  height: var(--floating-size);
+
+  min-width: var(--floating-size);
+  min-height: var(--floating-size);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #12a8e5,
+      #087fc3
+    );
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 22px rgba(0, 143, 211, 0.28);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* =========================================================
+   CHAT PULSE — WAVE 1
+   ========================================================= */
+
+.floating-toggle::before {
+  content: '';
+
+  position: absolute;
+
+  inset: -1px;
+
+  z-index: -1;
+
+  border-radius: 50%;
+
+  border:
+    2px solid
+    rgba(18, 168, 229, 0.48);
+
+  pointer-events: none;
+
+  animation:
+    chat-pulse
+    2.8s
+    ease-out
+    infinite;
+}
+
+
+/* =========================================================
+   CHAT PULSE — WAVE 2
+   ========================================================= */
+
+.floating-toggle::after {
+  content: '';
+
+  position: absolute;
+
+  inset: -1px;
+
+  z-index: -2;
+
+  border-radius: 50%;
+
+  border:
+    2px solid
+    rgba(18, 168, 229, 0.28);
+
+  pointer-events: none;
+
+  animation:
+    chat-pulse
+    2.8s
+    ease-out
+    0.65s
+    infinite;
+}
+
+
+/* =========================================================
+   CHAT PULSE ANIMATION
+   ========================================================= */
+
+@keyframes chat-pulse {
+  0% {
+    opacity: 0;
+
+    transform: scale(1);
+  }
+
+  12% {
+    opacity: 0.75;
+  }
+
+  55% {
+    opacity: 0;
+
+    transform: scale(1.55);
+  }
+
+  100% {
+    opacity: 0;
+
+    transform: scale(1.55);
+  }
+}
+
+
+/* =========================================================
+   CHAT ICON
+   ========================================================= */
+
+.floating-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform-origin: center;
+
+  animation:
+    chat-icon-attention
+    4.5s
+    ease-in-out
+    infinite;
+}
+
+
+/* =========================================================
+   CHAT ICON SHAKE
+   ========================================================= */
+
+@keyframes chat-icon-attention {
+  0%,
+  72%,
+  100% {
+    transform:
+      rotate(0deg)
+      scale(1);
+  }
+
+  75% {
+    transform:
+      rotate(-8deg)
+      scale(1.05);
+  }
+
+  78% {
+    transform:
+      rotate(8deg)
+      scale(1.05);
+  }
+
+  81% {
+    transform:
+      rotate(-6deg)
+      scale(1.05);
+  }
+
+  84% {
+    transform:
+      rotate(6deg)
+      scale(1.05);
+  }
+
+  87% {
+    transform:
+      rotate(-3deg)
+      scale(1.03);
+  }
+
+  90% {
+    transform:
+      rotate(3deg)
+      scale(1.03);
+  }
+
+  93% {
+    transform:
+      rotate(0deg)
+      scale(1);
+  }
+}
+
+
+/* =========================================================
+   CHAT HOVER
+   ========================================================= */
+
+.floating-toggle:hover {
+  transform:
+    translateY(-2px)
+    scale(1.06);
+
+  box-shadow:
+    0 12px 30px rgba(0, 143, 211, 0.38);
+}
+
+.floating-toggle:active {
+  transform: scale(0.94);
+}
+
+
+/*
+ * Hover thì tạm dừng rung.
+ */
+
+.floating-toggle:hover
+.floating-toggle-icon {
+  animation-play-state: paused;
+}
+
+
+/* =========================================================
+   CHAT OPEN STATE
+   ========================================================= */
+
+/*
+ * Khi menu đã mở thì không cần
+ * pulse kêu gọi click nữa.
+ */
+
+.floating-actions.is-open
+.floating-toggle::before,
+.floating-actions.is-open
+.floating-toggle::after {
+  animation: none;
+
+  opacity: 0;
+}
+
+
+/*
+ * Khi mở menu:
+ * icon chuyển sang dấu X và xoay nhẹ.
+ */
+
+.floating-actions.is-open
+.floating-toggle-icon {
+  animation: none;
+
+  transform: rotate(90deg);
+}
+
+
+/* =========================================================
+   CHAT TOOLTIP
+   ========================================================= */
+
+.floating-toggle-tooltip {
+  position: absolute;
+
+  right: calc(100% + 12px);
+  top: 50%;
+
+  padding: 7px 10px;
+
+  border-radius: 8px;
+
+  background: #102a43;
+  color: #ffffff;
+
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform:
+    translate(8px, -50%);
+
+  transition:
+    opacity 0.18s ease,
+    visibility 0.18s ease,
+    transform 0.18s ease;
+
+  pointer-events: none;
+}
+
+
+/* Show chat tooltip */
+
+.floating-toggle:hover
+.floating-toggle-tooltip,
+.floating-toggle:focus-visible
+.floating-toggle-tooltip {
+  opacity: 1;
+  visibility: visible;
+
+  transform:
+    translate(0, -50%);
+}
+
+
+/* =========================================================
+   BACK TO TOP — LEFT
+   ========================================================= */
+
+.floating-back-to-top {
+  position: fixed;
+
+  left: 22px;
+  bottom: 22px;
+
+  z-index: 999;
+
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border:
+    1px solid
+    rgba(15, 74, 110, 0.1);
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #128fd1;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 24px rgba(20, 72, 105, 0.12),
+    0 2px 6px rgba(20, 72, 105, 0.05);
+
+  opacity: 0;
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transform:
+    translateY(12px)
+    scale(0.88);
+
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+
+/* Visible */
+
+.floating-back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+
+  pointer-events: auto;
+
+  transform:
+    translateY(0)
+    scale(1);
+}
+
+
+/* Hover */
+
+.floating-back-to-top.is-visible:hover {
+  background: #f7fcff;
+
+  transform:
+    translateY(-3px)
+    scale(1.05);
+
+  box-shadow:
+    0 12px 30px rgba(20, 72, 105, 0.18);
+}
+
+
+/* Active */
+
+.floating-back-to-top.is-visible:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+.floating-action:focus-visible,
+.floating-toggle:focus-visible,
+.floating-back-to-top:focus-visible {
+  outline:
+    3px solid
+    rgba(18, 159, 218, 0.25);
+
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
   .floating-actions {
+    --floating-size: 46px;
+    --floating-gap: 9px;
+
     right: 14px;
-    bottom: calc(14px + env(safe-area-inset-bottom));
+    bottom: 18px;
   }
 
-  .floating-contact-menu {
-    width: min(272px, calc(100vw - 36px));
+  .floating-back-to-top {
+    left: 14px;
+    bottom: 18px;
+
+    width: 46px;
+    height: 46px;
   }
 
-  .floating-toggle {
-    width: 48px;
-    height: 48px;
+  /*
+   * Mobile không dùng hover tooltip.
+   */
+
+  .floating-tooltip,
+  .floating-toggle-tooltip {
+    display: none;
   }
 }
 
-[data-theme='dark'] .floating-contact-menu {
-  border-color: rgba(30, 58, 82, 0.9);
-  background: rgba(10, 25, 45, 0.97);
-}
 
-[data-theme='dark'] .floating-action {
-  color: #cbd5e1;
-}
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
 
-[data-theme='dark'] .floating-action:hover,
-[data-theme='dark'] .floating-action:focus-visible {
-  background: rgba(96, 165, 250, 0.1);
-}
+@media (prefers-reduced-motion: reduce) {
+  .floating-action,
+  .floating-action-icon,
+  .floating-tooltip,
+  .floating-toggle,
+  .floating-toggle-icon,
+  .floating-toggle-tooltip,
+  .floating-toggle::before,
+  .floating-toggle::after,
+  .floating-back-to-top {
+    animation: none !important;
 
-[data-theme='dark'] .floating-action strong {
-  color: #e2e8f0;
-}
-
-[data-theme='dark'] .floating-action small {
-  color: #94a3b8;
+    transition-duration: 0.01ms !important;
+  }
 }

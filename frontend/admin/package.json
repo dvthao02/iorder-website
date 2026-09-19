@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@iorder/contracts": "workspace:*",
+    "@tiptap/extension-image": "^3.27.1",
     "@tiptap/extension-link": "^3",
     "@tiptap/extension-placeholder": "^3",
     "@tiptap/extension-underline": "^3",

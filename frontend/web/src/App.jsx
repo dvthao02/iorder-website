@@ -28,6 +28,8 @@ import ServiceDetail from './pages/ServiceDetail'
 import NewsPage from './pages/NewsPage'
 import NewsDetail from './pages/NewsDetail'
 import ContactPage from './pages/ContactPage'
+import GuideDetail from './pages/GuideDetail'
+import GuidesPage from './pages/GuidesPage'
 import ToolsDownloadPage from './pages/ToolsDownloadPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import StaticPage from './pages/StaticPage'
@@ -53,7 +55,8 @@ export default function App() {
       <Route path="/dich-vu/:section/:slug" element={<ServiceDetail />} />
       <Route path="/ho-tro/cai-dat" element={<ToolsDownloadPage />} />
       <Route path="/ho-tro/:slug" element={<StaticPage />} />
-      <Route path="/huong-dan" element={<StaticPage />} />
+      <Route path="/huong-dan" element={<GuidesPage />} />
+      <Route path="/huong-dan/:slug" element={<GuideDetail />} />
       {/* /faq trùng nội dung với /ho-tro/faq — hợp nhất về một URL để tránh trùng lặp nội dung (SEO) */}
       <Route path="/faq" element={<Navigate to="/ho-tro/faq" replace />} />
       <Route path="/ho-tro-tu-xa" element={<StaticPage />} />

@@ -155,11 +155,21 @@ export default function Header({
         )
       default:
         if (item.children?.length) {
+          const cmsSupportItems = item.children.map((child) => ({
+            slug: child.id,
+            title: child.label,
+            href: child.url,
+          }))
+          // Duy trì entrypoint tới thư viện tài liệu sau khi thêm module Hướng dẫn.
+          // Menu CMS vẫn quyết định thứ tự/nhãn các mục còn lại.
+          const supportItems = cmsSupportItems.some((child) => child.href === '/huong-dan')
+            ? cmsSupportItems
+            : [SUPPORT_ITEMS[0], ...cmsSupportItems]
           return (
             <SupportMenu
               key={item.id}
               label={item.label}
-              items={item.children.map((child) => ({ slug: child.id, title: child.label, href: child.url }))}
+              items={supportItems}
               isOpen={openDropdown === item.url}
               onOpen={() => openDropdownFor(item.url)}
               onClose={closeMenu}

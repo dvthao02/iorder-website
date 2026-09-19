@@ -4,7 +4,9 @@ export const userStatusEnum = pgEnum('user_status', ['active', 'disabled'])
 
 export const contentStatusEnum = pgEnum('content_status', ['draft', 'review', 'scheduled', 'published', 'archived'])
 
-export const postTypeEnum = pgEnum('post_type', ['news', 'promotion', 'case_study', 'announcement'])
+// `guide` uses the same mature content lifecycle as posts (revision, publish,
+// archive and media) while giving the public site a dedicated documentation UI.
+export const postTypeEnum = pgEnum('post_type', ['news', 'promotion', 'case_study', 'announcement', 'guide'])
 
 export const offeringTypeEnum = pgEnum('offering_type', ['software', 'solution', 'service', 'industry'])
 

@@ -54,7 +54,8 @@ import { RichTextEditor } from './RichTextEditor'
 import { toast } from './toast'
 import { ActionMenu, type ActionMenuItem, DateTimePicker, ModalShell, useEscapeAndSave } from './ui'
 
-type PostKindFilter = 'all' | 'news' | 'promotion'
+type PostKindFilter = 'all' | 'news' | 'promotion' | 'guide'
+type ManagedPostType = Exclude<PostKindFilter, 'all'>
 
 const PAGE_SIZE = 6
 
@@ -79,6 +80,16 @@ const emptyPost: PostInput = {
   categoryIds: [],
   tags: [],
 }
+
+// Template khởi tạo chỉ xuất hiện trong CMS, giúp người biên tập soạn tài liệu
+// theo cấu trúc nhất quán. Nội dung này không được hiển thị công khai cho đến khi
+// họ hoàn thiện, lưu và xuất bản hướng dẫn.
+const guideTemplateBody = [
+  '<h2>Trước khi bắt đầu</h2><p>Nêu ngắn gọn điều kiện cần có hoặc quyền cần được cấp trước khi thao tác.</p>',
+  '<h2>Bước 1: Chuẩn bị</h2><p>Mô tả thao tác đầu tiên. Có thể chèn ảnh minh họa từ thư viện bằng nút hình ảnh trên thanh soạn thảo.</p>',
+  '<h2>Bước 2: Thực hiện</h2><p>Viết rõ vị trí nút bấm, dữ liệu cần nhập và kết quả cần thấy sau mỗi bước.</p>',
+  '<h2>Kiểm tra kết quả</h2><p>Cho người dùng biết cách xác nhận thao tác đã hoàn tất đúng.</p>',
+].join('')
 
 function slugify(value: string) {
   return value
@@ -138,7 +149,17 @@ function toInput(post: PostResponse): PostInput {
   }
 }
 
-export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } = {}) {
+export function PostsManager({
+  currentUser,
+  fixedType,
+}: {
+  currentUser?: AuthUser | null
+  /** Guides use the same editorial lifecycle, but stay separate from News in the CMS. */
+  fixedType?: ManagedPostType
+} = {}) {
+  const isGuideManager = fixedType === 'guide'
+  const contentLabel = isGuideManager ? 'Hướng dẫn' : 'Bài viết'
+  const contentLabelLower = isGuideManager ? 'hướng dẫn' : 'bài viết'
   const [posts, setPosts] = useState<PostResponse[]>([])
   const [images, setImages] = useState<MediaAsset[]>([])
   const [categories, setCategories] = useState<CategoryResponse[]>([])
@@ -158,7 +179,7 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
   selectedIdRef.current = selectedId
 
   const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<PostKindFilter>('all')
+  const [typeFilter, setTypeFilter] = useState<PostKindFilter>(fixedType ?? 'all')
   const [statusFilter, setStatusFilter] = useState<ContentStatus>('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
@@ -200,10 +221,15 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
   }
 
   const newPost = () => {
+    const initialPost = {
+      ...emptyPost,
+      type: fixedType ?? emptyPost.type,
+      ...(fixedType === 'guide' ? { body: guideTemplateBody } : {}),
+    }
     setSelectedId(null)
     setCreating(true)
-    setForm(emptyPost)
-    initialFormRef.current = emptyPost
+    setForm(initialPost)
+    initialFormRef.current = initialPost
     setShowCoverPicker(false)
     setLastSavedAt(null)
   }
@@ -432,7 +458,7 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
   }
 
   const previewPost = (slug: string) => {
-    if (slug) openPublicSite(`/tin-tuc/${slug}`)
+    if (slug) openPublicSite(isGuideManager ? `/huong-dan/${slug}` : `/tin-tuc/${slug}`)
   }
 
   // Trạng thái hẹn giờ hiển thị trên thẻ bài viết (draft + scheduledAt).
@@ -483,7 +509,7 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
     const query = search.trim().toLowerCase()
     return posts
       .filter((post) => statusFilter === 'all' || post.status === statusFilter)
-      .filter((post) => typeFilter === 'all' || post.type === typeFilter)
+      .filter((post) => (fixedType ? post.type === fixedType : typeFilter === 'all' || post.type === typeFilter))
       .filter((post) => categoryFilter === 'all' || post.categories.some((category) => category.id === categoryFilter))
       .filter((post) => {
         if (!query) return true
@@ -494,7 +520,7 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
         const right = new Date(b.updatedAt).getTime()
         return sortOrder === 'newest' ? right - left : left - right
       })
-  }, [posts, search, statusFilter, typeFilter, categoryFilter, sortOrder])
+  }, [posts, search, statusFilter, typeFilter, fixedType, categoryFilter, sortOrder])
 
   useEffect(() => {
     setPage(1)
@@ -608,15 +634,15 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
       <>
         <ContentEditorPage
           standalone
-          title={creating ? 'Bài viết mới' : 'Chỉnh sửa bài viết'}
+          title={creating ? `${contentLabel} mới` : `Chỉnh sửa ${contentLabelLower}`}
           status={<StatusBadge status={editingStatus} />}
           eyebrow={
             <span className="editor-breadcrumb">
               <button type="button" onClick={closeEditor}>
-                <ArrowLeft size={16} /> Tin tức
+                <ArrowLeft size={16} /> {contentLabel}
               </button>
               <span>›</span>
-              {creating ? 'Bài viết mới' : 'Chỉnh sửa bài viết'}
+              {creating ? `${contentLabel} mới` : `Chỉnh sửa ${contentLabelLower}`}
             </span>
           }
           actions={
@@ -702,14 +728,19 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
               <BasicInfoCard>
                 <div className="form-row-2col">
                   <label>
-                    Loại bài
-                    <select
-                      value={form.type}
-                      onChange={(event) => patchForm('type', event.target.value as PostInput['type'])}
-                    >
-                      <option value="news">Tin tức</option>
-                      <option value="promotion">Khuyến mãi</option>
-                    </select>
+                    {fixedType ? 'Loại nội dung' : 'Loại bài'}
+                    {fixedType ? (
+                      <input value="Hướng dẫn sử dụng" readOnly aria-readonly="true" />
+                    ) : (
+                      <select
+                        value={form.type}
+                        onChange={(event) => patchForm('type', event.target.value as PostInput['type'])}
+                      >
+                        <option value="news">Tin tức</option>
+                        <option value="promotion">Khuyến mãi</option>
+                        <option value="guide">Hướng dẫn sử dụng</option>
+                      </select>
+                    )}
                   </label>
                   <label>
                     Tiêu đề <span className="field-counter">{form.title.length}/220</span>
@@ -797,8 +828,9 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
               <ContentBodyEditor wordCount={wordCount}>
                 <RichTextEditor
                   value={form.body}
-                  placeholder="Soạn nội dung bài viết..."
+                  placeholder={isGuideManager ? 'Soạn từng bước hướng dẫn; dùng tiêu đề để tạo mục lục...' : 'Soạn nội dung bài viết...'}
                   onChange={(html) => patchForm('body', html)}
+                  images={images}
                 />
                 <label className="full-field">
                   Checklist / điểm nổi bật
@@ -926,9 +958,13 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
   return (
     <section className="admin-card content-manager">
       <ContentListPage
-        title="Bài viết"
-        description="Tạo tin tức hoặc bài khuyến mãi, lưu nháp rồi xuất bản."
-        actionLabel="Bài viết mới"
+        title={contentLabel}
+        description={
+          isGuideManager
+            ? 'Soạn tài liệu hướng dẫn có ảnh, chuyên mục, mục lục và quy trình thao tác; lưu nháp trước khi xuất bản.'
+            : 'Tạo tin tức hoặc bài khuyến mãi, lưu nháp rồi xuất bản.'
+        }
+        actionLabel={`${contentLabel} mới`}
         onCreate={newPost}
         stats={stats}
         search={search}
@@ -941,14 +977,17 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
           ? { categoryOptions, categoryValue: categoryFilter, onCategoryChange: setCategoryFilter }
           : {})}
         extraFilters={
+          !fixedType ? (
           <label className="content-select">
             <span>Loại bài</span>
             <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as PostKindFilter)}>
               <option value="all">Tất cả loại bài</option>
               <option value="news">Tin tức</option>
               <option value="promotion">Khuyến mãi</option>
+              <option value="guide">Hướng dẫn sử dụng</option>
             </select>
           </label>
+          ) : undefined
         }
       >
         {filtered.length === 0 ? (
@@ -958,8 +997,8 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
         ) : null}
 
         <ContentCardsGrid
-          addLabel="Thêm bài viết mới"
-          addDescription="Tạo tin tức hoặc khuyến mãi để hiển thị trên website"
+          addLabel={`Thêm ${contentLabelLower} mới`}
+          addDescription={isGuideManager ? 'Tạo tài liệu theo bước, ảnh minh họa và chuyên mục' : 'Tạo tin tức hoặc khuyến mãi để hiển thị trên website'}
           onCreate={newPost}
         >
           {pageItems.map((post) => {
@@ -979,7 +1018,7 @@ export function PostsManager({ currentUser }: { currentUser?: AuthUser | null } 
                 marker={
                   <>
                     <span className={`kind-badge ${post.type === 'promotion' ? 'kind-customer' : 'kind-partner'}`}>
-                      {post.type === 'promotion' ? 'Khuyến mãi' : 'Tin tức'}
+                      {post.type === 'promotion' ? 'Khuyến mãi' : post.type === 'guide' ? 'Hướng dẫn' : 'Tin tức'}
                     </span>
                     {scheduleText ? (
                       <span className="kind-badge kind-schedule">

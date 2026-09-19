@@ -696,7 +696,7 @@ export default function Home() {
 
               <p className="hero-commitment">
                 <ShieldCheck size={17} />
-                Dùng thử đầy đủ tính năng — không cần thẻ tín dụng
+                Dùng thử  MIỄN PHÍ đầy đủ tính năng trong 15 ngày !
               </p>
             </div>
 
