@@ -14,7 +14,8 @@ export default function SoftwareDetail() {
   const { slug } = useParams()
   const [cmsProduct, setCmsProduct] = useState(null)
   const staticProduct = softwareProducts.find((item) => item.slug === slug)
-  const product = cmsProduct ?? staticProduct
+  // const product = cmsProduct ?? staticProduct
+  const product = staticProduct
   const seoTitle = product
     ? product.title.includes('iOrder')
       ? product.title
