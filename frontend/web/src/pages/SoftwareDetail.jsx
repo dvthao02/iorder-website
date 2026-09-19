@@ -8,6 +8,7 @@ import { softwareProducts } from '../data/siteContent'
 import { fetchOffering } from '../utils/contentApi'
 
 import productSuite from '../assets/products/hero-iorder-suite.png'
+import posRetail from '../assets/products/hero-pos-retail-cutout.png'
 
 export default function SoftwareDetail() {
   const { slug } = useParams()
@@ -39,7 +40,14 @@ export default function SoftwareDetail() {
 
   return (
     <PageLayout>
-      <SectionRenderer offering={product} type="software" backPath="/phan-mem" backLabel="Quay lại phần mềm" fallbackImage={productSuite} />
+      <SectionRenderer
+        offering={product}
+        type="software"
+        backPath="/phan-mem"
+        backLabel="Quay lại phần mềm"
+        fallbackImage={productSuite}
+        processImage={posRetail}
+      />
     </PageLayout>
   )
 }
