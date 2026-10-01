@@ -157,7 +157,7 @@ export function AdminApp() {
   const navigate = useNavigate()
   const { section } = useParams()
   const location = useLocation()
-  // Bỏ '/admin' basename (đã strip bởi BrowserRouter) và dấu '/' đầu, để có path đầy đủ
+  // BrowserRouter đã bỏ basename và dấu '/' đầu để có path nội bộ của CMS.
   // dùng cho route con dạng 'cai-dat/nguoi-dung' (AdminApp không dùng route lồng thật).
   const fullPath = location.pathname.replace(/^\/+/, '').replace(/\/+$/, '')
   const isLoginRoute = section === 'login'

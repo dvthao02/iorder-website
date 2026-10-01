@@ -18,7 +18,7 @@ const router = createBrowserRouter(
     { path: '/:section', element: <AdminApp /> },
     { path: '/:section/*', element: <AdminApp /> },
   ],
-  { basename: '/admin' },
+  { basename: '/' },
 )
 
 createRoot(root).render(

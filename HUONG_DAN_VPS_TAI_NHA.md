@@ -233,13 +233,13 @@ Funnel không cần domain hoặc NAT, nhưng đang beta và có giới hạn b�
 
 ## 11. Build và public production qua Cloudflare Tunnel
 
-Phần này là quy trình đầy đủ đã áp dụng cho `iwork.vn`. Một route gốc phục vụ
-cả website và CMS:
+Phần này là quy trình production cho website và CMS tách hostname. API,
+PostgreSQL và MinIO vẫn ở mạng Docker nội bộ, không public trực tiếp:
 
 ```text
-https://iwork.vn/        → website công khai
-https://iwork.vn/admin   → CMS
-https://media.iwork.vn   → file ảnh/tài liệu công khai trong MinIO
+https://iorder.com.vn/       → public-web (website công khai)
+https://cms.iorder.com.vn/   → cms-web (CMS)
+https://media.iorder.com.vn/ → file ảnh/tài liệu công khai trong MinIO
 ```
 
 Không tạo public hostname cho PostgreSQL hoặc MinIO Console.
@@ -274,15 +274,18 @@ ngoài máy bằng:
 openssl rand -hex 32
 ```
 
-Các giá trị public quan trọng của `iwork.vn` là:
+Các giá trị public quan trọng là:
 
 ```ini
-# Chỉ cho cloudflared trên cùng VPS truy cập container web; API không có public port.
-APP_PORT=127.0.0.1:4000
-SITE_URL=https://iwork.vn
+# Chỉ cho cloudflared trên cùng VPS truy cập hai frontend; API không có public port.
+PUBLIC_APP_PORT=127.0.0.1:4000
+CMS_APP_PORT=127.0.0.1:4001
+SITE_URL=https://iorder.com.vn
+PUBLIC_ORIGIN=https://iorder.com.vn
+ADMIN_ORIGIN=https://cms.iorder.com.vn
 
 # iorder-media là tên bucket, không phải dấu / thừa.
-MEDIA_PUBLIC_BASE_URL=https://media.iwork.vn/iorder-media
+MEDIA_PUBLIC_BASE_URL=https://media.iorder.com.vn/iorder-media
 SENTRY_ENVIRONMENT=production
 ```
 
@@ -320,11 +323,12 @@ cd ~/apps/iorder-website/deploy
 docker compose up -d --build
 docker compose ps
 curl -i http://127.0.0.1:4000/
+curl -i http://127.0.0.1:4001/
 curl -i http://127.0.0.1:4000/api/public/health
 ```
 
-Mong đợi `web`, `api`, `postgres` và `minio` đều `healthy`; website trả HTML
-và `/api/public/health` trả JSON có `"status":"ok"`.
+Mong đợi `public-web`, `cms-web`, `api`, `postgres` và `minio` đều `healthy`;
+website/CMS trả HTML và `/api/public/health` trả JSON có `"status":"ok"`.
 
 Khi chỉ thay biến môi trường của API, khởi động lại riêng API để không chạy lại
 frontend/migration không cần thiết:
@@ -333,9 +337,9 @@ frontend/migration không cần thiết:
 docker compose up -d --no-deps --force-recreate api
 ```
 
-Kiểm tra lại `docker compose ps`. Container `web` phải hiện
-`127.0.0.1:4000->80/tcp` (hoặc port bind theo `APP_PORT`), còn `api` chỉ hiện
-`8080/tcp` trong mạng Docker nội bộ.
+Kiểm tra lại `docker compose ps`. `public-web` phải bind `127.0.0.1:4000->80/tcp`
+và `cms-web` phải bind `127.0.0.1:4001->80/tcp` (hoặc port trong `.env`); `api`
+chỉ hiện `8080/tcp` trong mạng Docker nội bộ.
 
 ### 11.4 Cài cloudflared trên Ubuntu
 
@@ -366,10 +370,11 @@ service systemd mới là tiến trình cần duy trì sau reboot.
 Trong **Networking → Tunnels → iweb-production → Routes → Add route →
 Published application**, tạo lần lượt:
 
-| Hostname                            | Service URL             | Dùng cho                         |
-| ----------------------------------- | ----------------------- | -------------------------------- |
-| _(để trống subdomain)_ + `iwork.vn` | `http://localhost:4000` | Trang chủ, API và CMS `/admin`   |
-| `media.iwork.vn`                    | `http://localhost:9000` | MinIO API chỉ để đọc file public |
+| Hostname               | Service URL             | Dùng cho                         |
+| ---------------------- | ----------------------- | -------------------------------- |
+| `iorder.com.vn`        | `http://localhost:4000` | Website công khai và public API  |
+| `cms.iorder.com.vn`    | `http://localhost:4001` | CMS và CMS API                   |
+| `media.iorder.com.vn`  | `http://localhost:9000` | MinIO API chỉ để đọc file public |
 
 Cloudflare tự tạo CNAME trỏ tới `*.cfargotunnel.com`; không cần tự tạo thêm A
 record cho hai hostname này.
@@ -378,8 +383,7 @@ Không thêm route cho:
 
 - PostgreSQL (`5432`): quản trị bằng SSH/Tailscale hoặc lệnh Docker trong VPS.
 - MinIO Console (`9001`): chỉ bind localhost; không public.
-- CMS subdomain riêng: hiện CMS dùng `https://iwork.vn/admin`, nên không cần
-  `admin.iwork.vn`.
+- PostgreSQL/MinIO Console: luôn chỉ ở mạng nội bộ hoặc localhost.
 
 Nếu `www.iwork.vn` đang trỏ website cũ, đừng tự xóa A record. Chỉ tạo route
 `www.iwork.vn → http://localhost:4000` sau khi chủ động quyết định chuyển
@@ -389,14 +393,14 @@ traffic khỏi máy chủ cũ.
 
 ```bash
 # Website, CMS và Tunnel phải đi qua Cloudflare.
-curl -I https://iwork.vn/
-curl -I https://iwork.vn/admin
+curl -I https://iorder.com.vn/
+curl -I https://cms.iorder.com.vn/
 
 # Bucket root bị cấm liệt kê nên HTTP 403 là bình thường.
-curl -I https://media.iwork.vn/iorder-media/
+curl -I https://media.iorder.com.vn/iorder-media/
 
 # Một object thật cần trả HTTP 200.
-curl -I https://media.iwork.vn/iorder-media/seed/posts/news3.jpg
+curl -I https://media.iorder.com.vn/iorder-media/seed/posts/news3.jpg
 ```
 
 Sau khi đổi `MEDIA_PUBLIC_BASE_URL`, restart API bằng lệnh ở mục 11.3 rồi hard
@@ -406,8 +410,8 @@ khi chạy bất cứ script migration nào.
 
 ### 11.7 Việc bảo mật nên làm tiếp
 
-1. Dùng Cloudflare Access để giới hạn `/admin` cho các email quản trị được
-   phép; password CMS vẫn là lớp bảo vệ bắt buộc.
+1. Dùng Cloudflare Access để giới hạn `cms.iorder.com.vn` cho các email quản
+   trị được phép; password CMS vẫn là lớp bảo vệ bắt buộc.
 2. Đặt backup PostgreSQL tự động và sao chép backup ra ngoài VPS.
 3. Lên lịch đổi riêng password PostgreSQL và MinIO nếu đã khởi tạo bằng mẫu
    test. Việc đổi cần cập nhật đồng thời database, MinIO và `.env`, vì vậy phải

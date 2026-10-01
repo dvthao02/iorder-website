@@ -22,8 +22,8 @@ x-app-environment: &app-environment
   DATABASE_URL: postgresql://admin_iorder:${POSTGRES_PASSWORD}@postgres:5432/iorderCMS
   SESSION_SECRET: ${SESSION_SECRET}
   CMS_PREVIEW_SECRET: ${CMS_PREVIEW_SECRET}
-  ADMIN_ORIGIN: ${SITE_URL}
-  PUBLIC_ORIGIN: ${SITE_URL}
+  ADMIN_ORIGIN: ${ADMIN_ORIGIN:-${SITE_URL}}
+  PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-${SITE_URL}}
   MEDIA_STORAGE_DRIVER: ${MEDIA_STORAGE_DRIVER:-minio}
   MEDIA_STORAGE_PATH: /app/storage/media
   MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL}
@@ -143,11 +143,12 @@ services:
       retries: 12
       start_period: 10s
 
-  web:
-    image: ${WEB_IMAGE:-iorder-web:local}
+  public-web:
+    image: ${PUBLIC_WEB_IMAGE:-${WEB_IMAGE:-iorder-public-web:local}}
     build:
       context: ..
       dockerfile: deploy/Frontend.Dockerfile
+      target: public-runtime
       args:
         VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
         VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-production}
@@ -162,7 +163,35 @@ services:
         condition: service_healthy
     restart: unless-stopped
     ports:
-      - '${APP_PORT:-4000}:80'
+      - '${PUBLIC_APP_PORT:-${APP_PORT:-127.0.0.1:4000}}:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/healthz']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  cms-web:
+    image: ${CMS_WEB_IMAGE:-iorder-cms-web:local}
+    build:
+      context: ..
+      dockerfile: deploy/Frontend.Dockerfile
+      target: cms-runtime
+      args:
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        VITE_SENTRY_ENVIRONMENT: ${VITE_SENTRY_ENVIRONMENT:-production}
+        VITE_SENTRY_RELEASE: ${VITE_SENTRY_RELEASE:-}
+        VITE_SENTRY_TRACES_SAMPLE_RATE: ${VITE_SENTRY_TRACES_SAMPLE_RATE:-0.05}
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - '${CMS_APP_PORT:-127.0.0.1:4001}:80'
     healthcheck:
       test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/healthz']
       interval: 10s

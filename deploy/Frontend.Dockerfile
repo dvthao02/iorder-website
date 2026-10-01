@@ -42,10 +42,16 @@ RUN pnpm --filter @iorder/contracts build \
   && pnpm --filter @iorder/web build \
   && pnpm --filter @iorder/admin build
 
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.27-alpine AS public-runtime
 
-COPY deploy/nginx.frontend.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx.public.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/frontend/web/dist /usr/share/nginx/html
-COPY --from=build /app/frontend/admin/dist /usr/share/nginx/html/admin
+
+EXPOSE 80
+
+FROM nginx:1.27-alpine AS cms-runtime
+
+COPY deploy/nginx.cms.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/frontend/admin/dist /usr/share/nginx/html
 
 EXPOSE 80

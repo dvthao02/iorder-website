@@ -3,9 +3,8 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react()],
-  // Dấu '/' cuối là bắt buộc để Vite dev prefix đúng /admin/ cho các module
-  // (vd /admin/src/main.tsx) — cần thiết khi chạy sau proxy tại 5173/admin.
-  base: '/admin/',
+  // CMS có hostname riêng, nên assets luôn được nạp từ gốc của cms.iorder.com.vn.
+  base: '/',
   server: {
     host: '0.0.0.0',
     port: 5174,
