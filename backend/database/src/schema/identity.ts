@@ -1,12 +1,12 @@
 import { char, index, pgTable, primaryKey, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { userStatusEnum } from './enums.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const users = pgTable(
   'users',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     username: varchar('username', { length: 80 }).notNull(),
     email: varchar('email', { length: 320 }),
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
@@ -25,7 +25,7 @@ export const users = pgTable(
 export const roles = pgTable(
   'roles',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     code: varchar('code', { length: 80 }).notNull(),
     name: varchar('name', { length: 120 }).notNull(),
     ...timestampColumns(),
@@ -49,7 +49,7 @@ export const userRoles = pgTable(
 export const sessions = pgTable(
   'sessions',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),

@@ -42,3 +42,11 @@ export const pageBlockTypeEnum = pgEnum('page_block_type', [
 export const partnerKindEnum = pgEnum('partner_kind', ['partner', 'customer'])
 
 export const linkTypeEnum = pgEnum('link_type', ['internal', 'external', 'email', 'phone', 'download'])
+
+export const salesEquipmentCategoryEnum = pgEnum('sales_equipment_category', [
+  'pos',
+  'printer',
+  'scanner',
+  'cash_drawer',
+  'accessory',
+])

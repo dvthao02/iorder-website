@@ -113,6 +113,20 @@
       "when": 1783260000000,
       "tag": "0015_add_guide_post_type",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790243485238,
+      "tag": "0016_uuid_v7_defaults",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790243485239,
+      "tag": "0017_sales_equipment",
+      "breakpoints": true
     }
   ]
 }

@@ -1,13 +1,14 @@
 import { index, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { users } from './identity.js'
+import { uuidV7Default } from './shared.js'
 
 export const leadStatusEnum = pgEnum('lead_status', ['new', 'contacted', 'closed'])
 
 export const contactLeads = pgTable(
   'contact_leads',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     name: varchar('name', { length: 180 }).notNull(),
     phone: varchar('phone', { length: 30 }).notNull(),
     email: varchar('email', { length: 320 }),

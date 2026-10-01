@@ -13,12 +13,12 @@ import {
 
 import { users } from './identity.js'
 import { mediaAssets } from './media.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const siteProfile = pgTable(
   'site_profile',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     profileKey: varchar('profile_key', { length: 40 }).default('default').notNull(),
     companyName: varchar('company_name', { length: 220 }).notNull(),
     legalName: varchar('legal_name', { length: 220 }),
@@ -36,7 +36,7 @@ export const siteProfile = pgTable(
 export const siteSettings = pgTable(
   'site_settings',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     key: varchar('key', { length: 160 }).notNull(),
     value: jsonb('value').$type<unknown>().notNull(),
     description: varchar('description', { length: 500 }),
@@ -49,7 +49,7 @@ export const siteSettings = pgTable(
 export const redirects = pgTable(
   'redirects',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     sourcePath: varchar('source_path', { length: 500 }).notNull(),
     destinationPath: varchar('destination_path', { length: 1000 }).notNull(),
     statusCode: integer('status_code').default(301).notNull(),
@@ -65,7 +65,7 @@ export const redirects = pgTable(
 export const auditLogs = pgTable(
   'audit_logs',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
     action: varchar('action', { length: 120 }).notNull(),
     entityType: varchar('entity_type', { length: 120 }).notNull(),

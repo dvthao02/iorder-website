@@ -36,6 +36,9 @@ import type {
   MenuResponse,
   MenuItemInput,
   AuditLogEntry,
+  SalesEquipmentInput,
+  SalesEquipmentRevisionSummary,
+  SalesEquipmentResponse,
 } from '@iorder/contracts'
 
 const localApiHost =
@@ -292,6 +295,55 @@ export function unpublishOffering(id: string) {
 
 export function deleteOffering(id: string) {
   return request<void>(`/api/admin/offerings/${id}`, { method: 'DELETE' })
+}
+
+// ── Sales equipment ────────────────────────────────────────────────────────
+export function listSalesEquipment(category?: string, status?: string) {
+  const params = new URLSearchParams()
+  if (category) params.set('category', category)
+  if (status) params.set('status', status)
+  const qs = params.toString()
+  return request<{ items: SalesEquipmentResponse[]; total: number }>(`/api/admin/sales-equipment${qs ? `?${qs}` : ''}`)
+}
+
+export function createSalesEquipment(input: SalesEquipmentInput) {
+  return request<{ item: SalesEquipmentResponse }>('/api/admin/sales-equipment', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateSalesEquipment(id: string, input: SalesEquipmentInput) {
+  return request<{ item: SalesEquipmentResponse }>(`/api/admin/sales-equipment/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}
+
+export function publishSalesEquipment(id: string) {
+  return request<{ item: SalesEquipmentResponse }>(`/api/admin/sales-equipment/${id}/publish`, { method: 'POST' })
+}
+
+export function archiveSalesEquipment(id: string) {
+  return request<{ item: SalesEquipmentResponse }>(`/api/admin/sales-equipment/${id}/archive`, { method: 'POST' })
+}
+
+export function unpublishSalesEquipment(id: string) {
+  return request<{ item: SalesEquipmentResponse }>(`/api/admin/sales-equipment/${id}/unpublish`, { method: 'POST' })
+}
+
+export function deleteSalesEquipment(id: string) {
+  return request<void>(`/api/admin/sales-equipment/${id}`, { method: 'DELETE' })
+}
+
+export function listSalesEquipmentRevisions(id: string) {
+  return request<{ items: SalesEquipmentRevisionSummary[] }>(`/api/admin/sales-equipment/${id}/revisions`)
+}
+
+export function restoreSalesEquipmentRevision(id: string, version: number) {
+  return request<{ item: SalesEquipmentResponse }>(`/api/admin/sales-equipment/${id}/revisions/${version}/restore`, {
+    method: 'POST',
+  })
 }
 
 // ── Partners ───────────────────────────────────────────────────────────────

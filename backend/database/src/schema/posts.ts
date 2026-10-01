@@ -16,12 +16,12 @@ import {
 import { contentStatusEnum, postTypeEnum } from './enums.js'
 import { users } from './identity.js'
 import { mediaAssets } from './media.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const posts = pgTable(
   'posts',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
     coverMediaId: uuid('cover_media_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
     type: postTypeEnum('type').notNull(),
@@ -58,7 +58,7 @@ export const posts = pgTable(
 export const postRevisions = pgTable(
   'post_revisions',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     postId: uuid('post_id')
       .notNull()
       .references(() => posts.id, { onDelete: 'cascade' }),
@@ -75,7 +75,7 @@ export const postRevisions = pgTable(
 export const categories = pgTable(
   'categories',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     parentId: uuid('parent_id').references((): AnyPgColumn => categories.id, { onDelete: 'set null' }),
     name: varchar('name', { length: 160 }).notNull(),
     slug: varchar('slug', { length: 180 }).notNull(),
@@ -102,7 +102,7 @@ export const postCategories = pgTable(
 export const tags = pgTable(
   'tags',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     name: varchar('name', { length: 120 }).notNull(),
     slug: varchar('slug', { length: 140 }).notNull(),
     ...timestampColumns(),

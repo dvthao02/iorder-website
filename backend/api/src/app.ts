@@ -26,6 +26,7 @@ import { registerNavigationRoutes } from './modules/navigation/navigation-routes
 import { registerOfferingRoutes } from './modules/offerings/offerings-routes.js'
 import { registerPartnerRoutes } from './modules/partners/partners-routes.js'
 import { registerPostRoutes } from './modules/posts/posts-routes.js'
+import { registerSalesEquipmentRoutes } from './modules/sales-equipment/sales-equipment-routes.js'
 import { registerSettingsRoutes } from './modules/settings/settings-routes.js'
 import { registerTestimonialRoutes } from './modules/testimonials/testimonials-routes.js'
 import { registerUserRoutes } from './modules/users/users-routes.js'
@@ -198,6 +199,7 @@ export async function buildApp(env: ApiEnv) {
     hooks,
   })
   registerOfferingRoutes(app, { db: database.db, hooks })
+  registerSalesEquipmentRoutes(app, { db: database.db, hooks })
   registerContentPageRoutes(app, { db: database.db, hooks })
   registerPartnerRoutes(app, { db: database.db })
   registerTestimonialRoutes(app, { db: database.db })

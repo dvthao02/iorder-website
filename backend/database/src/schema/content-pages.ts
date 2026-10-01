@@ -1,9 +1,9 @@
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const contentPages = pgTable('content_pages', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuid('id').default(uuidV7Default).primaryKey(),
   slug: varchar('slug', { length: 200 }).notNull().unique(),
   title: varchar('title', { length: 220 }).notNull(),
   lead: text('lead'),

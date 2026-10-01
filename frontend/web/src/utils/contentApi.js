@@ -214,6 +214,16 @@ export async function fetchDownloads() {
   return payload.items ?? []
 }
 
+// ── Sales equipment ────────────────────────────────────────────────────────
+
+export async function fetchSalesEquipment(category) {
+  const query = category ? `?category=${encodeURIComponent(category)}` : ''
+  // Giá và ảnh bìa thiết bị cần phản ánh ngay sau khi biên tập viên cập nhật.
+  // Không dùng cache phiên như nội dung trang tĩnh để tránh dữ liệu catalog cũ.
+  const payload = await apiFetch(`/api/public/sales-equipment${query}`, { cacheTtl: 0 })
+  return payload.items ?? []
+}
+
 // ── Site stats ─────────────────────────────────────────────────────────────
 
 let _statsCache = null

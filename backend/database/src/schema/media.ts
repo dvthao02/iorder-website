@@ -1,12 +1,12 @@
 import { bigint, index, integer, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { users } from './identity.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const mediaAssets = pgTable(
   'media_assets',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
     storageKey: varchar('storage_key', { length: 500 }).notNull().unique(),
     publicUrl: text('public_url').notNull(),

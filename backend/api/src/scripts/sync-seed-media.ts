@@ -1,7 +1,7 @@
-import { readFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { readFile, stat } from 'node:fs/promises'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createDatabase, mediaAssets } from '@iorder/database'
+import { createDatabase, mediaAssets, salesEquipment } from '@iorder/database'
 import { config } from 'dotenv'
 import { eq } from 'drizzle-orm'
 
@@ -57,6 +57,16 @@ const seedMediaFiles = [
   ['seed/posts/news3.jpg', 'frontend/web/src/assets/news/news3.jpg'],
 ] as const
 
+// Các ảnh đã có trong source được đưa vào Media Library, thay vì để catalog
+// Thiết bị phụ thuộc asset tĩnh. Mỗi entry có thể gắn ngay với một product seed.
+const equipmentMediaFiles = [
+  ['seed/equipment/iod86.png', 'frontend/web/src/assets/products/documentation/iorder-pos-terminal.png', 'may-pos-iod86'],
+  ['seed/equipment/pos-mini.png', 'frontend/web/src/assets/products/documentation/iorder-pos-tablet-angle.png', 'may-pos-iorder-mini'],
+  ['seed/equipment/printer.png', 'frontend/web/src/assets/products/hero-pos-fnb-cutout.png', 'may-in-hoa-don-tp80'],
+  ['seed/equipment/scanner.png', 'frontend/web/src/assets/products/hero-pos-retail-cutout.png', 'may-quet-ma-vach-scanpro'],
+  ['seed/equipment/cash-drawer.png', 'frontend/web/src/assets/products/documentation/iorder-pos-hardware-bundle.png', 'ket-dung-tien-cd410'],
+] as const
+
 try {
   let copied = 0
   let urlsUpdated = 0
@@ -75,8 +85,52 @@ try {
     urlsUpdated += updated.length
   }
 
+  let equipmentLinked = 0
+  for (const [storageKey, sourcePath, equipmentSlug] of equipmentMediaFiles) {
+    const source = resolve(repositoryRoot, sourcePath)
+    const sourceStats = await stat(source)
+    const mimeType = storageKey.endsWith('.jpg') ? 'image/jpeg' : 'image/png'
+    const { publicUrl } = await mediaStorage.putAt(storageKey, await readFile(source), mimeType)
+    copied += 1
+
+    const [existing] = await database.db
+      .select({ id: mediaAssets.id })
+      .from(mediaAssets)
+      .where(eq(mediaAssets.storageKey, storageKey))
+      .limit(1)
+    const asset = existing
+      ? (
+          await database.db
+            .update(mediaAssets)
+            .set({ publicUrl, fileSize: sourceStats.size, updatedAt: new Date() })
+            .where(eq(mediaAssets.id, existing.id))
+            .returning({ id: mediaAssets.id })
+        )[0]
+      : (
+          await database.db
+            .insert(mediaAssets)
+            .values({
+              storageKey,
+              publicUrl,
+              originalName: basename(source),
+              mimeType,
+              fileSize: sourceStats.size,
+              altText: `Thiết bị iOrder ${equipmentSlug}`,
+            })
+            .returning({ id: mediaAssets.id })
+        )[0]
+    if (!asset) throw new Error(`Could not create media asset for ${storageKey}`)
+
+    const linked = await database.db
+      .update(salesEquipment)
+      .set({ coverMediaId: asset.id, updatedAt: new Date() })
+      .where(eq(salesEquipment.slug, equipmentSlug))
+      .returning({ id: salesEquipment.id })
+    equipmentLinked += linked.length
+  }
+
   process.stdout.write(
-    `Synced ${copied} seed media files to ${env.MEDIA_STORAGE_DRIVER}; repaired ${urlsUpdated} media URLs.\n`,
+    `Synced ${copied} seed media files to ${env.MEDIA_STORAGE_DRIVER}; repaired ${urlsUpdated} media URLs; linked ${equipmentLinked} equipment covers.\n`,
   )
 } finally {
   await database.close()

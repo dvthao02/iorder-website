@@ -31,6 +31,7 @@ import ContactPage from './pages/ContactPage'
 import GuideDetail from './pages/GuideDetail'
 import GuidesPage from './pages/GuidesPage'
 import ToolsDownloadPage from './pages/ToolsDownloadPage'
+import SalesEquipmentPage from './pages/SalesEquipmentPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import StaticPage from './pages/StaticPage'
 import NotFound from './pages/NotFound'
@@ -54,6 +55,7 @@ export default function App() {
       <Route path="/dich-vu/:slug" element={<ServiceDetail />} />
       <Route path="/dich-vu/:section/:slug" element={<ServiceDetail />} />
       <Route path="/ho-tro/cai-dat" element={<ToolsDownloadPage />} />
+      <Route path="/thiet-bi" element={<SalesEquipmentPage />} />
       <Route path="/ho-tro/:slug" element={<StaticPage />} />
       <Route path="/huong-dan" element={<GuidesPage />} />
       <Route path="/huong-dan/:slug" element={<GuideDetail />} />

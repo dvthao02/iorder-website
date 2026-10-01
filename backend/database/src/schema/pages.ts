@@ -14,12 +14,12 @@ import {
 
 import { contentStatusEnum, pageBlockTypeEnum } from './enums.js'
 import { users } from './identity.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const pages = pgTable(
   'pages',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     title: varchar('title', { length: 220 }).notNull(),
     slug: varchar('slug', { length: 180 }).notNull(),
     template: varchar('template', { length: 80 }).default('default').notNull(),
@@ -44,7 +44,7 @@ export const pages = pgTable(
 export const pageBlocks = pgTable(
   'page_blocks',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     pageId: uuid('page_id')
       .notNull()
       .references(() => pages.id, { onDelete: 'cascade' }),
@@ -64,7 +64,7 @@ export const pageBlocks = pgTable(
 export const pageRevisions = pgTable(
   'page_revisions',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     pageId: uuid('page_id')
       .notNull()
       .references(() => pages.id, { onDelete: 'cascade' }),

@@ -1,0 +1,261 @@
+.sales-equipment-page {
+  background: var(--bg);
+}
+.sales-equipment-hero {
+  padding: 7.5rem 0 3.75rem;
+  background: radial-gradient(circle at 75% 15%, rgba(21, 136, 227, 0.18), transparent 30%), var(--soft);
+}
+.sales-equipment-hero-content {
+  max-width: 780px;
+  text-align: center;
+}
+.sales-equipment-hero span,
+.sales-equipment-detail-content > span {
+  color: var(--primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+.sales-equipment-hero h1 {
+  margin: 0.7rem 0 1rem;
+  color: var(--heading);
+  font-size: clamp(2.3rem, 4vw, 4rem);
+}
+.sales-equipment-hero p {
+  max-width: 660px;
+  margin: auto;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+.sales-equipment-catalog {
+  padding: 4.5rem 0 6rem;
+}
+.sales-equipment-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+.sales-equipment-heading h2 {
+  margin: 0.55rem 0 0;
+  color: var(--heading);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+}
+.sales-equipment-heading p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.sales-equipment-groups {
+  display: grid;
+  gap: 3.5rem;
+}
+.sales-equipment-group h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1.25rem;
+  color: var(--heading);
+  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+}
+.sales-equipment-group h2 svg {
+  color: var(--primary);
+}
+.sales-equipment-card-row + .sales-equipment-card-row {
+  margin-top: 1.25rem;
+}
+.sales-equipment-cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+.sales-equipment-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: transparent;
+  padding: 1rem;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.sales-equipment-card:hover,
+.sales-equipment-card.is-selected {
+  border-color: var(--primary);
+  background: var(--bg-card);
+  box-shadow: 0 12px 30px rgba(15, 35, 68, 0.08);
+  transform: translateY(-2px);
+}
+.sales-equipment-card.is-selected::after {
+  position: absolute;
+  z-index: 1;
+  bottom: -1.45rem;
+  left: 50%;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--bg-card);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+.sales-equipment-card-image {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1.5;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(145deg, var(--soft), #fff);
+  overflow: hidden;
+  color: var(--primary);
+}
+.sales-equipment-card-image img,
+.sales-equipment-detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.sales-equipment-card span,
+.sales-equipment-card small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.sales-equipment-card strong {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--heading);
+  line-height: 1.4;
+}
+.sales-equipment-card b,
+.sales-equipment-price {
+  color: var(--primary);
+  font-size: 1.15rem;
+}
+.sales-equipment-card small {
+  margin-top: 0.45rem;
+}
+.sales-equipment-detail {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.55fr) minmax(230px, 0.9fr) minmax(300px, 1.4fr);
+  gap: 1.5rem;
+  align-items: center;
+  margin-top: 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-card);
+  padding: 1.5rem;
+  box-shadow: 0 10px 28px rgba(15, 35, 68, 0.07);
+}
+.sales-equipment-detail-image {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--soft);
+  color: var(--primary);
+  overflow: hidden;
+}
+.sales-equipment-detail-content h2 {
+  margin: 0.5rem 0;
+  color: var(--heading);
+  font-size: 1.75rem;
+}
+.sales-equipment-model,
+.sales-equipment-warranty,
+.sales-equipment-summary {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.sales-equipment-model {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+.sales-equipment-warranty {
+  margin: 0.45rem 0 1rem;
+}
+.sales-equipment-summary {
+  margin-bottom: 1.25rem;
+}
+.sales-equipment-contact {
+  display: inline-flex;
+}
+.sales-equipment-specs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.sales-equipment-specs section {
+  border-left: 1px solid var(--border);
+  padding-left: 1.25rem;
+}
+.sales-equipment-specs h3 {
+  margin: 0 0 0.75rem;
+  color: var(--heading);
+  font-size: 1rem;
+}
+.sales-equipment-specs ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 0.9rem;
+}
+.sales-equipment-message {
+  padding: 2.5rem 0;
+  color: var(--muted);
+}
+@media (max-width: 980px) {
+  .sales-equipment-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sales-equipment-detail {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sales-equipment-specs {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .sales-equipment-hero {
+    padding-top: 6.5rem;
+  }
+  .sales-equipment-heading {
+    display: block;
+  }
+  .sales-equipment-heading p {
+    margin-top: 1rem;
+  }
+  .sales-equipment-detail {
+    grid-template-columns: 1fr;
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+  .sales-equipment-specs {
+    grid-template-columns: 1fr;
+  }
+  .sales-equipment-specs section {
+    border-top: 1px solid var(--border);
+    border-left: 0;
+    padding: 1rem 0 0;
+  }
+  .sales-equipment-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .sales-equipment-card {
+    padding: 0.7rem;
+  }
+  .sales-equipment-card strong {
+    font-size: 0.9rem;
+  }
+}

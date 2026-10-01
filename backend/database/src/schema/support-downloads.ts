@@ -1,12 +1,12 @@
 import { boolean, index, integer, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { mediaAssets } from './media.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const supportDownloads = pgTable(
   'support_downloads',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     fileMediaId: uuid('file_media_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
     icon: varchar('icon', { length: 60 }).notNull(),
     title: varchar('title', { length: 220 }).notNull(),

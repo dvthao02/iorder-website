@@ -18,6 +18,7 @@ import SupportMenu, { SUPPORT_ITEMS } from './header/SupportMenu'
 const FALLBACK_NAV = [
   { id: 'home', label: 'Trang chủ', url: '/', children: [] },
   { id: 'software', label: 'Phần mềm', url: '/phan-mem', children: [] },
+  { id: 'sales-equipment', label: 'Thiết bị', url: '/thiet-bi', children: [] },
   { id: 'solutions', label: 'Giải pháp', url: '/giai-phap', children: [] },
   { id: 'services', label: 'Dịch vụ', url: '/dich-vu', children: [] },
   { id: 'news', label: 'Tin tức', url: '/tin-tuc', children: [] },
@@ -100,7 +101,16 @@ export default function Header({
   const servicesMenu = effectiveServices ? flattenMenu(effectiveServices, '/dich-vu') : defaultServicePages
 
   // Danh sách mục header: ưu tiên menu CMS (đã lọc mục ẩn, đúng thứ tự), fallback cấu trúc tĩnh.
-  const navItems = cmsMenu?.items?.length ? cmsMenu.items : FALLBACK_NAV
+  const configuredNav = cmsMenu?.items?.length ? cmsMenu.items : FALLBACK_NAV
+  // Thiết bị bán hàng là entrypoint của catalog CMS. Các menu cũ trong DB chưa
+  // có mục này vẫn hiển thị nó, tránh việc phải reseed navigation khi deploy.
+  const navItems = configuredNav.some((item) => item.url === '/thiet-bi')
+    ? configuredNav
+    : [
+        ...configuredNav.slice(0, 2),
+        { id: 'sales-equipment', label: 'Thiết bị', url: '/thiet-bi', children: [] },
+        ...configuredNav.slice(2),
+      ]
 
   const closeMenu = () => {
     setOpenDropdown(null)

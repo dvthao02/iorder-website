@@ -23,6 +23,7 @@ const OfferingsManager = lazy(async () => ({ default: (await import('./Offerings
 const PartnersManager = lazy(async () => ({ default: (await import('./PartnersManager')).PartnersManager }))
 const PostsManager = lazy(async () => ({ default: (await import('./PostsManager')).PostsManager }))
 const SettingsPage = lazy(async () => ({ default: (await import('./SettingsPage')).SettingsPage }))
+const SalesEquipmentManager = lazy(async () => ({ default: (await import('./SalesEquipmentManager')).SalesEquipmentManager }))
 const TestimonialsManager = lazy(async () => ({ default: (await import('./TestimonialsManager')).TestimonialsManager }))
 
 // Slug con của trang Cài đặt — 'cai-dat' (tab mặc định), 'cai-dat/nguoi-dung', 'cai-dat/hoat-dong'.
@@ -72,6 +73,10 @@ const moduleHeaders: Record<string, ModuleHeader> = {
   software: {
     title: 'Phần mềm',
     description: 'Quản lý phần mềm hiển thị trên website.',
+  },
+  'sales-equipment': {
+    title: 'Thiết bị',
+    description: 'Quản lý máy POS, máy in, máy quét, két tiền và thông số hiển thị trên website.',
   },
   solutions: {
     title: 'Giải pháp',
@@ -268,6 +273,9 @@ export function AdminApp() {
       content = <HomepageEditor />
       break
     case 'software':
+    case 'sales-equipment':
+      content = <SalesEquipmentManager />
+      break
       content = <OfferingsManager key="software" type="software" />
       break
     case 'solutions':

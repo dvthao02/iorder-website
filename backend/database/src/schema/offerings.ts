@@ -15,12 +15,12 @@ import {
 import { contentStatusEnum, offeringTypeEnum, partnerKindEnum } from './enums.js'
 import { users } from './identity.js'
 import { mediaAssets } from './media.js'
-import { timestampColumns } from './shared.js'
+import { timestampColumns, uuidV7Default } from './shared.js'
 
 export const offerings = pgTable(
   'offerings',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     coverMediaId: uuid('cover_media_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
     type: offeringTypeEnum('type').notNull(),
     title: varchar('title', { length: 220 }).notNull(),
@@ -51,7 +51,7 @@ export const offerings = pgTable(
 export const offeringRevisions = pgTable(
   'offering_revisions',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     offeringId: uuid('offering_id')
       .notNull()
       .references(() => offerings.id, { onDelete: 'cascade' }),
@@ -67,7 +67,7 @@ export const offeringRevisions = pgTable(
 export const partners = pgTable(
   'partners',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').default(uuidV7Default).primaryKey(),
     logoMediaId: uuid('logo_media_id').references(() => mediaAssets.id, { onDelete: 'set null' }),
     kind: partnerKindEnum('kind').default('partner').notNull(),
     name: varchar('name', { length: 180 }).notNull(),
