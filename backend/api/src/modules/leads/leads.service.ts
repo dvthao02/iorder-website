@@ -61,6 +61,7 @@ export class LeadsService {
       page: query.page,
       limit: query.limit,
       ...(query.status ? { status: query.status } : {}),
+      ...(query.search ? { search: query.search } : {}),
     })
     return { items: rows.map(serializeLead), total, totalNew }
   }

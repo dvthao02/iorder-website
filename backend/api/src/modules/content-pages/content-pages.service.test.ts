@@ -47,6 +47,7 @@ function makeRepository(overrides: Partial<Record<keyof ContentPagesRepository, 
     update: vi.fn(),
     publish: vi.fn(),
     unpublish: vi.fn(),
+    archive: vi.fn(),
     hardDelete: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   }
@@ -197,6 +198,28 @@ describe('ContentPagesService.unpublish', () => {
 
     expect(result.item.status).toBe('draft')
     expect(repository.unpublish).toHaveBeenCalledWith(existing.id)
+    expect(handler).toHaveBeenCalledWith({ contentPageId: existing.id })
+  })
+})
+
+describe('ContentPagesService.archive', () => {
+  it('archives content instead of permanently deleting it and emits an event', async () => {
+    const existing = fakeContentPage({ status: 'published' })
+    const archived = fakeContentPage({ status: 'archived' })
+    const repository = makeRepository({
+      findById: vi.fn().mockResolvedValue(existing),
+      archive: vi.fn().mockResolvedValue(archived),
+    })
+    const hooks = new HookManager()
+    const handler = vi.fn()
+    hooks.register('content-pages:archived', handler)
+    const service = new ContentPagesService(repository, hooks)
+
+    const result = await service.archive(existing.id, 'editor-1')
+
+    expect(result.item.status).toBe('archived')
+    expect(repository.archive).toHaveBeenCalledWith(existing.id)
+    expect(repository.insertAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: 'content_page.archive' }))
     expect(handler).toHaveBeenCalledWith({ contentPageId: existing.id })
   })
 })

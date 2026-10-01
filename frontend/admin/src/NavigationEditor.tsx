@@ -11,7 +11,7 @@ import {
   upsertMenuItem,
 } from './api'
 import { toast } from './toast'
-import { PageHeader, ToggleSwitch, useEscapeAndSave } from './ui'
+import { ModalShell, PageHeader, ToggleSwitch, useEscapeAndSave } from './ui'
 
 // Mục header nào hiển thị danh sách con lấy từ Offerings (Phần mềm & Giải pháp), theo đúng loại + đường dẫn công khai.
 const OFFERING_MENU_MAP: Record<string, { type: string; prefix: string }> = {
@@ -75,18 +75,28 @@ type LinkGroup = {
   links: ContentLink[]
 }
 
+function flattenMenuItems(items: MenuItem[]): MenuItem[] {
+  return items.flatMap((item) => [item, ...flattenMenuItems(item.children)])
+}
+
+function descendantIds(item: MenuItem): Set<string> {
+  return new Set(flattenMenuItems(item.children).map((child) => child.id))
+}
+
 function MenuItemRow({
   item,
   location,
   depth,
+  parentChoices,
   onRefresh,
 }: {
   item: MenuItem
   location: string
   depth: number
+  parentChoices: MenuItem[]
   onRefresh: () => void
 }) {
-  const [editing, setEditing] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({
     label: item.label,
     url: item.url,
@@ -97,6 +107,7 @@ function MenuItemRow({
     parentId: item.parentId,
   })
   const [busy, setBusy] = useState(false)
+  const validParentChoices = parentChoices.filter((candidate) => candidate.id !== item.id && !descendantIds(item).has(candidate.id))
 
   const save = async () => {
     setBusy(true)
@@ -110,7 +121,7 @@ function MenuItemRow({
         isEnabled: form.isEnabled,
         parentId: form.parentId,
       })
-      setEditing(false)
+      setModalOpen(false)
       onRefresh()
       toast.success('Đã lưu mục menu.')
     } catch {
@@ -153,78 +164,94 @@ function MenuItemRow({
     }
   }
 
-  useEscapeAndSave({ active: editing, onEscape: () => setEditing(false) })
+  useEscapeAndSave({
+    active: modalOpen,
+    onSave: () => void save(),
+    onEscape: () => setModalOpen(false),
+  })
 
   return (
     <div className="nav-item" style={{ marginLeft: depth * 20 }}>
-      {editing ? (
-        <div className="nav-item-form">
-          <input
-            placeholder="Nhãn"
-            value={form.label}
-            onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-          />
-          <input
-            placeholder="URL hoặc đường dẫn"
-            value={form.url}
-            onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
-          />
-          <select value={form.target} onChange={(e) => setForm((f) => ({ ...f, target: e.target.value }))}>
-            <option value="_self">Cùng tab</option>
-            <option value="_blank">Tab mới</option>
-          </select>
-          <input
-            placeholder="Icon key (tuỳ chọn)"
-            value={form.icon}
-            onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
-            style={{ width: 120 }}
-          />
-          <input
-            type="number"
-            placeholder="Thứ tự"
-            value={form.sortOrder}
-            onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
-            style={{ width: 80 }}
-          />
-          <ToggleSwitch
-            checked={form.isEnabled}
-            onChange={(next) => setForm((f) => ({ ...f, isEnabled: next }))}
-            label="Hiển thị"
-          />
-          <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>
-            Lưu
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => setEditing(false)} disabled={busy}>
-            Hủy
-          </button>
+      <div className="nav-item-row">
+        <ToggleSwitch
+          checked={item.isEnabled}
+          onChange={(next) => void quickToggle(next)}
+          label=""
+          hint=""
+          disabled={busy}
+        />
+        <span className={item.isEnabled ? '' : 'nav-disabled'}>
+          <strong>{item.label}</strong> <small>→ {item.url}</small>
+          {item.target === '_blank' && <small> ↗</small>}
+        </span>
+        <div className="nav-item-actions">
+          <button type="button" className="btn-secondary btn-icon" onClick={() => setModalOpen(true)} disabled={busy}>Sửa</button>
+          <button type="button" className="btn-danger btn-icon" onClick={() => void remove()} disabled={busy}>Xóa</button>
         </div>
-      ) : (
-        <div className="nav-item-row">
-          <ToggleSwitch
-            checked={item.isEnabled}
-            onChange={(next) => void quickToggle(next)}
-            label=""
-            hint=""
-            disabled={busy}
-          />
-          <span className={item.isEnabled ? '' : 'nav-disabled'}>
-            <strong>{item.label}</strong> <small>→ {item.url}</small>
-            {item.target === '_blank' && <small> ↗</small>}
-          </span>
-          <div className="nav-item-actions">
-            <button type="button" className="btn-secondary" onClick={() => setEditing(true)}>
-              Sửa
-            </button>
-            <button type="button" className="btn-danger" onClick={() => void remove()} disabled={busy}>
-              Xóa
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
       {item.children.map((child) => (
-        <MenuItemRow key={child.id} item={child} location={location} depth={depth + 1} onRefresh={onRefresh} />
+        <MenuItemRow key={child.id} item={child} location={location} depth={depth + 1} parentChoices={parentChoices} onRefresh={onRefresh} />
       ))}
       <AddMenuItemForm location={location} parentId={item.id} onDone={onRefresh} />
+      {modalOpen ? (
+        <ModalShell
+          as="form"
+          size="lg"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void save()
+          }}
+          onOverlayClick={() => setModalOpen(false)}
+          header={
+            <>
+              <h2>Sửa mục menu</h2>
+              <button type="button" className="modal-close" onClick={() => setModalOpen(false)}>
+                ×
+              </button>
+            </>
+          }
+          footer={
+            <>
+              <button type="button" className="secondary-button" onClick={() => setModalOpen(false)} disabled={busy}>
+                Hủy
+              </button>
+              <button type="submit" className="primary-button" disabled={busy || !form.label.trim() || !form.url.trim()}>
+                {busy ? 'Đang lưu…' : 'Lưu thay đổi'}
+              </button>
+            </>
+          }
+        >
+          <div className="form-grid two-columns">
+            <label className="form-field">
+              <span className="field-label">Nhãn hiển thị</span>
+              <input required maxLength={180} value={form.label} onChange={(event) => setForm((current) => ({ ...current, label: event.target.value }))} />
+            </label>
+            <label className="form-field">
+              <span className="field-label">Đường dẫn</span>
+              <input required maxLength={1000} placeholder="/lien-he hoặc https://..." value={form.url} onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))} />
+            </label>
+            <label className="form-field">
+              <span className="field-label">Kiểu mở</span>
+              <select value={form.target} onChange={(event) => setForm((current) => ({ ...current, target: event.target.value }))}>
+                <option value="_self">Cùng cửa sổ</option>
+                <option value="_blank">Mở tab mới</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span className="field-label">Mục cha</span>
+              <select value={form.parentId ?? ''} onChange={(event) => setForm((current) => ({ ...current, parentId: event.target.value || null }))}>
+                <option value="">Không có (mục cấp cao)</option>
+                {validParentChoices.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.label}</option>)}
+              </select>
+            </label>
+            <label className="form-field">
+              <span className="field-label">Thứ tự hiển thị</span>
+              <input type="number" min={0} value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: Number(event.target.value) }))} />
+            </label>
+          </div>
+          <ToggleSwitch checked={form.isEnabled} onChange={(isEnabled) => setForm((current) => ({ ...current, isEnabled }))} label="Hiển thị trên website" hint={form.isEnabled ? 'Mục đang hiện công khai.' : 'Mục đang ẩn khỏi website.'} />
+        </ModalShell>
+      ) : null}
     </div>
   )
 }
@@ -238,7 +265,7 @@ function AddMenuItemForm({
   parentId: string | null
   onDone: () => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({ label: '', url: '', target: '_self', icon: '', sortOrder: 0, isEnabled: true })
   const [busy, setBusy] = useState(false)
 
@@ -256,7 +283,7 @@ function AddMenuItemForm({
         parentId,
       })
       setForm({ label: '', url: '', target: '_self', icon: '', sortOrder: 0, isEnabled: true })
-      setOpen(false)
+      setModalOpen(false)
       onDone()
       toast.success('Đã thêm mục menu.')
     } catch {
@@ -266,55 +293,64 @@ function AddMenuItemForm({
     }
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        className="btn-secondary"
-        style={{ marginTop: 6, marginLeft: parentId ? 20 : 0 }}
-        onClick={() => setOpen(true)}
-      >
-        + Thêm mục{parentId ? ' con' : ''}
-      </button>
-    )
-  }
+  useEscapeAndSave({
+    active: modalOpen,
+    onSave: () => void save(),
+    onEscape: () => setModalOpen(false),
+  })
 
   return (
-    <div className="nav-item-form" style={{ marginLeft: parentId ? 20 : 0 }}>
-      <input
-        placeholder="Nhãn *"
-        value={form.label}
-        onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-        required
-      />
-      <input
-        placeholder="URL hoặc đường dẫn *"
-        value={form.url}
-        onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
-        required
-      />
-      <select value={form.target} onChange={(e) => setForm((f) => ({ ...f, target: e.target.value }))}>
-        <option value="_self">Cùng tab</option>
-        <option value="_blank">Tab mới</option>
-      </select>
-      <input
-        type="number"
-        placeholder="Thứ tự"
-        value={form.sortOrder}
-        onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
-        style={{ width: 80 }}
-      />
-      <button
-        type="button"
-        className="btn-primary"
-        onClick={() => void save()}
-        disabled={busy || !form.label || !form.url}
-      >
-        Thêm
+    <div style={{ marginLeft: parentId ? 20 : 0 }}>
+      <button type="button" className="btn-secondary" onClick={() => setModalOpen(true)}>
+        + Thêm mục{parentId ? ' con' : ''}
       </button>
-      <button type="button" className="btn-secondary" onClick={() => setOpen(false)} disabled={busy}>
-        Hủy
-      </button>
+      {modalOpen ? (
+        <ModalShell
+          as="form"
+          size="lg"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void save()
+          }}
+          onOverlayClick={() => setModalOpen(false)}
+          header={
+            <>
+              <h2>{parentId ? 'Thêm mục con' : 'Thêm mục menu'}</h2>
+              <button type="button" className="modal-close" onClick={() => setModalOpen(false)}>×</button>
+            </>
+          }
+          footer={
+            <>
+              <button type="button" className="secondary-button" onClick={() => setModalOpen(false)} disabled={busy}>Hủy</button>
+              <button type="submit" className="primary-button" disabled={busy || !form.label.trim() || !form.url.trim()}>{busy ? 'Đang thêm…' : 'Thêm mục'}</button>
+            </>
+          }
+        >
+          <p className="form-hint">{parentId ? 'Mục này sẽ được thêm dưới mục hiện tại.' : 'Tạo một mục ở cấp cao nhất của menu.'}</p>
+          <div className="form-grid two-columns">
+            <label className="form-field">
+              <span className="field-label">Nhãn hiển thị</span>
+              <input required maxLength={180} autoFocus value={form.label} onChange={(event) => setForm((current) => ({ ...current, label: event.target.value }))} />
+            </label>
+            <label className="form-field">
+              <span className="field-label">Đường dẫn</span>
+              <input required maxLength={1000} placeholder="/lien-he hoặc https://..." value={form.url} onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))} />
+            </label>
+            <label className="form-field">
+              <span className="field-label">Kiểu mở</span>
+              <select value={form.target} onChange={(event) => setForm((current) => ({ ...current, target: event.target.value }))}>
+                <option value="_self">Cùng cửa sổ</option>
+                <option value="_blank">Mở tab mới</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span className="field-label">Thứ tự hiển thị</span>
+              <input type="number" min={0} value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: Number(event.target.value) }))} />
+            </label>
+          </div>
+          <ToggleSwitch checked={form.isEnabled} onChange={(isEnabled) => setForm((current) => ({ ...current, isEnabled }))} label="Hiển thị trên website" hint={form.isEnabled ? 'Mục sẽ hiển thị công khai.' : 'Mục được lưu nhưng đang ẩn khỏi website.'} />
+        </ModalShell>
+      ) : null}
     </div>
   )
 }
@@ -341,6 +377,7 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
   const [busy, setBusy] = useState(false)
 
   const startEdit = (link: ContentLink) => {
+    setAdding(false)
     setEditingId(link.id)
     setEditForm({
       label: link.label,
@@ -413,95 +450,83 @@ function LinkGroupSection({ group, onRefresh }: { group: LinkGroup; onRefresh: (
     }
   }
 
+  const closeLinkEditor = () => {
+    setEditingId(null)
+    setAdding(false)
+  }
+
+  useEscapeAndSave({
+    active: Boolean(editingId) || adding,
+    onSave: () => void (editingId ? saveLink() : addLink()),
+    onEscape: closeLinkEditor,
+  })
+
   return (
     <div className="link-group-section">
       <h4>
         {group.name} <small>({group.code})</small>
       </h4>
-      {group.links.map((link) =>
-        editingId === link.id ? (
-          <div key={link.id} className="nav-item-form">
-            <input
-              placeholder="Nhãn"
-              value={editForm.label}
-              onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))}
-            />
-            <input
-              placeholder="URL"
-              value={editForm.url}
-              onChange={(e) => setEditForm((f) => ({ ...f, url: e.target.value }))}
-            />
-            <select value={editForm.type} onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
-              <option value="internal">Nội bộ</option>
-              <option value="external">Bên ngoài</option>
-              <option value="email">Email</option>
-              <option value="phone">Điện thoại</option>
-            </select>
-            <ToggleSwitch
-              checked={editForm.isEnabled}
-              onChange={(next) => setEditForm((f) => ({ ...f, isEnabled: next }))}
-              label="Hiển thị"
-            />
-            <button type="button" className="btn-primary" onClick={() => void saveLink()} disabled={busy}>
-              Lưu
-            </button>
-            <button type="button" className="btn-secondary" onClick={() => setEditingId(null)} disabled={busy}>
-              Hủy
-            </button>
-          </div>
-        ) : (
-          <div key={link.id} className="nav-item-row">
-            <ToggleSwitch
-              checked={link.isEnabled}
-              onChange={(next) => void quickToggleLink(link, next)}
-              label=""
-              hint=""
-              disabled={busy}
-            />
-            <span className={link.isEnabled ? '' : 'nav-disabled'}>
-              <strong>{link.label}</strong> <small>→ {link.url}</small>
-            </span>
-            <div className="nav-item-actions">
-              <button type="button" className="btn-secondary" onClick={() => startEdit(link)}>
-                Sửa
-              </button>
-              <button type="button" className="btn-danger" onClick={() => void removeLink(link.id)}>
-                Xóa
-              </button>
-            </div>
-          </div>
-        ),
-      )}
-      {adding ? (
-        <div className="nav-item-form">
-          <input
-            placeholder="Nhãn *"
-            value={newForm.label}
-            onChange={(e) => setNewForm((f) => ({ ...f, label: e.target.value }))}
+      {group.links.map((link) => (
+        <div key={link.id} className="nav-item-row">
+          <ToggleSwitch
+            checked={link.isEnabled}
+            onChange={(next) => void quickToggleLink(link, next)}
+            label=""
+            hint=""
+            disabled={busy}
           />
-          <input
-            placeholder="URL *"
-            value={newForm.url}
-            onChange={(e) => setNewForm((f) => ({ ...f, url: e.target.value }))}
-          />
-          <select value={newForm.type} onChange={(e) => setNewForm((f) => ({ ...f, type: e.target.value }))}>
-            <option value="internal">Nội bộ</option>
-            <option value="external">Bên ngoài</option>
-            <option value="email">Email</option>
-            <option value="phone">Điện thoại</option>
-          </select>
-          <button type="button" className="btn-primary" onClick={() => void addLink()} disabled={busy}>
-            Thêm
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => setAdding(false)}>
-            Hủy
-          </button>
+          <span className={link.isEnabled ? '' : 'nav-disabled'}>
+            <strong>{link.label}</strong> <small>→ {link.url}</small>
+          </span>
+          <div className="nav-item-actions">
+            <button type="button" className="btn-secondary btn-icon" onClick={() => startEdit(link)} disabled={busy}>Sửa</button>
+            <button type="button" className="btn-danger btn-icon" onClick={() => void removeLink(link.id)} disabled={busy}>Xóa</button>
+          </div>
         </div>
-      ) : (
-        <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setAdding(true)}>
+      ))}
+      <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => { setEditingId(null); setAdding(true) }} disabled={busy}>
           + Thêm liên kết
-        </button>
-      )}
+      </button>
+      {editingId ? (
+        <ModalShell
+          as="form"
+          size="lg"
+          onSubmit={(event) => { event.preventDefault(); void saveLink() }}
+          onOverlayClick={closeLinkEditor}
+          header={<><h2>Sửa liên kết</h2><button type="button" className="modal-close" onClick={closeLinkEditor}>×</button></>}
+          footer={<><button type="button" className="secondary-button" onClick={closeLinkEditor} disabled={busy}>Hủy</button><button type="submit" className="primary-button" disabled={busy || !editForm.label.trim() || !editForm.url.trim()}>{busy ? 'Đang lưu…' : 'Lưu thay đổi'}</button></>}
+        >
+          <p className="form-hint">Chọn đúng loại để liên kết hoạt động như mong muốn: nội bộ dùng đường dẫn bắt đầu bằng /; email dùng mailto:; điện thoại dùng tel:.</p>
+          <div className="form-grid two-columns">
+            <label className="form-field"><span className="field-label">Nhãn hiển thị</span><input required maxLength={180} autoFocus value={editForm.label} onChange={(event) => setEditForm((current) => ({ ...current, label: event.target.value }))} /></label>
+            <label className="form-field"><span className="field-label">Đường dẫn</span><input required maxLength={1000} value={editForm.url} onChange={(event) => setEditForm((current) => ({ ...current, url: event.target.value }))} /></label>
+            <label className="form-field"><span className="field-label">Loại liên kết</span><select value={editForm.type} onChange={(event) => setEditForm((current) => ({ ...current, type: event.target.value }))}><option value="internal">Nội bộ</option><option value="external">Bên ngoài</option><option value="email">Email</option><option value="phone">Điện thoại</option><option value="download">Tải xuống</option></select></label>
+            <label className="form-field"><span className="field-label">Kiểu mở</span><select value={editForm.target} onChange={(event) => setEditForm((current) => ({ ...current, target: event.target.value }))}><option value="_self">Cùng cửa sổ</option><option value="_blank">Mở tab mới</option></select></label>
+            <label className="form-field"><span className="field-label">Thứ tự hiển thị</span><input type="number" min={0} value={editForm.sortOrder} onChange={(event) => setEditForm((current) => ({ ...current, sortOrder: Number(event.target.value) }))} /></label>
+          </div>
+          <ToggleSwitch checked={editForm.isEnabled} onChange={(isEnabled) => setEditForm((current) => ({ ...current, isEnabled }))} label="Hiển thị trên website" hint={editForm.isEnabled ? 'Liên kết đang hiển thị công khai.' : 'Liên kết được lưu nhưng đang ẩn.'} />
+        </ModalShell>
+      ) : null}
+      {adding ? (
+        <ModalShell
+          as="form"
+          size="lg"
+          onSubmit={(event) => { event.preventDefault(); void addLink() }}
+          onOverlayClick={closeLinkEditor}
+          header={<><h2>Thêm liên kết</h2><button type="button" className="modal-close" onClick={closeLinkEditor}>×</button></>}
+          footer={<><button type="button" className="secondary-button" onClick={closeLinkEditor} disabled={busy}>Hủy</button><button type="submit" className="primary-button" disabled={busy || !newForm.label.trim() || !newForm.url.trim()}>{busy ? 'Đang thêm…' : 'Thêm liên kết'}</button></>}
+        >
+          <p className="form-hint">Với liên kết nội bộ, dùng đường dẫn bắt đầu bằng /. Email dùng mailto: và điện thoại dùng tel:.</p>
+          <div className="form-grid two-columns">
+            <label className="form-field"><span className="field-label">Nhãn hiển thị</span><input required maxLength={180} autoFocus value={newForm.label} onChange={(event) => setNewForm((current) => ({ ...current, label: event.target.value }))} /></label>
+            <label className="form-field"><span className="field-label">Đường dẫn</span><input required maxLength={1000} placeholder="/lien-he, https://..., mailto:..." value={newForm.url} onChange={(event) => setNewForm((current) => ({ ...current, url: event.target.value }))} /></label>
+            <label className="form-field"><span className="field-label">Loại liên kết</span><select value={newForm.type} onChange={(event) => setNewForm((current) => ({ ...current, type: event.target.value }))}><option value="internal">Nội bộ</option><option value="external">Bên ngoài</option><option value="email">Email</option><option value="phone">Điện thoại</option><option value="download">Tải xuống</option></select></label>
+            <label className="form-field"><span className="field-label">Kiểu mở</span><select value={newForm.target} onChange={(event) => setNewForm((current) => ({ ...current, target: event.target.value }))}><option value="_self">Cùng cửa sổ</option><option value="_blank">Mở tab mới</option></select></label>
+            <label className="form-field"><span className="field-label">Thứ tự hiển thị</span><input type="number" min={0} value={newForm.sortOrder} onChange={(event) => setNewForm((current) => ({ ...current, sortOrder: Number(event.target.value) }))} /></label>
+          </div>
+          <ToggleSwitch checked={newForm.isEnabled} onChange={(isEnabled) => setNewForm((current) => ({ ...current, isEnabled }))} label="Hiển thị trên website" hint={newForm.isEnabled ? 'Liên kết sẽ hiển thị công khai ngay sau khi lưu.' : 'Liên kết sẽ được lưu ở trạng thái ẩn.'} />
+        </ModalShell>
+      ) : null}
     </div>
   )
 }
@@ -630,7 +655,7 @@ export function NavigationEditor() {
                 return (
                   <div key={item.id} className="menu-top-card">
                     <span className="menu-top-order">#{index + 1}</span>
-                    <MenuItemRow item={item} location={menu.location} depth={0} onRefresh={() => void load()} />
+                    <MenuItemRow item={item} location={menu.location} depth={0} parentChoices={flattenMenuItems(menu.items)} onRefresh={() => void load()} />
                     {offeringEntry && (
                       <>
                         <p className="menu-item-hint">

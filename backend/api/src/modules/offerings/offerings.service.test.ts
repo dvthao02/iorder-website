@@ -13,7 +13,16 @@ function fakeOffering(overrides: Partial<Record<string, unknown>> = {}) {
     title: 'Phần mềm mẫu',
     slug: 'phan-mem-mau',
     summary: null,
-    contentJson: { description: 'Mô tả', tags: [], metrics: [], features: [], benefits: [], faq: [], items: [] },
+    contentJson: {
+      description: 'Mô tả',
+      tags: [],
+      metrics: [],
+      features: [],
+      benefits: [],
+      faq: [],
+      items: [],
+      sections: [],
+    },
     icon: null,
     status: 'draft',
     sortOrder: 0,
@@ -41,7 +50,16 @@ function fakeInput(overrides: Partial<Record<string, unknown>> = {}) {
     seoTitle: null,
     seoDescription: null,
     canonicalUrl: null,
-    contentJson: { description: 'Mô tả', tags: [], metrics: [], features: [], benefits: [], faq: [], items: [] },
+    contentJson: {
+      description: 'Mô tả',
+      tags: [],
+      metrics: [],
+      features: [],
+      benefits: [],
+      faq: [],
+      items: [],
+      sections: [],
+    },
     ...overrides,
   } as any
 }
@@ -50,6 +68,7 @@ function makeRepository(overrides: Partial<Record<keyof OfferingsRepository, unk
   const base = {
     resolveMediaUrl: vi.fn().mockResolvedValue(null),
     coverExists: vi.fn().mockResolvedValue(true),
+    mediaReferencesExist: vi.fn().mockResolvedValue(true),
     slugExistsForType: vi.fn().mockResolvedValue(false),
     createRevision: vi.fn().mockResolvedValue(undefined),
     insertAuditLog: vi.fn().mockResolvedValue(undefined),

@@ -41,3 +41,10 @@ export class ContentLinkNotFoundError extends ApplicationError {
     Object.setPrototypeOf(this, ContentLinkNotFoundError.prototype)
   }
 }
+
+export class InvalidMenuItemParentError extends ApplicationError {
+  constructor() {
+    super('INVALID_MENU_ITEM_PARENT', 'Menu item parent is invalid', 422)
+    Object.setPrototypeOf(this, InvalidMenuItemParentError.prototype)
+  }
+}

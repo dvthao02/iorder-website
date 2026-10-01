@@ -15,7 +15,7 @@ import {
 } from './content-editor/ContentEditorPage'
 import {
   createContentPage,
-  deleteContentPage,
+  archiveContentPage,
   listContentPages,
   publishContentPage,
   unpublishContentPage,
@@ -28,7 +28,7 @@ import { ActionMenu, type ActionMenuItem, useEscapeAndSave } from './ui'
 
 const PAGE_SIZE = 8
 
-type PageStatusFilter = 'all' | 'draft' | 'published'
+type PageStatusFilter = 'all' | 'draft' | 'published' | 'archived'
 
 const emptyPage: ContentPageInput = {
   slug: '',
@@ -189,12 +189,13 @@ export function ContentPagesManager() {
     }
   }
 
-  const removePage = async (id: string) => {
+  const archivePage = async (id: string) => {
     try {
-      await deleteContentPage(id)
-      if (id === selectedId) closeEditor()
+      const result = await archiveContentPage(id)
+      setPages((current) => current.map((item) => (item.id === id ? result.item : item)))
+      if (id === selectedId) setForm(toInput(result.item))
       await loadData()
-      toast.warning('Đã xóa trang nội dung. Thao tác này không thể hoàn tác.')
+      toast.warning('Đã lưu trữ trang nội dung. Có thể khôi phục về bản nháp khi cần.')
     } catch {
       toast.error('Không thể xóa trang nội dung.')
     }
@@ -302,15 +303,24 @@ export function ContentPagesManager() {
                           onClick: () => void unpublish(selectedId),
                         },
                       ]
-                    : []),
-                  ...(selectedId
+                    : selectedId && editingStatus === 'archived'
+                      ? [
+                          {
+                            label: 'Khôi phục về bản nháp',
+                            icon: EyeOff,
+                            disabled: isSaving,
+                            onClick: () => void unpublish(selectedId),
+                          },
+                        ]
+                      : []),
+                  ...(selectedId && editingStatus !== 'archived'
                     ? [
                         {
-                          label: 'Xóa',
+                          label: 'Lưu trữ',
                           icon: EyeOff,
                           tone: 'danger' as const,
                           disabled: isSaving,
-                          onClick: () => void removePage(selectedId),
+                          onClick: () => void archivePage(selectedId),
                         },
                       ]
                     : []),
@@ -420,7 +430,7 @@ export function ContentPagesManager() {
         search={search}
         onSearch={setSearch}
         status={statusFilter === 'all' ? 'all' : statusFilter}
-        onStatus={(value) => setStatusFilter(value === 'archived' ? 'all' : (value as PageStatusFilter))}
+        onStatus={(value) => setStatusFilter(value as PageStatusFilter)}
         sort={sortOrder}
         onSort={setSortOrder}
       >
@@ -450,8 +460,12 @@ export function ContentPagesManager() {
                   [
                     item.status === 'published'
                       ? { label: 'Gỡ xuất bản', onClick: () => void unpublish(item.id) }
-                      : { label: 'Xuất bản', onClick: () => void quickPublish(item.id) },
-                    { label: 'Xóa', onClick: () => void removePage(item.id), danger: true },
+                      : item.status === 'archived'
+                        ? { label: 'Khôi phục về bản nháp', onClick: () => void unpublish(item.id) }
+                        : { label: 'Xuất bản', onClick: () => void quickPublish(item.id) },
+                    ...(item.status !== 'archived'
+                      ? [{ label: 'Lưu trữ', onClick: () => void archivePage(item.id), danger: true }]
+                      : []),
                   ].filter(Boolean) as Array<{ label: string; onClick: () => void; danger?: boolean }>
                 }
               />

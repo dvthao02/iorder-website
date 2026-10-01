@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, MessageSquareQuote, Pencil, Plus, Search, Star,
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createTestimonial, deleteTestimonial, listMedia, listTestimonials, updateTestimonial } from './api'
+import { BasicInfoCard, ContentBodyEditor, ContentEditorPage, CoverImageCard, DisplaySettingCard, StatusBadge } from './content-editor/ContentEditorPage'
 import { toast } from './toast'
 import { ImagePicker, ModalShell, PageHeader, ToggleSwitch, useEscapeAndSave } from './ui'
 
@@ -191,7 +192,7 @@ export function TestimonialsManager() {
 
   useEscapeAndSave({
     active: editing !== null,
-    onSave: () => formRef.current?.requestSubmit(),
+    onSave: () => void save(),
     onEscape: () => close(),
   })
 
@@ -250,8 +251,8 @@ export function TestimonialsManager() {
   const patchForm = <K extends keyof TestimonialInput>(key: K, value: TestimonialInput[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
 
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const save = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     const validationError = validateTestimonial(form)
     if (validationError) {
       toast.error(validationError)
@@ -261,7 +262,6 @@ export function TestimonialsManager() {
     try {
       if (editing === 'new') await createTestimonial(form)
       else if (editing) await updateTestimonial(editing.id, form)
-      close()
       await loadData()
       toast.success('Đã lưu đánh giá.')
     } catch {
@@ -300,6 +300,36 @@ export function TestimonialsManager() {
       .map((w) => w[0])
       .join('')
       .toUpperCase() || '?'
+
+  if (editing !== null) {
+    const editingItem = editing === 'new' ? null : editing
+    return (
+      <ContentEditorPage
+        standalone
+        title={editing === 'new' ? 'Thêm đánh giá khách hàng' : 'Sửa đánh giá khách hàng'}
+        status={<StatusBadge status={form.isEnabled ? 'published' : 'archived'} label={form.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'} />}
+        eyebrow={<button type="button" className="modal-back" onClick={close}>← Đánh giá khách hàng</button>}
+        actions={<button type="submit" className="btn-primary" disabled={isSaving || Boolean(validationError)} title={validationError ?? undefined}>{isSaving ? 'Đang lưu…' : 'Lưu thay đổi'}</button>}
+        onSubmit={() => void save()}
+        main={<>
+          <BasicInfoCard>
+            <div className="form-row-2col">
+              <label>Tên khách hàng <span className="field-counter">{form.authorName.length}/160</span><input required maxLength={160} value={form.authorName} onChange={(event) => patchForm('authorName', event.target.value)} /></label>
+              <label>Chức danh <span className="field-counter">{(form.authorRole ?? '').length}/180</span><input maxLength={180} value={form.authorRole ?? ''} onChange={(event) => patchForm('authorRole', event.target.value || null)} /></label>
+            </div>
+            <label className="full-field">Công ty <span className="field-counter">{(form.company ?? '').length}/180</span><input maxLength={180} value={form.company ?? ''} onChange={(event) => patchForm('company', event.target.value || null)} /></label>
+          </BasicInfoCard>
+          <ContentBodyEditor>
+            <label className="full-field">Nội dung đánh giá <span className="field-counter">{form.quote.length}/4000</span><textarea required maxLength={4000} rows={7} value={form.quote} onChange={(event) => patchForm('quote', event.target.value)} /></label>
+          </ContentBodyEditor>
+        </>}
+        sidebar={<>
+          <CoverImageCard coverUrl={avatarUrl} images={images} value={form.avatarMediaId} onChange={(id) => patchForm('avatarMediaId', id)} onUploaded={(asset) => setImages((current) => [asset, ...current])} onRemove={() => patchForm('avatarMediaId', null)} pickerOpen={showAvatarPicker} onTogglePicker={() => setShowAvatarPicker((current) => !current)} />
+          <DisplaySettingCard updatedAt={editingItem?.updatedAt ?? null} visible={form.isEnabled} onVisibleChange={(next) => patchForm('isEnabled', next)}><label className="full-field">Đánh giá sao<StarPicker value={form.rating} onChange={(rating) => patchForm('rating', rating)} /></label><label className="full-field">Thứ tự hiển thị<input type="number" min={0} max={9999} value={form.sortOrder} onChange={(event) => patchForm('sortOrder', Number(event.target.value))} /></label></DisplaySettingCard>
+        </>}
+      />
+    )
+  }
 
   return (
     <div className="admin-module">

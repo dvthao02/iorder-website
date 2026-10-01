@@ -38,6 +38,32 @@
     sans-serif;
 }
 
+/* Fallback khi route được tách chunk đang tải. Giữ trang có phản hồi rõ ràng trên mạng chậm. */
+.route-loading {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.route-loading-spinner {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: route-loading-spin 0.75s linear infinite;
+}
+
+@keyframes route-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 [data-theme='dark'] {
   --text: #cbd5e1;
   --heading: #f1f5f9;

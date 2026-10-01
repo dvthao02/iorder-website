@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { getLeads, updateLeadStatus } from './api'
 import { toast } from './toast'
-import { ModalShell, PageHeader, StatusDot } from './ui'
+import { ModalShell, PageHeader, StatusDot, useEscapeAndSave } from './ui'
 
 type StatusFilter = 'all' | LeadStatus
 
@@ -35,6 +35,7 @@ export function LeadsManager() {
   const [total, setTotal] = useState(0)
   const [totalNew, setTotalNew] = useState(0)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const limit = 20
@@ -43,8 +44,9 @@ export function LeadsManager() {
   const [isUpdating, setIsUpdating] = useState(false)
 
   const loadData = async () => {
-    const params: { page: number; limit: number; status?: LeadStatus } = { page, limit }
+    const params: { page: number; limit: number; status?: LeadStatus; search?: string } = { page, limit }
     if (statusFilter !== 'all') params.status = statusFilter
+    if (search.trim()) params.search = search.trim()
     const result = await getLeads(params)
     setItems(result.items)
     setTotal(result.total)
@@ -57,9 +59,11 @@ export function LeadsManager() {
       .catch(() => toast.error('Không thể tải danh sách khách liên hệ.'))
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, page])
+  }, [statusFilter, page, search])
 
   const detail = useMemo(() => items.find((item) => item.id === detailId) ?? null, [items, detailId])
+
+  useEscapeAndSave({ active: detail !== null, onEscape: () => setDetailId(null) })
 
   const changeStatus = async (id: string, status: LeadStatus) => {
     setIsUpdating(true)
@@ -89,6 +93,16 @@ export function LeadsManager() {
       />
 
       <div className="toolbar">
+        <input
+          className="toolbar-search"
+          type="search"
+          placeholder="Tìm tên, số điện thoại, email..."
+          value={search}
+          onChange={(event) => {
+            setPage(1)
+            setSearch(event.target.value)
+          }}
+        />
         <select
           value={statusFilter}
           onChange={(event) => {

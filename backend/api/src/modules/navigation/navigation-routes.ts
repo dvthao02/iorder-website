@@ -1,4 +1,4 @@
-import { menuItemInputSchema } from '@iorder/contracts'
+import { contentLinkUpsertInputSchema, menuItemInputSchema } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
 import type { FastifyInstance } from 'fastify'
 
@@ -34,11 +34,11 @@ export function registerNavigationRoutes(app: FastifyInstance, { db }: { db: Cms
 
   // ── Admin: create menu ────────────────────────────────────────────────────
   app.post('/api/admin/menus', { preHandler: [authGuard] }, async (request, reply) => {
-    requireCmsUser(request)
+    const user = requireCmsUser(request)
     const { name, location } = request.body as { name: string; location: string }
     if (!name || !location) return reply.code(400).send({ error: 'MISSING_FIELDS' })
     try {
-      const { statusCode, item } = await service.createMenu(name, location)
+      const { statusCode, item } = await service.createMenu(name, location, user.id)
       return reply.code(statusCode).send({ item })
     } catch (error) {
       return sendError(reply, error)
@@ -47,8 +47,8 @@ export function registerNavigationRoutes(app: FastifyInstance, { db }: { db: Cms
 
   // ── Admin: seed default navigation ───────────────────────────────────────
   app.post('/api/admin/menus/seed-defaults', { preHandler: [authGuard] }, async (request, reply) => {
-    requireCmsUser(request)
-    const { statusCode, created } = await service.seedDefaults()
+    const user = requireCmsUser(request)
+    const { statusCode, created } = await service.seedDefaults(user.id)
     return reply.code(statusCode).send({ created })
   })
 
@@ -71,13 +71,13 @@ export function registerNavigationRoutes(app: FastifyInstance, { db }: { db: Cms
 
   // ── Admin: upsert menu item ───────────────────────────────────────────────
   app.put('/api/admin/menus/:location/items/:itemId', { preHandler: [authGuard] }, async (request, reply) => {
-    requireCmsUser(request)
+    const user = requireCmsUser(request)
     const { location, itemId } = request.params as { location: string; itemId: string }
     const body = menuItemInputSchema.safeParse(request.body)
     if (!body.success) return reply.code(400).send({ error: 'VALIDATION_ERROR', issues: body.error.issues })
 
     try {
-      const { statusCode, item } = await service.upsertMenuItem(location, itemId, body.data)
+      const { statusCode, item } = await service.upsertMenuItem(location, itemId, body.data, user.id)
       return reply.code(statusCode).send({ item })
     } catch (error) {
       return sendError(reply, error)
@@ -86,10 +86,10 @@ export function registerNavigationRoutes(app: FastifyInstance, { db }: { db: Cms
 
   // ── Admin: delete menu item ───────────────────────────────────────────────
   app.delete('/api/admin/menus/:location/items/:itemId', { preHandler: [authGuard] }, async (request, reply) => {
-    requireCmsUser(request)
+    const user = requireCmsUser(request)
     const { location, itemId } = request.params as { location: string; itemId: string }
     try {
-      await service.deleteMenuItem(location, itemId)
+      await service.deleteMenuItem(location, itemId, user.id)
       return reply.code(204).send()
     } catch (error) {
       return sendError(reply, error)
@@ -104,12 +104,13 @@ export function registerNavigationRoutes(app: FastifyInstance, { db }: { db: Cms
 
   // ── Admin: upsert content link ────────────────────────────────────────────
   app.put('/api/admin/link-groups/:code/links/:linkId', { preHandler: [authGuard] }, async (request, reply) => {
-    requireCmsUser(request)
+    const user = requireCmsUser(request)
     const { code, linkId } = request.params as { code: string; linkId: string }
-    const body = request.body as Record<string, unknown>
+    const body = contentLinkUpsertInputSchema.safeParse(request.body)
+    if (!body.success) return reply.code(400).send({ error: 'VALIDATION_ERROR', issues: body.error.issues })
 
     try {
-      const { statusCode, item } = await service.upsertContentLink(code, linkId, body)
+      const { statusCode, item } = await service.upsertContentLink(code, linkId, body.data, user.id)
       return reply.code(statusCode).send({ item })
     } catch (error) {
       return sendError(reply, error)
@@ -118,10 +119,10 @@ export function registerNavigationRoutes(app: FastifyInstance, { db }: { db: Cms
 
   // ── Admin: delete content link ────────────────────────────────────────────
   app.delete('/api/admin/link-groups/:code/links/:linkId', { preHandler: [authGuard] }, async (request, reply) => {
-    requireCmsUser(request)
+    const user = requireCmsUser(request)
     const { code, linkId } = request.params as { code: string; linkId: string }
     try {
-      await service.deleteContentLink(code, linkId)
+      await service.deleteContentLink(code, linkId, user.id)
       return reply.code(204).send()
     } catch (error) {
       return sendError(reply, error)

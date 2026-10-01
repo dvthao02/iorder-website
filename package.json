@@ -18,7 +18,7 @@
     "start": "node backend/api/dist/scripts/sync-seed-media.js && node backend/api/dist/server.js",
     "build:production": "pnpm --filter @iorder/contracts build && pnpm --filter @iorder/database build && pnpm --filter @iorder/api build && pnpm --filter @iorder/web build && pnpm --filter @iorder/admin build && pnpm --filter @iorder/api gen:sitemap",
     "railway:migrate": "pnpm --filter @iorder/database db:migrate",
-    "bootstrap:core": "pnpm --filter @iorder/database db:seed && pnpm --filter @iorder/api create-admin",
+    "bootstrap:core": "pnpm --filter @iorder/database db:seed && pnpm content:import:legacy && pnpm --filter @iorder/api create-admin",
     "content:import:legacy": "pnpm --filter @iorder/api import:homepage && pnpm --filter @iorder/api import:posts && pnpm --filter @iorder/api import:offerings && pnpm --filter @iorder/api import:testimonials",
     "media:migrate-local": "pnpm --filter @iorder/api migrate:local-media",
     "media:migrate-remote": "pnpm --filter @iorder/api migrate:remote-media",

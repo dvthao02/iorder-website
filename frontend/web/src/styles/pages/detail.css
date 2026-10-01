@@ -352,7 +352,7 @@
 .detail-section-renderer-block--variant-product-grid .detail-feature-item:hover .icon-badge { background: #1d5fe0; color: #fff; }
 
 .detail-product-workflow { background: #ffffff; }
-.detail-workflow-grid { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px; }
+.detail-workflow-grid { position: relative; display: grid; grid-template-columns: repeat(var(--workflow-count, 5), minmax(0, 1fr)); gap: 20px; }
 .detail-workflow-grid::before { position: absolute; top: 18px; right: 9%; left: 9%; height: 1px; background: #cfe5f7; content: ''; transform: scaleX(0); transform-origin: left; transition: transform 0.85s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .detail-workflow-step { position: relative; z-index: 1; display: flex; min-width: 0; flex-direction: column; align-items: center; padding: 0 4px; opacity: 0; text-align: center; transform: translateY(18px); transition: opacity 0.48s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.48s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .detail-workflow-reveal.is-visible .detail-workflow-grid::before { transform: scaleX(1); }
@@ -477,7 +477,7 @@
   .detail-image-text__grid > .detail-media-frame, .detail-process-section__grid > .detail-media-frame { justify-self: start; }
   .detail-process-section__grid > .detail-media-frame { order: initial; }
   .detail-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .detail-workflow-grid { grid-template-columns: repeat(5, minmax(180px, 1fr)); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x proximity; }
+  .detail-workflow-grid { grid-template-columns: repeat(var(--workflow-count, 5), minmax(180px, 1fr)); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x proximity; }
   .detail-workflow-step { scroll-snap-align: start; }
   .detail-cta-section--software > .container > div { grid-template-columns: 1fr; }
 }

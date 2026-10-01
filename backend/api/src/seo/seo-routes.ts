@@ -11,7 +11,7 @@ const OFFERING_PREFIX: Record<string, string> = {
 }
 
 // Trang tĩnh quan trọng (đường dẫn cố định của website).
-const STATIC_PATHS = ['/', '/tin-tuc', '/phan-mem', '/giai-phap', '/dich-vu', '/lien-he']
+const STATIC_PATHS = ['/', '/tin-tuc', '/phan-mem', '/thiet-bi', '/giai-phap', '/dich-vu', '/lien-he']
 
 function xmlEscape(value: string) {
   return value.replace(

@@ -15,7 +15,10 @@ function sessionCookieOptions(env: ApiEnv, expiresAt?: Date) {
   return {
     path: '/',
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
+    // Docker local vẫn chạy image production nhưng truy cập qua HTTP. Dựa vào
+    // origin của CMS để không phát cookie Secure mà browser sẽ bỏ qua ở localhost,
+    // đồng thời giữ cờ Secure cho mọi triển khai HTTPS.
+    secure: new URL(env.ADMIN_ORIGIN).protocol === 'https:',
     sameSite: 'lax' as const,
     signed: true,
     ...(expiresAt ? { expires: expiresAt } : {}),

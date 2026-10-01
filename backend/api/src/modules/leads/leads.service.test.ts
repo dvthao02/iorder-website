@@ -111,3 +111,14 @@ describe('LeadsService.updateStatus', () => {
     )
   })
 })
+
+describe('LeadsService.list', () => {
+  it('passes the optional CRM search phrase to the repository', async () => {
+    const repository = makeRepository()
+    const service = new LeadsService(repository)
+
+    await service.list({ page: 1, limit: 20, search: '0901' })
+
+    expect(repository.list).toHaveBeenCalledWith({ page: 1, limit: 20, search: '0901' })
+  })
+})

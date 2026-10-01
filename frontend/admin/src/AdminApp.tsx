@@ -1,13 +1,14 @@
 import type { AuthUser } from '@iorder/contracts'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Bell, ChevronDown, KeyRound, LogOut, UserCircle } from 'lucide-react'
+import { Bell, ChevronDown, KeyRound, LogOut, Search, UserCircle } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import logoIorder from './assets/logo.png'
 import { changePassword, getLeads, getSession, listOfferings, listPosts, login, logout } from './api'
+import { ContentQuickSwitcher } from './ContentQuickSwitcher'
 import { LoginForm } from './LoginForm'
 import { Sidebar } from './sidebar/Sidebar'
-import { keyBySlug, slugByKey } from './sidebar/navigation'
+import { adminOnlyNavigationGroups, keyBySlug, navigation, slugByKey } from './sidebar/navigation'
 import type { SettingsTab } from './SettingsPage'
 import { ToastHost, toast } from './toast'
 import { ModalShell } from './ui'
@@ -47,6 +48,19 @@ const LEGACY_SETTINGS_REDIRECTS: Record<string, SettingsTab> = {
   'hoat-dong': 'activity',
 }
 
+const RECENT_MODULES_STORAGE_KEY = 'admin.contentStudio.recentModules'
+
+function readRecentModuleKeys(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_MODULES_STORAGE_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((value): value is string => typeof value === 'string' && value !== 'dashboard').slice(0, 6)
+  } catch {
+    return []
+  }
+}
+
 const errorMessages: Record<string, string> = {
   INVALID_CREDENTIALS: 'Tên đăng nhập hoặc mật khẩu không đúng.',
   API_UNAVAILABLE: 'Không kết nối được CMS API. Hãy kiểm tra dịch vụ tại cổng 4000.',
@@ -57,14 +71,14 @@ const errorMessages: Record<string, string> = {
 type ModuleHeader = { title: string; description?: string }
 
 const defaultModuleHeader: ModuleHeader = {
-  title: 'Tổng quan CMS iOrder',
-  description: 'Theo dõi nội dung và tình trạng website một cách trực quan.',
+  title: 'Content Studio',
+  description: 'Quản lý nội dung và trải nghiệm website iOrder.',
 }
 
 const moduleHeaders: Record<string, ModuleHeader> = {
   dashboard: {
-    title: 'Tổng quan CMS iOrder',
-    description: 'Theo dõi nội dung và tình trạng website một cách trực quan.',
+    title: 'Content Studio',
+    description: 'Theo dõi nội dung và tình trạng website iOrder một cách trực quan.',
   },
   homepage: {
     title: 'Trang chủ',
@@ -91,7 +105,7 @@ const moduleHeaders: Record<string, ModuleHeader> = {
     description: 'Quản lý ngành hàng hiển thị trên website.',
   },
   posts: {
-    title: 'Bài viết',
+    title: 'Tin tức',
     description: 'Tạo tin tức hoặc bài khuyến mãi, lưu nháp rồi xuất bản.',
   },
   guides: {
@@ -99,7 +113,7 @@ const moduleHeaders: Record<string, ModuleHeader> = {
     description: 'Tạo tài liệu theo chuyên mục, chèn ảnh minh họa và xuất bản theo quy trình CMS.',
   },
   downloads: {
-    title: 'Hỗ trợ cài đặt',
+    title: 'Tài liệu tải xuống',
     description: 'Quản lý tài liệu tải về và file hỗ trợ cài đặt.',
   },
   'content-pages': {
@@ -115,19 +129,19 @@ const moduleHeaders: Record<string, ModuleHeader> = {
     description: 'Lời chứng thực hiển thị ở mục khách hàng nói gì trên trang chủ.',
   },
   leads: {
-    title: 'Khách liên hệ',
+    title: 'Liên hệ khách hàng',
     description: 'Xem và xử lý lead thu được từ form liên hệ trên website.',
   },
   media: {
-    title: 'Tài liệu và hình ảnh',
+    title: 'Thư viện media',
     description: 'Quản lý ảnh, tài liệu và metadata dùng trên website.',
   },
   navigation: {
-    title: 'Menu & Điều hướng',
+    title: 'Điều hướng website',
     description: 'Sắp xếp menu điều hướng và các nhóm liên kết hiển thị trên website.',
   },
   settings: {
-    title: 'Cài đặt website',
+    title: 'Cấu hình website',
     description: 'Thông tin công ty, người dùng CMS và nhật ký hoạt động.',
   },
 }
@@ -138,6 +152,8 @@ export function AdminApp() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [badges, setBadges] = useState<Record<string, number>>({})
+  const [quickSwitcherOpen, setQuickSwitcherOpen] = useState(false)
+  const [recentModuleKeys, setRecentModuleKeys] = useState<string[]>(readRecentModuleKeys)
   const navigate = useNavigate()
   const { section } = useParams()
   const location = useLocation()
@@ -164,6 +180,13 @@ export function AdminApp() {
   ].filter(Boolean) as string[]
 
   const goTo = (key: string) => {
+    if (key !== 'dashboard') {
+      setRecentModuleKeys((current) => {
+        const next = [key, ...current.filter((currentKey) => currentKey !== key)].slice(0, 6)
+        localStorage.setItem(RECENT_MODULES_STORAGE_KEY, JSON.stringify(next))
+        return next
+      })
+    }
     const slug = slugByKey[key] ?? ''
     navigate(slug ? `/${slug}` : '/')
   }
@@ -209,6 +232,18 @@ export function AdminApp() {
     if (user && section && !isLoginRoute && !keyBySlug[section] && !settingsTabFromPath && !legacyRedirectTab)
       navigate('/', { replace: true })
   }, [isLoading, user, section, isLoginRoute, navigate, settingsTabFromPath, legacyRedirectTab])
+
+  useEffect(() => {
+    if (!user || isLoginRoute) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setQuickSwitcherOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [user, isLoginRoute])
 
   // Bookmark cũ 'nguoi-dung' / 'hoat-dong' (khi 2 trang này còn độc lập) → chuyển sang tab
   // tương ứng trong 'cai-dat/...' để không vỡ link đã lưu.
@@ -273,10 +308,10 @@ export function AdminApp() {
       content = <HomepageEditor />
       break
     case 'software':
+      content = <OfferingsManager key="software" type="software" />
+      break
     case 'sales-equipment':
       content = <SalesEquipmentManager />
-      break
-      content = <OfferingsManager key="software" type="software" />
       break
     case 'solutions':
       content = <OfferingsManager key="solution" type="solution" />
@@ -327,6 +362,10 @@ export function AdminApp() {
       content = <Dashboard onOpen={goTo} />
   }
 
+  const visibleNavigation = navigation.filter(
+    (item) => user.roles.includes('admin') || !adminOnlyNavigationGroups.has(item.group),
+  )
+
   return (
     <div className={`admin-workspace${collapsed ? ' is-collapsed' : ''}`}>
       <Sidebar
@@ -344,10 +383,19 @@ export function AdminApp() {
           notificationCount={notificationCount}
           notifications={notifications}
           user={user}
+          onOpenQuickSwitcher={() => setQuickSwitcherOpen(true)}
           onLogout={() => void handleLogout()}
         />
         <Suspense fallback={<p className="admin-info">Đang tải...</p>}>{content}</Suspense>
       </main>
+      {quickSwitcherOpen ? (
+        <ContentQuickSwitcher
+          items={visibleNavigation}
+          recentKeys={recentModuleKeys}
+          onNavigate={goTo}
+          onClose={() => setQuickSwitcherOpen(false)}
+        />
+      ) : null}
       <ToastHost />
     </div>
   )
@@ -359,6 +407,7 @@ function AdminTopbar({
   notificationCount,
   notifications,
   user,
+  onOpenQuickSwitcher,
   onLogout,
 }: {
   title: string
@@ -366,6 +415,7 @@ function AdminTopbar({
   notificationCount: number
   notifications: string[]
   user: AuthUser
+  onOpenQuickSwitcher: () => void
   onLogout: () => void
 }) {
   const [accountOpen, setAccountOpen] = useState(false)
@@ -419,6 +469,16 @@ function AdminTopbar({
           {description ? <p>{description}</p> : null}
         </div>
         <div className="admin-topbar-actions">
+          <button
+            type="button"
+            className="admin-quick-switcher-button"
+            title="Đi nhanh trong Content Studio (Ctrl+K)"
+            onClick={onOpenQuickSwitcher}
+          >
+            <Search size={17} />
+            <span>Tìm nhanh</span>
+            <kbd>Ctrl K</kbd>
+          </button>
           <div className="admin-notification-wrap">
             <button
               type="button"

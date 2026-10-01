@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createPartner, deletePartner, listMedia, listPartners, updatePartner } from './api'
+import { BasicInfoCard, ContentBodyEditor, ContentEditorPage, CoverImageCard, DisplaySettingCard, StatusBadge } from './content-editor/ContentEditorPage'
 import { toast } from './toast'
 import { ImagePicker, ModalShell, PageHeader, StatusDot, ToggleSwitch, useEscapeAndSave } from './ui'
 
@@ -53,6 +54,7 @@ export function PartnersManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerInput>(emptyPartner)
   const [isSaving, setIsSaving] = useState(false)
+  const [showLogoPicker, setShowLogoPicker] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -72,7 +74,7 @@ export function PartnersManager() {
 
   useEscapeAndSave({
     active: editorOpen,
-    onSave: () => formRef.current?.requestSubmit(),
+    onSave: () => void save(),
     onEscape: () => closeEditor(),
   })
 
@@ -85,21 +87,24 @@ export function PartnersManager() {
   const openCreate = () => {
     setEditingId(null)
     setForm({ ...emptyPartner, sortOrder: items.length })
+    setShowLogoPicker(false)
     setEditorOpen(true)
   }
 
   const openEdit = (partner: PartnerResponse) => {
     setEditingId(partner.id)
     setForm(toInput(partner))
+    setShowLogoPicker(false)
     setEditorOpen(true)
   }
 
   const closeEditor = () => {
+    setShowLogoPicker(false)
     setEditorOpen(false)
   }
 
-  const save = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const save = async (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
     const validationError = validatePartner(form)
     if (validationError) {
       toast.error(validationError)
@@ -110,7 +115,7 @@ export function PartnersManager() {
       if (editingId) await updatePartner(editingId, form)
       else await createPartner(form)
       await loadData()
-      setEditorOpen(false)
+      setShowLogoPicker(false)
       toast.success(editingId ? 'Đã cập nhật đối tác.' : 'Đã thêm đối tác.')
     } catch (error) {
       const code = error instanceof Error ? error.message : ''
@@ -192,6 +197,38 @@ export function PartnersManager() {
     () => items.filter((p) => p.isEnabled).sort((a, b) => a.sortOrder - b.sortOrder),
     [items],
   )
+
+  if (editorOpen) {
+    const editingPartner = items.find((partner) => partner.id === editingId) ?? null
+    const validationError = validatePartner(form)
+    const coverUrl = editingPartner?.logoUrl ?? logoUrl(form.logoMediaId)
+    return (
+      <ContentEditorPage
+        standalone
+        title={editingId ? 'Chỉnh sửa đối tác' : 'Thêm đối tác'}
+        status={<StatusBadge status={form.isEnabled ? 'published' : 'archived'} label={form.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'} />}
+        eyebrow={<button type="button" className="modal-back" onClick={closeEditor}>← Đối tác & Khách hàng</button>}
+        actions={<button type="submit" className="btn-primary" disabled={isSaving || Boolean(validationError)} title={validationError ?? undefined}>{isSaving ? 'Đang lưu…' : 'Lưu thay đổi'}</button>}
+        onSubmit={() => void save()}
+        main={<>
+          <BasicInfoCard>
+            <div className="form-row-2col">
+              <label>Tên đối tác <span className="field-counter">{form.name.length}/180</span><input required maxLength={180} value={form.name} onChange={(event) => patchForm('name', event.target.value)} /></label>
+              <label>Loại<select value={form.kind} onChange={(event) => patchForm('kind', event.target.value as PartnerKind)}><option value="partner">Đối tác</option><option value="customer">Khách hàng</option></select></label>
+            </div>
+            <label className="full-field">Website<input type="url" placeholder="https://..." value={form.websiteUrl ?? ''} onChange={(event) => patchForm('websiteUrl', event.target.value || null)} /></label>
+          </BasicInfoCard>
+          <ContentBodyEditor>
+            <label className="full-field">Mô tả ngắn <span className="field-counter">{(form.description ?? '').length}/2000</span><textarea maxLength={2000} rows={5} value={form.description ?? ''} onChange={(event) => patchForm('description', event.target.value || null)} /></label>
+          </ContentBodyEditor>
+        </>}
+        sidebar={<>
+          <CoverImageCard coverUrl={coverUrl} images={images} value={form.logoMediaId} onChange={(id) => patchForm('logoMediaId', id)} onUploaded={(asset) => setImages((current) => [asset, ...current])} onRemove={() => patchForm('logoMediaId', null)} pickerOpen={showLogoPicker} onTogglePicker={() => setShowLogoPicker((current) => !current)} />
+          <DisplaySettingCard updatedAt={editingPartner?.updatedAt ?? null} visible={form.isEnabled} onVisibleChange={(next) => patchForm('isEnabled', next)}><label className="full-field">Thứ tự hiển thị<input type="number" min={0} max={9999} value={form.sortOrder} onChange={(event) => patchForm('sortOrder', Number(event.target.value))} /></label></DisplaySettingCard>
+        </>}
+      />
+    )
+  }
 
   return (
     <section className="admin-card content-manager">

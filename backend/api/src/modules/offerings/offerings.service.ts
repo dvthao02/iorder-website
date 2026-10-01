@@ -18,16 +18,14 @@ export class OfferingsService {
 
   private async serializeWithMedia(offering: OfferingRecord) {
     const content = offering.contentJson as OfferingContent
-    const mediaIds = [...new Set((content.sections ?? []).map((section) => section.imageMediaId).filter(Boolean))] as string[]
+    const mediaIds = [
+      ...new Set((content.sections ?? []).map((section) => section.imageMediaId).filter(Boolean)),
+    ] as string[]
     const entries = await Promise.all(
       mediaIds.map(async (id) => [id, await this.repository.resolveMediaUrl(id)] as const),
     )
     const sectionMediaUrls = Object.fromEntries(entries.filter((entry): entry is [string, string] => Boolean(entry[1])))
-    return serializeOffering(
-      offering,
-      await this.repository.resolveMediaUrl(offering.coverMediaId),
-      sectionMediaUrls,
-    )
+    return serializeOffering(offering, await this.repository.resolveMediaUrl(offering.coverMediaId), sectionMediaUrls)
   }
 
   async list(query: OfferingListQuery) {
@@ -44,7 +42,11 @@ export class OfferingsService {
 
   async create(input: OfferingInput, editorId: string) {
     if (!(await this.repository.coverExists(input.coverMediaId))) throw new OfferingCoverNotFoundError()
-    if (!(await this.repository.mediaReferencesExist(input.contentJson.sections.map((section) => section.imageMediaId))))
+    if (
+      !(await this.repository.mediaReferencesExist(
+        (input.contentJson.sections ?? []).map((section) => section.imageMediaId),
+      ))
+    )
       throw new OfferingSectionMediaNotFoundError()
     if (await this.repository.slugExistsForType(input.type, input.slug)) throw new OfferingSlugExistsError()
 
@@ -70,7 +72,11 @@ export class OfferingsService {
     const existing = await this.repository.findById(id)
     if (!existing) throw new OfferingNotFoundError()
     if (!(await this.repository.coverExists(input.coverMediaId))) throw new OfferingCoverNotFoundError()
-    if (!(await this.repository.mediaReferencesExist(input.contentJson.sections.map((section) => section.imageMediaId))))
+    if (
+      !(await this.repository.mediaReferencesExist(
+        (input.contentJson.sections ?? []).map((section) => section.imageMediaId),
+      ))
+    )
       throw new OfferingSectionMediaNotFoundError()
     if (input.slug !== existing.slug && (await this.repository.slugExistsForType(input.type, input.slug, id)))
       throw new OfferingSlugExistsError()

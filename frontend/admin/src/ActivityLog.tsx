@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { listActivity } from './api'
 import { toast } from './toast'
-import { ModalShell, PageHeader } from './ui'
+import { ModalShell, PageHeader, useEscapeAndSave } from './ui'
 
 // Nhãn tiếng Việt cho từng action code thực tế đang được ghi log qua insertAuditLog
 // trong backend/api/src/modules/**. Action lạ (chưa có trong map) hiển thị nguyên chuỗi gốc.
@@ -12,6 +12,12 @@ const ACTION_LABELS: Record<string, string> = {
   'category.create': 'Tạo chuyên mục',
   'category.update': 'Cập nhật chuyên mục',
   'category.delete': 'Xóa chuyên mục',
+  'content_page.create': 'Tạo trang nội dung',
+  'content_page.update': 'Cập nhật trang nội dung',
+  'content_page.publish': 'Xuất bản trang nội dung',
+  'content_page.unpublish': 'Gỡ xuất bản trang nội dung',
+  'content_page.archive': 'Lưu trữ trang nội dung',
+  'content_page.delete': 'Xóa trang nội dung',
   'download.create': 'Tạo tài liệu hỗ trợ cài đặt',
   'download.update': 'Cập nhật tài liệu hỗ trợ cài đặt',
   'download.delete': 'Xóa tài liệu hỗ trợ cài đặt',
@@ -22,6 +28,14 @@ const ACTION_LABELS: Record<string, string> = {
   'media.upload': 'Tải lên tệp media',
   'media.update': 'Cập nhật metadata media',
   'media.delete': 'Xóa tệp media',
+  'navigation.menu.create': 'Tạo menu điều hướng',
+  'navigation.menu.seed': 'Đồng bộ menu theo giao diện',
+  'navigation.item.create': 'Thêm mục menu',
+  'navigation.item.update': 'Cập nhật mục menu',
+  'navigation.item.delete': 'Xóa mục menu',
+  'navigation.link.create': 'Thêm liên kết điều hướng',
+  'navigation.link.update': 'Cập nhật liên kết điều hướng',
+  'navigation.link.delete': 'Xóa liên kết điều hướng',
   'offering.create': 'Tạo phần mềm/giải pháp/dịch vụ',
   'offering.update': 'Cập nhật phần mềm/giải pháp/dịch vụ',
   'offering.publish': 'Xuất bản phần mềm/giải pháp/dịch vụ',
@@ -45,6 +59,8 @@ const ACTION_LABELS: Record<string, string> = {
   'testimonial.create': 'Thêm đánh giá khách hàng',
   'testimonial.update': 'Cập nhật đánh giá khách hàng',
   'testimonial.delete': 'Xóa đánh giá khách hàng',
+  'lead.create': 'Nhận khách liên hệ mới',
+  'lead.status_update': 'Cập nhật trạng thái khách liên hệ',
 }
 
 const ENTITY_TYPE_OPTIONS = [
@@ -58,6 +74,11 @@ const ENTITY_TYPE_OPTIONS = [
   'site_profile',
   'site_settings',
   'testimonial',
+  'content_page',
+  'menu',
+  'menu_item',
+  'content_link',
+  'contact_lead',
 ]
 
 function actionLabel(action: string): string {
@@ -113,6 +134,8 @@ export function ActivityLog() {
   }, [entityTypeFilter, actionFilter])
 
   const actionOptions = useMemo(() => Object.keys(ACTION_LABELS).sort((a, b) => a.localeCompare(b)), [])
+
+  useEscapeAndSave({ active: detailEntry !== null, onEscape: () => setDetailEntry(null) })
 
   return (
     <section className="admin-card content-manager activity-log">

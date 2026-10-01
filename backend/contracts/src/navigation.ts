@@ -43,6 +43,9 @@ export const contentLinkInputSchema = z.object({
   isEnabled: z.boolean().default(true),
 })
 
+// Nhóm liên kết được xác định từ URL admin, nên client không được tự gửi groupId.
+export const contentLinkUpsertInputSchema = contentLinkInputSchema.omit({ groupId: true })
+
 export const contentLinkResponseSchema = z.object({
   id: contentIdSchema,
   groupId: contentIdSchema,
@@ -66,5 +69,6 @@ export type MenuItemInput = z.infer<typeof menuItemInputSchema>
 export type MenuItemResponse = z.infer<typeof menuItemResponseSchema>
 export type MenuResponse = z.infer<typeof menuResponseSchema>
 export type ContentLinkInput = z.infer<typeof contentLinkInputSchema>
+export type ContentLinkUpsertInput = z.infer<typeof contentLinkUpsertInputSchema>
 export type ContentLinkResponse = z.infer<typeof contentLinkResponseSchema>
 export type LinkGroupResponse = z.infer<typeof linkGroupResponseSchema>

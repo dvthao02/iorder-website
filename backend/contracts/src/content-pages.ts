@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { contentIdSchema } from './content.js'
 
-export const contentPageStatusSchema = z.enum(['draft', 'published'])
+export const contentPageStatusSchema = z.enum(['draft', 'published', 'archived'])
 
 export const contentPageSlugSchema = z
   .string()

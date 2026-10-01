@@ -5,17 +5,15 @@ import { describe, expect, it } from 'vitest'
 
 // Các module hiện có service.ts với mutation method (create/update/delete/...) nhưng CHƯA gọi insertAuditLog.
 // nợ chuẩn — xóa dần khỏi danh sách khi nâng cấp
-const KNOWN_VIOLATIONS = ['navigation']
+const KNOWN_VIOLATIONS: string[] = []
 
 // Các module hiện chưa có file <name>.service.test.ts.
 // nợ chuẩn — xóa dần khỏi danh sách khi nâng cấp
-const KNOWN_MISSING_TESTS = ['categories', 'downloads', 'media', 'navigation', 'partners', 'settings', 'testimonials']
+const KNOWN_MISSING_TESTS: string[] = []
 
 // settings module hiện chưa có file <name>.errors.ts (không throw ApplicationError subclass riêng).
 // nợ chuẩn — xóa dần khỏi danh sách khi nâng cấp
-const KNOWN_MISSING_STRUCTURE: Record<string, string[]> = {
-  settings: ['settings.errors.ts'],
-}
+const KNOWN_MISSING_STRUCTURE: Record<string, string[]> = {}
 
 const MODULES_DIR = join(import.meta.dirname, '../modules')
 

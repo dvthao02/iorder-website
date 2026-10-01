@@ -400,6 +400,10 @@ export function unpublishContentPage(id: string) {
   return request<{ item: ContentPageResponse }>(`/api/admin/content-pages/${id}/unpublish`, { method: 'POST' })
 }
 
+export function archiveContentPage(id: string) {
+  return request<{ item: ContentPageResponse }>(`/api/admin/content-pages/${id}/archive`, { method: 'POST' })
+}
+
 export function deleteContentPage(id: string) {
   return request<void>(`/api/admin/content-pages/${id}`, { method: 'DELETE' })
 }
@@ -451,11 +455,12 @@ export function deleteTestimonial(id: string) {
 }
 
 // ── Leads (khách liên hệ) ────────────────────────────────────────────────────
-export function getLeads(params: { page?: number; limit?: number; status?: LeadStatus }) {
+export function getLeads(params: { page?: number; limit?: number; status?: LeadStatus; search?: string }) {
   const query = new URLSearchParams()
   if (params.page) query.set('page', String(params.page))
   if (params.limit) query.set('limit', String(params.limit))
   if (params.status) query.set('status', params.status)
+  if (params.search) query.set('search', params.search)
   const qs = query.toString()
   return request<{ items: ContactLead[]; total: number; totalNew: number }>(`/api/admin/leads${qs ? `?${qs}` : ''}`)
 }

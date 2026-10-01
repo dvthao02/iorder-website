@@ -1,6 +1,6 @@
 import type { MenuItemInput } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
-import { contentLinks, linkGroups, menuItems, menus } from '@iorder/database'
+import { auditLogs, contentLinks, linkGroups, menuItems, menus } from '@iorder/database'
 import { and, asc, eq } from 'drizzle-orm'
 
 export type MenuItemRecord = typeof menuItems.$inferSelect & { children?: MenuItemRecord[] }
@@ -149,6 +149,20 @@ export class NavigationRepository {
     return item ?? null
   }
 
+  async wouldCreateMenuItemCycle(menuId: string, itemId: string, parentId: string) {
+    const items = await this.db
+      .select({ id: menuItems.id, parentId: menuItems.parentId })
+      .from(menuItems)
+      .where(eq(menuItems.menuId, menuId))
+    const parentById = new Map(items.map((item) => [item.id, item.parentId]))
+    let currentId: string | null = parentId
+    while (currentId) {
+      if (currentId === itemId) return true
+      currentId = parentById.get(currentId) ?? null
+    }
+    return false
+  }
+
   async createMenuItem(menuId: string, input: MenuItemInput) {
     const [created] = await this.db
       .insert(menuItems)
@@ -242,5 +256,16 @@ export class NavigationRepository {
 
   async deleteContentLink(groupId: string, linkId: string) {
     await this.db.delete(contentLinks).where(and(eq(contentLinks.id, linkId), eq(contentLinks.groupId, groupId)))
+  }
+
+  async insertAuditLog(entry: {
+    userId: string
+    action: string
+    entityType: string
+    entityId?: string
+    beforeData?: unknown
+    afterData?: unknown
+  }) {
+    await this.db.insert(auditLogs).values(entry)
   }
 }

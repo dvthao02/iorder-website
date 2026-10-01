@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createDownload, deleteDownload, listDownloads, listMedia, updateDownload, uploadMedia } from './api'
+import { BasicInfoCard, ContentBodyEditor, ContentEditorPage, DisplaySettingCard, StatusBadge } from './content-editor/ContentEditorPage'
 import { toast } from './toast'
 import { ModalShell, PageHeader, StatusDot, ToggleSwitch, useEscapeAndSave } from './ui'
 
@@ -189,7 +190,7 @@ export function DownloadsManager() {
 
   useEscapeAndSave({
     active: editorOpen,
-    onSave: () => formRef.current?.requestSubmit(),
+    onSave: () => void save(),
     onEscape: () => closeEditor(),
   })
 
@@ -215,8 +216,8 @@ export function DownloadsManager() {
     setEditorOpen(false)
   }
 
-  const save = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const save = async (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
     const validationError = validateDownload(form)
     if (validationError) {
       toast.error(validationError)
@@ -227,7 +228,6 @@ export function DownloadsManager() {
       if (editingId) await updateDownload(editingId, form)
       else await createDownload(form)
       await loadData()
-      setEditorOpen(false)
       toast.success(editingId ? 'Đã cập nhật mục hỗ trợ cài đặt.' : 'Đã thêm mục hỗ trợ cài đặt.')
     } catch {
       toast.error('Không thể lưu.')
@@ -298,6 +298,38 @@ export function DownloadsManager() {
     ordered.splice(to, 0, moved)
     setDragId(null)
     void persistOrder(ordered)
+  }
+
+  if (editorOpen) {
+    const editingDownload = items.find((item) => item.id === editingId) ?? null
+    const validationError = validateDownload(form)
+    return (
+      <ContentEditorPage
+        standalone
+        title={editingId ? 'Sửa mục hỗ trợ cài đặt' : 'Thêm mục hỗ trợ cài đặt'}
+        status={<StatusBadge status={form.isEnabled ? 'published' : 'archived'} label={form.isEnabled ? 'Đang hiển thị' : 'Đang ẩn'} />}
+        eyebrow={<button type="button" className="modal-back" onClick={closeEditor}>← Hỗ trợ cài đặt</button>}
+        actions={<button type="submit" className="btn-primary" disabled={isSaving || Boolean(validationError)} title={validationError ?? undefined}>{isSaving ? 'Đang lưu…' : 'Lưu thay đổi'}</button>}
+        onSubmit={() => void save()}
+        main={<>
+          <BasicInfoCard>
+            <div className="form-row-2col">
+              <label>Tiêu đề <span className="field-counter">{form.title.length}/220</span><input required maxLength={220} value={form.title} onChange={(event) => patchForm('title', event.target.value)} /></label>
+              <label>Biểu tượng<select value={form.icon} onChange={(event) => patchForm('icon', event.target.value as DownloadIcon)}>{ICON_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            </div>
+            <label className="full-field">Nhãn phụ <span className="field-counter">{(form.meta ?? '').length}/160</span><input maxLength={160} placeholder="Ví dụ: Windows / Hỗ trợ từ xa" value={form.meta ?? ''} onChange={(event) => patchForm('meta', event.target.value || null)} /></label>
+          </BasicInfoCard>
+          <ContentBodyEditor>
+            <label className="full-field">Mô tả <span className="field-counter">{(form.description ?? '').length}/2000</span><textarea maxLength={2000} rows={5} value={form.description ?? ''} onChange={(event) => patchForm('description', event.target.value || null)} /></label>
+          </ContentBodyEditor>
+          <section className="editor-card">
+            <div className="editor-card-heading"><h3>File tải xuống</h3><p>Chọn một file từ thư viện hoặc tải file mới trực tiếp.</p></div>
+            <FilePicker files={files} value={form.fileMediaId} fileName={editingFileName} onChange={(id, name) => { patchForm('fileMediaId', id); setEditingFileName(name) }} onUploaded={(asset) => setFiles((current) => [asset, ...current])} />
+          </section>
+        </>}
+        sidebar={<DisplaySettingCard updatedAt={editingDownload?.updatedAt ?? null} visible={form.isEnabled} onVisibleChange={(next) => patchForm('isEnabled', next)}><label className="full-field">Thứ tự hiển thị<input type="number" min={0} max={9999} value={form.sortOrder} onChange={(event) => patchForm('sortOrder', Number(event.target.value))} /></label></DisplaySettingCard>}
+      />
+    )
   }
 
   return (

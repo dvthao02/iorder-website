@@ -24,7 +24,8 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useBlocker } from 'react-router-dom'
 
 import {
   BasicInfoCard,
@@ -51,7 +52,7 @@ import {
   unpublishOffering,
   updateOffering,
 } from './api'
-import { openPublicSite, publicSiteUrl } from './public-site'
+import { openPublicSite } from './public-site'
 import { RichTextEditor } from './RichTextEditor'
 import { toast } from './toast'
 import { ActionMenu, type ActionMenuItem, ToggleSwitch, useEscapeAndSave } from './ui'
@@ -527,31 +528,128 @@ function DetailSectionItemsEditor({
     <div className="detail-section-items">
       <div className="list-editor-head">
         <span className="list-editor-label">Nội dung trong khối</span>
-        <button type="button" className="list-editor-add" onClick={() => onChange([...items, { title: '', description: null, href: null }])}>
+        <button
+          type="button"
+          className="list-editor-add"
+          onClick={() => onChange([...items, { title: '', description: null, href: null }])}
+        >
           <Plus size={13} /> Thêm mục
         </button>
       </div>
       {items.map((item, index) => (
-        <div key={`${item.title}-${index}`} className="detail-section-item-row">
+        <div key={index} className="detail-section-item-row">
           <span>{index + 1}</span>
           <div>
             <input
               value={item.title}
               placeholder="Tiêu đề hoặc nội dung chính"
-              onChange={(event) => onChange(items.map((value, i) => i === index ? { ...value, title: event.target.value } : value))}
+              onChange={(event) =>
+                onChange(items.map((value, i) => (i === index ? { ...value, title: event.target.value } : value)))
+              }
             />
             <input
               value={item.description ?? ''}
               placeholder="Mô tả ngắn (không bắt buộc)"
-              onChange={(event) => onChange(items.map((value, i) => i === index ? { ...value, description: event.target.value || null } : value))}
+              onChange={(event) =>
+                onChange(
+                  items.map((value, i) =>
+                    i === index ? { ...value, description: event.target.value || null } : value,
+                  ),
+                )
+              }
             />
           </div>
-          <button type="button" className="list-editor-remove" aria-label="Xóa mục" onClick={() => onChange(items.filter((_, i) => i !== index))}>
+          <button
+            type="button"
+            className="list-editor-remove"
+            aria-label="Xóa mục"
+            onClick={() => onChange(items.filter((_, i) => i !== index))}
+          >
             <Minus size={14} />
           </button>
         </div>
       ))}
       {!items.length ? <p className="list-editor-empty">Khối này chưa có mục nội dung.</p> : null}
+    </div>
+  )
+}
+
+function WorkflowEditor({
+  steps,
+  onChange,
+}: {
+  steps: NonNullable<OfferingSection['workflowSteps']>
+  onChange: (steps: NonNullable<OfferingSection['workflowSteps']>) => void
+}) {
+  const patch = (index: number, value: Partial<(typeof steps)[number]>) =>
+    onChange(steps.map((step, i) => (i === index ? { ...step, ...value } : step)))
+  const move = (index: number, offset: number) => {
+    const next = [...steps]
+    const current = next[index]
+    const target = next[index + offset]
+    if (!current || !target) return
+    next[index] = target
+    next[index + offset] = current
+    onChange(next)
+  }
+  return (
+    <div>
+      <p>Dot di chuyển theo thứ tự các bước đang bật. Mỗi dòng tính năng là một mục hiển thị.</p>
+      {steps.map((step, index) => (
+        <fieldset key={step.id}>
+          <legend>Bước {index + 1}</legend>
+          <label>
+            Tên bước
+            <input
+              maxLength={220}
+              value={step.title}
+              onChange={(event) => patch(index, { title: event.target.value })}
+            />
+          </label>
+          <label>
+            Mô tả
+            <textarea
+              maxLength={2000}
+              value={step.description}
+              onChange={(event) => patch(index, { description: event.target.value })}
+            />
+          </label>
+          <ListEditor
+            label="Tính năng của bước"
+            items={step.features}
+            onChange={(features) => patch(index, { features })}
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={step.isVisible}
+              onChange={(event) => patch(index, { isVisible: event.target.checked })}
+            />
+            Hiển thị bước
+          </label>
+          <button type="button" disabled={index === 0} onClick={() => move(index, -1)}>
+            Lên
+          </button>
+          <button type="button" disabled={index === steps.length - 1} onClick={() => move(index, 1)}>
+            Xuống
+          </button>
+          <button type="button" onClick={() => onChange(steps.filter((_, i) => i !== index))}>
+            Bỏ bước
+          </button>
+        </fieldset>
+      ))}
+      <button
+        type="button"
+        disabled={steps.length >= 12}
+        onClick={() =>
+          onChange([
+            ...steps,
+            { id: crypto.randomUUID(), title: 'Bước mới', description: '', features: [], isVisible: true },
+          ])
+        }
+      >
+        Thêm bước
+      </button>
     </div>
   )
 }
@@ -565,46 +663,287 @@ function DetailSectionsEditor({
   images: MediaAsset[]
   onChange: (sections: OfferingSection[]) => void
 }) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [removed, setRemoved] = useState<{ section: OfferingSection; index: number } | null>(null)
   const update = (index: number, patch: Partial<OfferingSection>) =>
-    onChange(sections.map((section, i) => i === index ? { ...section, ...patch } : section))
+    onChange(sections.map((section, i) => (i === index ? { ...section, ...patch } : section)))
+  const move = (index: number, offset: number) => {
+    const next = [...sections]
+    const source = next[index]
+    const target = next[index + offset]
+    if (!source || !target) return
+    next[index] = target
+    next[index + offset] = source
+    onChange(next)
+  }
 
   return (
     <section className="detail-sections-editor">
       <div className="detail-sections-editor__head">
-        <div><span className="field-label">Bố cục trang chi tiết</span><p>Sắp thứ tự các khối hiển thị. Nếu để trống, trang vẫn dùng bố cục mặc định từ dữ liệu hiện có.</p></div>
-        <select aria-label="Thêm khối" defaultValue="" onChange={(event) => { if (event.target.value) { onChange([...sections, newDetailSection(event.target.value as OfferingSection['type'])]); event.target.value = '' } }}>
+        <div>
+          <span className="field-label">Bố cục trang chi tiết</span>
+          <p>Thứ tự bên dưới là thứ tự khách hàng nhìn thấy. Mở từng khối để sửa nội dung và cách hiển thị.</p>
+        </div>
+        <select
+          aria-label="Thêm khối"
+          defaultValue=""
+          onChange={(event) => {
+            if (event.target.value) {
+              const added = newDetailSection(event.target.value as OfferingSection['type'])
+              onChange([...sections, added])
+              setExpanded(added.id)
+              event.target.value = ''
+            }
+          }}
+        >
           <option value="">+ Thêm khối...</option>
-          {DETAIL_SECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          {DETAIL_SECTION_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
+      {removed ? (
+        <div className="offering-editor-notice" role="status">
+          Đã bỏ khối khỏi bố cục chưa lưu.
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              const next = [...sections]
+              next.splice(Math.min(removed.index, next.length), 0, removed.section)
+              onChange(next)
+              setRemoved(null)
+            }}
+          >
+            Hoàn tác
+          </button>
+        </div>
+      ) : null}
       {sections.map((section, index) => (
         <article key={section.id} className="detail-section-editor-card">
           <div className="detail-section-editor-card__head">
-            <strong>{index + 1}. {DETAIL_SECTION_OPTIONS.find((option) => option.value === section.type)?.label}</strong>
+            <button
+              type="button"
+              className="offering-block-title"
+              aria-expanded={expanded === section.id}
+              aria-controls={`block-${section.id}`}
+              onClick={() => setExpanded(expanded === section.id ? null : section.id)}
+            >
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <strong>
+                {section.title || DETAIL_SECTION_OPTIONS.find((option) => option.value === section.type)?.label}
+              </strong>
+              <small>
+                {section.isVisible ? 'Đang hiện' : 'Đang ẩn'} · {expanded === section.id ? 'Thu gọn' : 'Chỉnh sửa'}
+              </small>
+            </button>
             <div>
-              <label><input type="checkbox" checked={section.isVisible} onChange={(event) => update(index, { isVisible: event.target.checked })} /> Hiện</label>
-              <button type="button" className="list-editor-remove" aria-label="Xóa khối" onClick={() => onChange(sections.filter((_, i) => i !== index))}><Minus size={14} /></button>
+              <button
+                type="button"
+                className="secondary-button"
+                aria-label={`Đưa khối ${index + 1} lên`}
+                disabled={index === 0}
+                onClick={() => move(index, -1)}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                aria-label={`Đưa khối ${index + 1} xuống`}
+                disabled={index === sections.length - 1}
+                onClick={() => move(index, 1)}
+              >
+                ↓
+              </button>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={section.isVisible}
+                  onChange={(event) => update(index, { isVisible: event.target.checked })}
+                />{' '}
+                Hiện
+              </label>
+              <button
+                type="button"
+                className="list-editor-remove"
+                aria-label="Xóa khối"
+                onClick={() => {
+                  setRemoved({ section, index })
+                  onChange(sections.filter((_, i) => i !== index))
+                  toast.warning('Đã bỏ khối. Chọn Hoàn tác để khôi phục trước khi lưu.')
+                }}
+              >
+                <Minus size={14} />
+              </button>
             </div>
           </div>
-          {section.type !== 'spacer' ? <>
-            <div className="form-row-2col">
-              <label>Nhãn nhỏ<input value={section.eyebrow ?? ''} maxLength={120} onChange={(event) => update(index, { eyebrow: event.target.value || null })} /></label>
-              <label>Biến thể<select value={section.variant} onChange={(event) => update(index, { variant: event.target.value })}><option value="default">Mặc định</option><option value="soft">Nền xanh nhạt</option><option value="accent">Nhấn màu</option><option value="compact">Gọn</option><option value="split">Hai cột</option></select></label>
-            </div>
-            <div className="form-row-3col">
-              <label>Nền<select value={section.background} onChange={(event) => update(index, { background: event.target.value as OfferingSection['background'] })}><option value="white">Trắng</option><option value="soft-blue">Xanh nhạt</option><option value="gradient">Gradient</option><option value="navy">Xanh navy</option></select></label>
-              <label>Độ rộng<select value={section.container} onChange={(event) => update(index, { container: event.target.value as OfferingSection['container'] })}><option value="standard">Chuẩn</option><option value="wide">Rộng</option><option value="narrow">Hẹp</option></select></label>
-              <label>Khoảng cách<select value={section.spacing} onChange={(event) => update(index, { spacing: event.target.value as OfferingSection['spacing'] })}><option value="compact">Gọn</option><option value="normal">Chuẩn</option><option value="spacious">Thoáng</option></select></label>
-            </div>
-            <label>Tiêu đề<input value={section.title ?? ''} maxLength={220} onChange={(event) => update(index, { title: event.target.value || null })} /></label>
-            <label>Nội dung / mô tả<textarea rows={3} value={section.body ?? ''} maxLength={4000} onChange={(event) => update(index, { body: event.target.value || null })} /></label>
-            {['hero', 'imageText', 'process'].includes(section.type) ? <div className="form-row-2col">
-              <label>Ảnh từ thư viện<select value={section.imageMediaId ?? ''} onChange={(event) => update(index, { imageMediaId: event.target.value || null })}><option value="">Dùng ảnh cover của trang</option>{images.filter((image) => image.mimeType.startsWith('image/')).map((image) => <option key={image.id} value={image.id}>{image.originalName}</option>)}</select></label>
-              <label>Mô tả ảnh<input value={section.imageAlt ?? ''} maxLength={220} onChange={(event) => update(index, { imageAlt: event.target.value || null })} /></label>
-            </div> : null}
-            {section.type === 'cta' || section.ctaLabel ? <div className="form-row-2col"><label>Nhãn nút<input value={section.ctaLabel ?? ''} maxLength={120} onChange={(event) => update(index, { ctaLabel: event.target.value || null })} /></label><label>Đường dẫn nút<input value={section.ctaHref ?? ''} maxLength={500} placeholder="/lien-he" onChange={(event) => update(index, { ctaHref: event.target.value || null })} /></label></div> : null}
-            {!['hero', 'cta'].includes(section.type) ? <DetailSectionItemsEditor items={section.items} onChange={(items) => update(index, { items })} /> : null}
-          </> : null}
+          <div id={`block-${section.id}`} hidden={expanded !== section.id} className="offering-block-fields">
+            {section.type !== 'spacer' ? (
+              <>
+                <div className="form-row-2col">
+                  <label>
+                    Nhãn nhỏ
+                    <input
+                      value={section.eyebrow ?? ''}
+                      maxLength={120}
+                      onChange={(event) => update(index, { eyebrow: event.target.value || null })}
+                    />
+                  </label>
+                  <label>
+                    Biến thể
+                    <select
+                      value={section.variant}
+                      onChange={(event) => update(index, { variant: event.target.value })}
+                    >
+                      <option value="default">Mặc định</option>
+                      <option value="soft">Nền xanh nhạt</option>
+                      <option value="accent">Nhấn màu</option>
+                      <option value="compact">Gọn</option>
+                      <option value="split">Hai cột</option>
+                      {section.type === 'featureGrid' ? (
+                        <option value="product-workflow">Quy trình có dot</option>
+                      ) : null}
+                    </select>
+                  </label>
+                </div>
+                <div className="form-row-3col">
+                  <label>
+                    Nền
+                    <select
+                      value={section.background}
+                      onChange={(event) =>
+                        update(index, { background: event.target.value as OfferingSection['background'] })
+                      }
+                    >
+                      <option value="white">Trắng</option>
+                      <option value="soft-blue">Xanh nhạt</option>
+                      <option value="gradient">Gradient</option>
+                      <option value="navy">Xanh navy</option>
+                    </select>
+                  </label>
+                  <label>
+                    Độ rộng
+                    <select
+                      value={section.container}
+                      onChange={(event) =>
+                        update(index, { container: event.target.value as OfferingSection['container'] })
+                      }
+                    >
+                      <option value="standard">Chuẩn</option>
+                      <option value="wide">Rộng</option>
+                      <option value="narrow">Hẹp</option>
+                    </select>
+                  </label>
+                  <label>
+                    Khoảng cách
+                    <select
+                      value={section.spacing}
+                      onChange={(event) => update(index, { spacing: event.target.value as OfferingSection['spacing'] })}
+                    >
+                      <option value="compact">Gọn</option>
+                      <option value="normal">Chuẩn</option>
+                      <option value="spacious">Thoáng</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  Tiêu đề
+                  <input
+                    value={section.title ?? ''}
+                    maxLength={220}
+                    onChange={(event) => update(index, { title: event.target.value || null })}
+                  />
+                </label>
+                <label>
+                  Nội dung / mô tả
+                  <textarea
+                    rows={3}
+                    value={section.body ?? ''}
+                    maxLength={4000}
+                    onChange={(event) => update(index, { body: event.target.value || null })}
+                  />
+                </label>
+                {['hero', 'imageText', 'process'].includes(section.type) ? (
+                  <div className="form-row-2col">
+                    <label>
+                      Ảnh từ thư viện
+                      <select
+                        value={section.imageMediaId ?? ''}
+                        onChange={(event) => update(index, { imageMediaId: event.target.value || null })}
+                      >
+                        <option value="">Dùng ảnh cover của trang</option>
+                        {images
+                          .filter((image) => image.mimeType.startsWith('image/'))
+                          .map((image) => (
+                            <option key={image.id} value={image.id}>
+                              {image.originalName}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label>
+                      Mô tả ảnh
+                      <input
+                        value={section.imageAlt ?? ''}
+                        maxLength={220}
+                        onChange={(event) => update(index, { imageAlt: event.target.value || null })}
+                      />
+                    </label>
+                  </div>
+                ) : null}
+                {section.type === 'cta' || section.ctaLabel ? (
+                  <div className="form-row-2col">
+                    <label>
+                      Nhãn nút
+                      <input
+                        value={section.ctaLabel ?? ''}
+                        maxLength={120}
+                        onChange={(event) => update(index, { ctaLabel: event.target.value || null })}
+                      />
+                    </label>
+                    <label>
+                      Đường dẫn nút
+                      <input
+                        value={section.ctaHref ?? ''}
+                        maxLength={500}
+                        placeholder="/lien-he"
+                        onChange={(event) => update(index, { ctaHref: event.target.value || null })}
+                      />
+                    </label>
+                  </div>
+                ) : null}
+                {section.type === 'featureGrid' ? (
+                  <>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={section.variant === 'product-workflow'}
+                        onChange={(event) =>
+                          update(index, {
+                            variant: event.target.checked ? 'product-workflow' : 'default',
+                            workflowSteps: section.workflowSteps ?? [],
+                          })
+                        }
+                      />{' '}
+                      Hiển thị quy trình có dot di chuyển
+                    </label>
+                    {section.variant === 'product-workflow' ? (
+                      <WorkflowEditor
+                        steps={section.workflowSteps ?? []}
+                        onChange={(workflowSteps) => update(index, { workflowSteps })}
+                      />
+                    ) : null}
+                  </>
+                ) : null}
+                {!['hero', 'cta'].includes(section.type) && section.variant !== 'product-workflow' ? (
+                  <DetailSectionItemsEditor items={section.items} onChange={(items) => update(index, { items })} />
+                ) : null}
+              </>
+            ) : null}
+          </div>
         </article>
       ))}
     </section>
@@ -709,6 +1048,32 @@ function OfferingForm({
   const [saving, setSaving] = useState(false)
   const [showCover, setShowCover] = useState(false)
   const [availableImages, setAvailableImages] = useState(images)
+  const [editorTab, setEditorTab] = useState<'content' | 'layout' | 'seo'>('content')
+  const [savedSignature, setSavedSignature] = useState(() =>
+    JSON.stringify(toOfferingInput(initial as OfferingResponse)),
+  )
+  const [leaveRequested, setLeaveRequested] = useState(false)
+  const busy = useRef(false)
+  const signature = JSON.stringify(toOfferingInput(form as OfferingResponse))
+  const hasChanges = signature !== savedSignature
+  const blocker = useBlocker(hasChanges || saving)
+  const hasCustomLayout = (form.contentJson.sections?.length ?? 0) > 0
+
+  useEffect(() => {
+    if (!hasChanges) return
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [hasChanges])
+
+  const requestClose = () => {
+    if (busy.current) return
+    if (hasChanges) setLeaveRequested(true)
+    else onCancel()
+  }
 
   useEffect(() => setAvailableImages(images), [images])
 
@@ -718,7 +1083,6 @@ function OfferingForm({
 
   const handleTitle = (title: string) => set({ title, slug: form.slug || slugify(title) })
   const coverImg = availableImages.find((image) => image.id === form.coverMediaId)
-  const publicUrl = form.slug ? publicSiteUrl(`${TYPE_PREFIX[form.type]}/${form.slug}`) : ''
   const copy = FORM_COPY[form.type]
   const status = current?.status ?? 'draft'
   const descriptionText = form.contentJson.description.replace(/<[^>]+>/g, ' ').trim()
@@ -741,38 +1105,48 @@ function OfferingForm({
   const canPublish = !validationError
 
   const saveDraft = async () => {
+    if (busy.current) return
     const error = validateOffering(form)
     if (error) {
       toast.error(error)
       return
     }
+    busy.current = true
     setSaving(true)
     try {
       await onSave(form)
+      setSavedSignature(signature)
+      setLeaveRequested(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Không thể lưu nội dung.')
     } finally {
+      busy.current = false
       setSaving(false)
     }
   }
 
   const publishNow = async () => {
+    if (busy.current) return
     const error = validateOffering(form)
     if (error) {
       toast.error(error)
       return
     }
+    busy.current = true
     setSaving(true)
     try {
       await onPublish(form)
+      setSavedSignature(signature)
+      setLeaveRequested(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Không thể xuất bản.')
     } finally {
+      busy.current = false
       setSaving(false)
     }
   }
 
-  useEscapeAndSave({ active: true, onSave: () => void saveDraft(), onEscape: onCancel })
+  useEscapeAndSave({ active: true, onSave: () => void saveDraft(), onEscape: requestClose })
 
   const typeLabel = MANAGED_TYPES.find((type) => type.key === form.type)?.label ?? 'Nội dung'
 
@@ -784,7 +1158,7 @@ function OfferingForm({
       status={<StatusBadge status={status} />}
       eyebrow={
         <span className="editor-breadcrumb">
-          <button type="button" onClick={onCancel}>
+          <button type="button" disabled={saving} onClick={requestClose}>
             <ArrowLeft size={16} /> {typeLabel}
           </button>
           <span>›</span>
@@ -796,29 +1170,38 @@ function OfferingForm({
           <button
             type="button"
             className="secondary-button btn-icon save-draft-button"
-            disabled={saving}
+            disabled={saving || (!hasChanges && Boolean(current))}
             onClick={() => void saveDraft()}
           >
-            <FileText size={15} /> Lưu nháp
+            <FileText size={15} />{' '}
+            {saving
+              ? 'Đang lưu…'
+              : status === 'published'
+                ? 'Cập nhật trang đang đăng'
+                : status === 'archived'
+                  ? 'Lưu thay đổi'
+                  : 'Lưu nháp'}
           </button>
-          <button
-            type="button"
-            className="btn-primary btn-icon"
-            disabled={saving || !canPublish}
-            title={!canPublish ? (validationError ?? undefined) : undefined}
-            onClick={() => void publishNow()}
-          >
-            <CheckCircle2 size={15} /> Xuất bản ngay
-          </button>
+          {status !== 'published' ? (
+            <button
+              type="button"
+              className="btn-primary btn-icon"
+              disabled={saving || !canPublish}
+              title={!canPublish ? (validationError ?? undefined) : undefined}
+              onClick={() => void publishNow()}
+            >
+              <CheckCircle2 size={15} /> Xuất bản ngay
+            </button>
+          ) : null}
           <ActionMenu
             items={
               [
-                ...(publicUrl
+                ...(current?.status === 'published'
                   ? [
                       {
-                        label: 'Xem trước',
+                        label: 'Xem trang đã đăng',
                         icon: Eye,
-                        onClick: () => window.open(publicUrl, '_blank', 'noopener'),
+                        onClick: () => openPublicSite(`${TYPE_PREFIX[current.type]}/${current.slug}`),
                       },
                     ]
                   : []),
@@ -827,7 +1210,7 @@ function OfferingForm({
                       {
                         label: 'Nhân bản',
                         icon: Copy,
-                        disabled: saving,
+                        disabled: saving || hasChanges,
                         onClick: () => void onDuplicate(),
                       },
                     ]
@@ -838,7 +1221,7 @@ function OfferingForm({
                       {
                         label: 'Gỡ xuất bản',
                         icon: EyeOff,
-                        disabled: saving,
+                        disabled: saving || hasChanges,
                         onClick: () => void onUnpublish(),
                       },
                     ]
@@ -849,7 +1232,7 @@ function OfferingForm({
                         label: 'Ẩn',
                         icon: EyeOff,
                         tone: 'danger' as const,
-                        disabled: saving,
+                        disabled: saving || hasChanges,
                         onClick: () => void onArchive(),
                       },
                     ]
@@ -865,172 +1248,233 @@ function OfferingForm({
       }}
       main={
         <>
-          <BasicInfoCard>
-            <div className="form-row-2col">
-              <label>
-                {copy.titleLabel} <span className="field-counter">{form.title.length}/220</span>
-                <input
-                  value={form.title}
-                  onChange={(event) => handleTitle(event.target.value)}
-                  required
-                  maxLength={220}
-                />
-              </label>
-              <label>
-                Slug
-                <input
-                  value={form.slug}
-                  onChange={(event) => set({ slug: slugify(event.target.value) })}
-                  required
-                  maxLength={180}
-                  pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                />
-              </label>
+          <nav className="offering-editor-tabs" aria-label="Các phần biên tập">
+            {(
+              [
+                { key: 'content', label: 'Nội dung' },
+                { key: 'layout', label: 'Bố cục' },
+                { key: 'seo', label: 'SEO' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                aria-pressed={editorTab === tab.key}
+                className={editorTab === tab.key ? 'is-active' : ''}
+                onClick={() => setEditorTab(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+            <span role="status">
+              {saving ? 'Đang lưu…' : hasChanges ? 'Có thay đổi chưa lưu' : 'Không có thay đổi chưa lưu'}
+            </span>
+          </nav>
+          {leaveRequested || blocker.state === 'blocked' ? (
+            <div className="offering-editor-notice" role="alert">
+              <p>Anh/chị đang có thay đổi chưa lưu.</p>
+              <button type="button" className="secondary-button" onClick={() => { setLeaveRequested(false); if (blocker.state === 'blocked') blocker.reset() }}>
+                Tiếp tục chỉnh sửa
+              </button>
+              <button type="button" className="secondary-button" disabled={saving} onClick={() => { if (blocker.state === 'blocked') blocker.proceed(); else onCancel() }}>
+                Bỏ thay đổi và quay lại
+              </button>
             </div>
-            <label className="full-field">
-              {copy.summaryLabel} <span className="field-counter">{(form.summary ?? '').length}/600</span>
-              <textarea
-                rows={3}
-                value={form.summary ?? ''}
-                onChange={(event) => set({ summary: event.target.value || null })}
-                maxLength={600}
-                placeholder={copy.summaryPlaceholder}
-              />
-            </label>
-            <div className="form-row-2col">
-              <IconPicker value={form.icon} label={copy.iconLabel} onChange={(icon) => set({ icon })} />
-              <label className="sort-order-field">
-                {copy.sortLabel}
-                <input
-                  type="number"
-                  value={form.sortOrder}
-                  onChange={(event) => set({ sortOrder: Number(event.target.value) })}
-                  min={0}
-                />
-              </label>
-            </div>
-            {form.type === 'industry' ? (
+          ) : null}
+          {status === 'published' ? (
+            <p className="offering-editor-notice">
+              Trang đang công khai. Nút Cập nhật sẽ áp dụng thay đổi trực tiếp lên website.
+            </p>
+          ) : null}
+          <fieldset disabled={saving} className="offering-editor-panel" hidden={editorTab !== 'content'}>
+            <BasicInfoCard>
+              <div className="form-row-2col">
+                <label>
+                  {copy.titleLabel} <span className="field-counter">{form.title.length}/220</span>
+                  <input
+                    value={form.title}
+                    onChange={(event) => handleTitle(event.target.value)}
+                    required
+                    maxLength={220}
+                  />
+                </label>
+                <label>
+                  Slug
+                  <input
+                    value={form.slug}
+                    onChange={(event) => set({ slug: slugify(event.target.value) })}
+                    required
+                    maxLength={180}
+                    pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                  />
+                </label>
+              </div>
               <label className="full-field">
-                {copy.categoryLabel}
-                <CategoryCombobox
-                  value={form.contentJson.category}
-                  onChange={(category) => setContent({ category })}
-                  options={categoryOptionsForType}
-                  placeholder={copy.categoryPlaceholder}
+                {copy.summaryLabel} <span className="field-counter">{(form.summary ?? '').length}/600</span>
+                <textarea
+                  rows={3}
+                  value={form.summary ?? ''}
+                  onChange={(event) => set({ summary: event.target.value || null })}
+                  maxLength={600}
+                  placeholder={copy.summaryPlaceholder}
                 />
               </label>
-            ) : null}
-          </BasicInfoCard>
+              <div className="form-row-2col">
+                <IconPicker value={form.icon} label={copy.iconLabel} onChange={(icon) => set({ icon })} />
+                <label className="sort-order-field">
+                  {copy.sortLabel}
+                  <input
+                    type="number"
+                    value={form.sortOrder}
+                    onChange={(event) => set({ sortOrder: Number(event.target.value) })}
+                    min={0}
+                  />
+                </label>
+              </div>
+              {form.type === 'industry' ? (
+                <label className="full-field">
+                  {copy.categoryLabel}
+                  <CategoryCombobox
+                    value={form.contentJson.category}
+                    onChange={(category) => setContent({ category })}
+                    options={categoryOptionsForType}
+                    placeholder={copy.categoryPlaceholder}
+                  />
+                </label>
+              ) : null}
+            </BasicInfoCard>
 
-          <ContentBodyEditor wordCount={wordCount}>
-            <div className="form-field">
-              <span className="field-label">{copy.descriptionLabel}</span>
-              <RichTextEditor
-                value={form.contentJson.description}
-                placeholder={`Soạn ${copy.descriptionLabel.toLowerCase()}...`}
-                onChange={(html) => setContent({ description: html })}
-              />
-            </div>
-            <div className="form-row-2col">
-              <label>
-                Phù hợp với
-                <input
-                  value={form.contentJson.bestFor ?? ''}
-                  onChange={(event) => setContent({ bestFor: event.target.value || null })}
-                  maxLength={300}
-                  placeholder="Cửa hàng bán lẻ, nhà hàng..."
+            <ContentBodyEditor wordCount={wordCount}>
+              <div className="form-field">
+                <span className="field-label">{copy.descriptionLabel}</span>
+                <RichTextEditor
+                  value={form.contentJson.description}
+                  placeholder={`Soạn ${copy.descriptionLabel.toLowerCase()}...`}
+                  onChange={(html) => setContent({ description: html })}
                 />
-              </label>
-              <label>
-                Giá trị cốt lõi
-                <input
-                  value={form.contentJson.keyValue ?? ''}
-                  onChange={(event) => setContent({ keyValue: event.target.value || null })}
-                  maxLength={300}
-                  placeholder="Vận hành bán hàng tập trung"
-                />
-              </label>
-            </div>
-            <div className="form-field">
-              <span className="field-label">Tags</span>
-              <TagInput tags={form.contentJson.tags} onChange={(next) => setContent({ tags: next })} />
-            </div>
-            <ListEditor
-              label="Số liệu nhanh"
-              items={form.contentJson.metrics}
-              onChange={(next) => setContent({ metrics: next })}
-              placeholder="Tạo đơn ít bước"
-            />
-            <ListEditor
-              label="Tính năng chính"
-              items={form.contentJson.features}
-              onChange={(next) => setContent({ features: next })}
-              placeholder="Bán hàng tại quầy, gọi món..."
-            />
-            <ListEditor
-              label="Lợi ích vận hành"
-              items={form.contentJson.benefits}
-              onChange={(next) => setContent({ benefits: next })}
-              placeholder="Giảm thời gian đào tạo..."
-            />
-            <FaqEditor items={form.contentJson.faq} onChange={(next) => setContent({ faq: next })} />
-            <ItemsEditor items={form.contentJson.items} onChange={(next) => setContent({ items: next })} />
+              </div>
+              <div className="form-row-2col">
+                <label>
+                  Phù hợp với
+                  <input
+                    value={form.contentJson.bestFor ?? ''}
+                    onChange={(event) => setContent({ bestFor: event.target.value || null })}
+                    maxLength={300}
+                    placeholder="Cửa hàng bán lẻ, nhà hàng..."
+                  />
+                </label>
+                <label>
+                  Giá trị cốt lõi
+                  <input
+                    value={form.contentJson.keyValue ?? ''}
+                    onChange={(event) => setContent({ keyValue: event.target.value || null })}
+                    maxLength={300}
+                    placeholder="Vận hành bán hàng tập trung"
+                  />
+                </label>
+              </div>
+              <div className="form-field">
+                <span className="field-label">Tags</span>
+                <TagInput tags={form.contentJson.tags} onChange={(next) => setContent({ tags: next })} />
+              </div>
+              {!hasCustomLayout ? (
+                <>
+                  <ListEditor
+                    label="Số liệu nhanh"
+                    items={form.contentJson.metrics}
+                    onChange={(next) => setContent({ metrics: next })}
+                    placeholder="Tạo đơn ít bước"
+                  />
+                  <ListEditor
+                    label="Tính năng chính"
+                    items={form.contentJson.features}
+                    onChange={(next) => setContent({ features: next })}
+                    placeholder="Bán hàng tại quầy, gọi món..."
+                  />
+                  <ListEditor
+                    label="Lợi ích vận hành"
+                    items={form.contentJson.benefits}
+                    onChange={(next) => setContent({ benefits: next })}
+                    placeholder="Giảm thời gian đào tạo..."
+                  />
+                  <FaqEditor items={form.contentJson.faq} onChange={(next) => setContent({ faq: next })} />
+                  <ItemsEditor items={form.contentJson.items} onChange={(next) => setContent({ items: next })} />
+                </>
+              ) : (
+                <div className="offering-editor-notice">
+                  Trang đang dùng bố cục riêng. Tính năng, lợi ích và FAQ được chỉnh trong từng khối ở mục{' '}
+                  <button type="button" className="secondary-button" onClick={() => setEditorTab('layout')}>
+                    Bố cục
+                  </button>
+                  .
+                </div>
+              )}
+            </ContentBodyEditor>
+
+            {form.type !== 'industry' ? (
+              <CategoryTagSelector>
+                <label className="full-field">
+                  {copy.categoryLabel}
+                  <CategoryCombobox
+                    value={form.contentJson.category}
+                    onChange={(category) => setContent({ category })}
+                    options={categoryOptionsForType}
+                    placeholder={copy.categoryPlaceholder}
+                  />
+                </label>
+              </CategoryTagSelector>
+            ) : null}
+          </fieldset>
+          <fieldset disabled={saving} className="offering-editor-panel" hidden={editorTab !== 'layout'}>
+            {!hasCustomLayout ? (
+              <p className="offering-editor-notice">
+                Trang đang dùng bố cục mặc định từ nội dung. Khi thêm khối, các khối sẽ thay thế phần bố cục mặc định;
+                hãy thêm đủ các phần cần hiển thị.
+              </p>
+            ) : null}
             <DetailSectionsEditor
               sections={form.contentJson.sections ?? []}
               images={availableImages}
               onChange={(sections) => setContent({ sections })}
             />
-          </ContentBodyEditor>
-
-          {form.type !== 'industry' ? (
-            <CategoryTagSelector>
+          </fieldset>
+          <fieldset disabled={saving} className="offering-editor-panel" hidden={editorTab !== 'seo'}>
+            <SeoMetaCard
+              title={form.seoTitle || form.title || 'Tiêu đề trang'}
+              description={form.seoDescription || form.summary || 'Mô tả trang sẽ hiển thị ở đây...'}
+              url={`https://iorder.vn${TYPE_PREFIX[form.type]}/${form.slug || 'slug'}`}
+            >
+              <div className="form-row-2col">
+                <label>
+                  Tiêu đề SEO <span className="field-counter">{(form.seoTitle ?? '').length}/70</span>
+                  <input
+                    value={form.seoTitle ?? ''}
+                    onChange={(event) => set({ seoTitle: event.target.value || null })}
+                    maxLength={70}
+                    placeholder={form.title}
+                  />
+                </label>
+                <label>
+                  Mô tả SEO <span className="field-counter">{(form.seoDescription ?? '').length}/180</span>
+                  <textarea
+                    rows={3}
+                    value={form.seoDescription ?? ''}
+                    onChange={(event) => set({ seoDescription: event.target.value || null })}
+                    maxLength={180}
+                    placeholder={form.summary ?? ''}
+                  />
+                </label>
+              </div>
               <label className="full-field">
-                {copy.categoryLabel}
-                <CategoryCombobox
-                  value={form.contentJson.category}
-                  onChange={(category) => setContent({ category })}
-                  options={categoryOptionsForType}
-                  placeholder={copy.categoryPlaceholder}
-                />
-              </label>
-            </CategoryTagSelector>
-          ) : null}
-
-          <SeoMetaCard
-            title={form.seoTitle || form.title || 'Tiêu đề trang'}
-            description={form.seoDescription || form.summary || 'Mô tả trang sẽ hiển thị ở đây...'}
-            url={`https://iorder.vn${TYPE_PREFIX[form.type]}/${form.slug || 'slug'}`}
-          >
-            <div className="form-row-2col">
-              <label>
-                Tiêu đề SEO <span className="field-counter">{(form.seoTitle ?? '').length}/70</span>
+                Canonical URL
                 <input
-                  value={form.seoTitle ?? ''}
-                  onChange={(event) => set({ seoTitle: event.target.value || null })}
-                  maxLength={70}
-                  placeholder={form.title}
+                  value={form.canonicalUrl ?? ''}
+                  onChange={(event) => set({ canonicalUrl: event.target.value || null })}
+                  placeholder="https://..."
                 />
               </label>
-              <label>
-                Mô tả SEO <span className="field-counter">{(form.seoDescription ?? '').length}/180</span>
-                <textarea
-                  rows={3}
-                  value={form.seoDescription ?? ''}
-                  onChange={(event) => set({ seoDescription: event.target.value || null })}
-                  maxLength={180}
-                  placeholder={form.summary ?? ''}
-                />
-              </label>
-            </div>
-            <label className="full-field">
-              Canonical URL
-              <input
-                value={form.canonicalUrl ?? ''}
-                onChange={(event) => set({ canonicalUrl: event.target.value || null })}
-                placeholder="https://..."
-              />
-            </label>
-          </SeoMetaCard>
+            </SeoMetaCard>
+          </fieldset>
         </>
       }
       sidebar={
@@ -1044,47 +1488,44 @@ function OfferingForm({
             onSaveDraft={() => void saveDraft()}
             hideActions
           />
-          <CoverImageCard
-            coverUrl={coverImg?.publicUrl ?? null}
-            images={availableImages}
-            value={form.coverMediaId}
-            onChange={(id) => set({ coverMediaId: id })}
-            onUploaded={(asset) => {
-              setAvailableImages((prev) => [asset, ...prev])
-              set({ coverMediaId: asset.id })
-            }}
-            onRemove={() => set({ coverMediaId: null })}
-            pickerOpen={showCover}
-            onTogglePicker={() => setShowCover((value) => !value)}
-            fallback={
-              <OfferingIconFallback
-                icon={form.icon}
-                title={form.title}
-                type={form.type}
-                className="content-cover-fallback"
-                size={30}
-              />
-            }
-          />
-          <DisplaySettingCard
-            readMinutes={Math.max(1, Math.ceil(wordCount / 200))}
-            wordCount={wordCount}
-            updatedAt={current?.updatedAt ?? null}
-            visible={status === 'published'}
-            onVisibleChange={(visible) => {
-              if (visible) void publishNow()
-              else if (onArchive) void onArchive()
-            }}
-          >
-            <div className="content-sidebar-extra">
-              <ToggleSwitch
-                checked={form.isFeatured}
-                onChange={(next) => set({ isFeatured: next })}
-                label="Nổi bật"
-                hint="Ưu tiên hiển thị ở vị trí nổi bật"
-              />
-            </div>
-          </DisplaySettingCard>
+          <fieldset disabled={saving} className="offering-editor-panel">
+            <CoverImageCard
+              coverUrl={coverImg?.publicUrl ?? null}
+              images={availableImages}
+              value={form.coverMediaId}
+              onChange={(id) => set({ coverMediaId: id })}
+              onUploaded={(asset) => {
+                setAvailableImages((prev) => [asset, ...prev])
+                set({ coverMediaId: asset.id })
+              }}
+              onRemove={() => set({ coverMediaId: null })}
+              pickerOpen={showCover}
+              onTogglePicker={() => setShowCover((value) => !value)}
+              fallback={
+                <OfferingIconFallback
+                  icon={form.icon}
+                  title={form.title}
+                  type={form.type}
+                  className="content-cover-fallback"
+                  size={30}
+                />
+              }
+            />
+            <DisplaySettingCard
+              readMinutes={Math.max(1, Math.ceil(wordCount / 200))}
+              wordCount={wordCount}
+              updatedAt={current?.updatedAt ?? null}
+            >
+              <div className="content-sidebar-extra">
+                <ToggleSwitch
+                  checked={form.isFeatured}
+                  onChange={(next) => set({ isFeatured: next })}
+                  label="Nổi bật"
+                  hint="Ưu tiên hiển thị ở vị trí nổi bật"
+                />
+              </div>
+            </DisplaySettingCard>
+          </fieldset>
         </>
       }
     />
@@ -1129,10 +1570,11 @@ export function OfferingsManager({ type: activeType }: { type: OfferingType }) {
   }, [activeType])
 
   const saveOffering = async (input: OfferingInput) => {
-    if (editing === 'new') await createOffering(input)
-    else if (editing) await updateOffering(editing.id, input)
-    setEditing(null)
-    await load()
+    const result =
+      editing === 'new' ? await createOffering(input) : editing ? await updateOffering(editing.id, input) : null
+    if (!result) return
+    setEditing(result.item)
+    setItems((values) => [result.item, ...values.filter((item) => item.id !== result.item.id)])
     toast.success('Đã lưu nội dung.')
   }
 
@@ -1140,9 +1582,10 @@ export function OfferingsManager({ type: activeType }: { type: OfferingType }) {
     const saved =
       editing === 'new' ? await createOffering(input) : editing ? await updateOffering(editing.id, input) : null
     if (!saved) return
-    await publishOffering(saved.item.id)
-    setEditing(null)
-    await load()
+    setEditing(saved.item)
+    const result = await publishOffering(saved.item.id)
+    setEditing(result.item)
+    setItems((values) => [result.item, ...values.filter((item) => item.id !== result.item.id)])
     toast.success('Đã xuất bản.')
   }
 
@@ -1181,6 +1624,7 @@ export function OfferingsManager({ type: activeType }: { type: OfferingType }) {
   const handleUnpublish = async (id: string) => {
     try {
       const result = await unpublishOffering(id)
+      setEditing((value) => value && value !== 'new' && value.id === id ? result.item : value)
       setItems((current) => current.map((item) => (item.id === id ? result.item : item)))
       toast.success('Đã gỡ xuất bản. Nội dung chuyển về bản nháp.')
     } catch {

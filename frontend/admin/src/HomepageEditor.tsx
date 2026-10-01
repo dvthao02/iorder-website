@@ -281,8 +281,12 @@ function newBlock(type: HomepageBlock['type'], mediaId = ''): HomepageBlock {
 
 // Giữ nguyên thứ tự đã lưu (do kéo-thả sắp xếp); chỉ bổ sung section còn thiếu vào cuối theo thứ tự mặc định.
 function fixedBlocks(blocks: HomepageBlock[], mediaId = '') {
-  const byType = new Map(blocks.map((block) => [block.type, block]))
-  const presentTypes = blocks.map((block) => block.type).filter((type) => byType.has(type))
+  // Dữ liệu local recovery có thể còn từ một phiên CMS dùng block legacy.
+  // Không để block ngoài contract hiện hành quay lại form rồi autosave ghi đè
+  // dữ liệu đã được migration.
+  const supportedBlocks = blocks.filter((block) => HOMEPAGE_SECTION_ORDER.some((type) => type === block.type))
+  const byType = new Map(supportedBlocks.map((block) => [block.type, block]))
+  const presentTypes = supportedBlocks.map((block) => block.type)
   const missingTypes = HOMEPAGE_SECTION_ORDER.filter((type) => !byType.has(type))
   return [...presentTypes, ...missingTypes].map((type) => byType.get(type) ?? newBlock(type, mediaId))
 }

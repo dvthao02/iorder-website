@@ -46,6 +46,18 @@ export const offeringSectionSchema = z.object({
   imageAlt: optText(220),
   ctaLabel: optText(120),
   ctaHref: z.string().trim().max(500).nullable().default(null),
+  workflowSteps: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(80),
+        title: z.string().trim().min(1).max(220),
+        description: z.string().trim().max(2000).default(''),
+        isVisible: z.boolean().default(true),
+        features: z.array(z.string().trim().min(1).max(220)).max(30).default([]),
+      }),
+    )
+    .max(12)
+    .optional(),
   items: z
     .array(
       z.object({

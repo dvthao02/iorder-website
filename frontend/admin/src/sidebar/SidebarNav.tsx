@@ -1,11 +1,8 @@
 import type { CmsRole } from '@iorder/contracts'
 import { useEffect, useState } from 'react'
 
-import { navigation, navigationGroups } from './navigation'
+import { adminOnlyNavigationGroups, navigation, navigationGroups } from './navigation'
 import { SidebarNavGroup } from './SidebarNavGroup'
-
-// Nhóm 'config' (menu, cài đặt, người dùng, hoạt động) chỉ dành cho admin — editor không được truy cập.
-const ADMIN_ONLY_GROUPS = new Set(['config'])
 
 // Key localStorage lưu danh sách group id đang bị collapse (không phải đang mở —
 // mặc định mở khi key chưa tồn tại).
@@ -41,7 +38,7 @@ export function SidebarNav({
   roles: CmsRole[]
 }) {
   const isAdmin = roles.includes('admin')
-  const visibleGroups = navigationGroups.filter((group) => isAdmin || !ADMIN_ONLY_GROUPS.has(group.id))
+  const visibleGroups = navigationGroups.filter((group) => isAdmin || !adminOnlyNavigationGroups.has(group.id))
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => readCollapsedGroups())
 
   // Khôi phục lại từ localStorage khi mount (đề phòng thay đổi ở tab khác).

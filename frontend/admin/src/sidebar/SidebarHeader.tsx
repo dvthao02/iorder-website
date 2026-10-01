@@ -1,14 +1,19 @@
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 import logoIorderMark from '../assets/logo-circle.jpg'
-import logoIorder from '../assets/logo.png'
 
 // Logo + nút thu gọn/mở rộng sidebar (con của Sidebar).
 export function SidebarHeader({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   return (
     <div className="sidebar-header">
       <span className={`sidebar-logo-badge${collapsed ? ' is-mark' : ''}`}>
-        <img src={collapsed ? logoIorderMark : logoIorder} alt="iOrder" />
+        <img src={logoIorderMark} alt="iOrder" />
+        {!collapsed ? (
+          <span className="sidebar-studio-label">
+            <strong>iOrder</strong>
+            <small>Content Studio</small>
+          </span>
+        ) : null}
       </span>
       <button
         type="button"

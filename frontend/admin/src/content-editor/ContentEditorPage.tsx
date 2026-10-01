@@ -514,12 +514,52 @@ export function ContentEditorPage({
       }}
     >
       <ContentHeader eyebrow={eyebrow} title={title} description={description} status={status} actions={actions} />
-      <div className="content-editor-grid">
-        <div className="content-editor-main">{main}</div>
-        <div className="content-editor-sidebar">{sidebar}</div>
-      </div>
+      <ContentStudioEditorShell className="content-editor-grid" inspector={sidebar}>
+        {main}
+      </ContentStudioEditorShell>
       {footer ? <div className="content-editor-footer">{footer}</div> : null}
     </form>
+  )
+}
+
+/**
+ * Khung chung cho các editor trong Content Studio.
+ *
+ * Module đơn giản (bài viết, offering...) chỉ dùng canvas + inspector. Module
+ * trực quan hơn có thể đưa Navigator và Preview vào đúng slot mà không phải
+ * sao chép lại toàn bộ bố cục/editor header. Đây là layout primitive, không
+ * áp đặt field schema hay hành vi publish của từng module.
+ */
+export function ContentStudioEditorShell({
+  children,
+  navigator,
+  preview,
+  inspector,
+  className,
+}: {
+  children: ReactNode
+  navigator?: ReactNode
+  preview?: ReactNode
+  inspector?: ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={[
+        'content-studio-editor-shell',
+        navigator ? 'has-navigator' : '',
+        preview ? 'has-preview' : '',
+        inspector ? 'has-inspector' : '',
+        className ?? '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {navigator ? <aside className="content-studio-editor-navigator">{navigator}</aside> : null}
+      <main className="content-studio-editor-canvas content-editor-main">{children}</main>
+      {preview ? <section className="content-studio-editor-preview">{preview}</section> : null}
+      {inspector ? <aside className="content-studio-editor-inspector content-editor-sidebar">{inspector}</aside> : null}
+    </div>
   )
 }
 

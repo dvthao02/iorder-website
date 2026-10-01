@@ -5,6 +5,7 @@ export const CONTENT_PAGE_EVENTS = {
   UPDATED: 'content-pages:updated',
   PUBLISHED: 'content-pages:published',
   UNPUBLISHED: 'content-pages:unpublished',
+  ARCHIVED: 'content-pages:archived',
   DELETED: 'content-pages:deleted',
 } as const
 

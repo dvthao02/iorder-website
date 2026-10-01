@@ -127,6 +127,13 @@
       "when": 1790243485239,
       "tag": "0017_sales_equipment",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790310000000,
+      "tag": "0018_canonicalize_homepage_legacy_blocks",
+      "breakpoints": true
     }
   ]
 }

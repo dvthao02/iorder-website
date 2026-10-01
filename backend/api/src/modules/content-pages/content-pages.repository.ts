@@ -14,7 +14,7 @@ export function serializeContentPage(page: ContentPageRecord) {
     body: page.body,
     seoTitle: page.seoTitle,
     seoDescription: page.seoDescription,
-    status: page.status as 'draft' | 'published',
+    status: page.status as 'draft' | 'published' | 'archived',
     publishedAt: page.publishedAt?.toISOString() ?? null,
     createdAt: page.createdAt.toISOString(),
     updatedAt: page.updatedAt.toISOString(),
@@ -142,6 +142,15 @@ export class ContentPagesRepository {
     const rows = await this.db
       .update(contentPages)
       .set({ status: 'draft', updatedAt: new Date() })
+      .where(eq(contentPages.id, id))
+      .returning()
+    return rows[0] ?? null
+  }
+
+  async archive(id: string) {
+    const rows = await this.db
+      .update(contentPages)
+      .set({ status: 'archived', updatedAt: new Date() })
       .where(eq(contentPages.id, id))
       .returning()
     return rows[0] ?? null

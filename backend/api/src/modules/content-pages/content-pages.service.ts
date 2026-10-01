@@ -98,6 +98,23 @@ export class ContentPagesService {
     return { item: serializeContentPage(updated) }
   }
 
+  async archive(id: string, editorId: string) {
+    const existing = await this.repository.findById(id)
+    if (!existing) throw new ContentPageNotFoundError()
+    const updated = await this.repository.archive(id)
+    if (!updated) throw new ContentPageNotFoundError()
+    await this.repository.insertAuditLog({
+      userId: editorId,
+      action: 'content_page.archive',
+      entityType: 'content_page',
+      entityId: id,
+      beforeData: serializeContentPage(existing),
+      afterData: serializeContentPage(updated),
+    })
+    await this.hooks.emit(CONTENT_PAGE_EVENTS.ARCHIVED, { contentPageId: id })
+    return { item: serializeContentPage(updated) }
+  }
+
   async delete(id: string, editorId: string) {
     const existing = await this.repository.findById(id)
     if (!existing) throw new ContentPageNotFoundError()

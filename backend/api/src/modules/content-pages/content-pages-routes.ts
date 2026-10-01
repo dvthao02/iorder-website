@@ -89,6 +89,16 @@ export function registerContentPageRoutes(
     }
   })
 
+  app.post('/api/admin/content-pages/:id/archive', { preHandler: [authGuard] }, async (request, reply) => {
+    const user = requireCmsUser(request)
+    const { id } = request.params as { id: string }
+    try {
+      return await service.archive(id, user.id)
+    } catch (error) {
+      return sendError(reply, error)
+    }
+  })
+
   // ── Admin: delete (hard delete, full audit log with beforeData) ──────────
   app.delete('/api/admin/content-pages/:id', { preHandler: [authGuard] }, async (request, reply) => {
     const user = requireCmsUser(request)

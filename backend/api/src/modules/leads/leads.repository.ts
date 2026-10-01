@@ -1,7 +1,7 @@
 import type { ContactLeadInput, LeadStatus } from '@iorder/contracts'
 import type { CmsDatabase } from '@iorder/database'
 import { auditLogs, contactLeads } from '@iorder/database'
-import { and, count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
 
 export type LeadRecord = typeof contactLeads.$inferSelect
 
@@ -54,8 +54,17 @@ export class LeadsRepository {
     return created
   }
 
-  async list(params: { page: number; limit: number; status?: LeadStatus }) {
+  async list(params: { page: number; limit: number; status?: LeadStatus; search?: string }) {
     const filters = params.status ? [eq(contactLeads.status, params.status)] : []
+    if (params.search) {
+      const keyword = `%${params.search}%`
+      filters.push(or(
+        ilike(contactLeads.name, keyword),
+        ilike(contactLeads.phone, keyword),
+        ilike(contactLeads.email, keyword),
+        ilike(contactLeads.businessModel, keyword),
+      )!)
+    }
     const whereClause = filters.length > 0 ? and(...filters) : undefined
 
     const [rows, totalRows, totalNewRows] = await Promise.all([
